@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Formula (demo)</title>
+		<meta charset="UTF-8" />
+		<link rel="stylesheet" href="css/formula.min.css" />
+		<style>
+			body {
+				margin: 0;
+				overflow-y: scroll;
+			}
+			
+			.container
+			{
+				box-sizing: border-box;
+				height: 100%;
+				left: 50%;
+				margin: 0 auto 0 -512px;
+				padding: 20px;
+				position: absolute;
+				width: 1024px;
+			}
+		</style>
+	</head>
+	
+	<body ng-app="demo" ng-controller="demoController">
+		<div class="container" formula="formulaData">
+		</div>
+		
+		<script src="js/angular.min.js"></script>
+		<script src="js/tv4.min.js"></script>
+		<script src="js/formula.min.js"></script>
+		
+		<script>
+			angular.module('demo', ['formula'])
+				.controller('demoController', function($scope) {
+					$scope.formulaData = {
+						schema: "json/demo-schema.json",
+						form: "json/demo-form.json",
+						template: null,
+						language: null,
+						model: {
+							_id: 'foobarID',
+							string: 'foobar',
+							boolean: true,
+							array_object: [
+								{ string_default: 'foo', number: 1 },
+								{ string_default: 'bar', number: 2 }
+							],
+							array_string_enum: [ 'foo', 'qux' ],
+							array_string: [ 'foobar', 'bazquz' ],
+							ref_object: { hemisphere: 'N', area: 'foo', country: 'no' },
+							array_hierarchy: [
+								{
+									sub_array_one: [
+										{
+											sub_sub_array_one: [
+												{
+													obj_1_1_1: 'foo',
+													obj_1_1_2: 4
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					};
+				});
+		</script>
+	</body>
+</html>

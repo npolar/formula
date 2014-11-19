@@ -1,0 +1,80 @@
+<form class="formula" ng-if="form.fieldsets">
+	<header ng-if="form.title">
+		{{ form.title }}
+	</header>
+	
+	<nav ng-if="form.fieldsets.length > 1">
+		<a ng-repeat="fieldset in form.fieldsets" ng-class="{ active: fieldset.active }" href="" ng-click="form.activate(fieldset)">{{ fieldset.title }}</a>
+	</nav>
+	
+	<fieldset ng-repeat="fieldset in form.fieldsets" ng-if="fieldset.active">
+		<legend ng-if="fieldset.title">{{ fieldset.title }}</legend>
+		
+		<div ng-repeat="field in fieldset.fields" ng-show="field.visible" formula:field-definition>
+			<div ng-if="field.typeOf('input')" title="{{ field.description }}" ng-class="{ valid: field.valid, error: field.error, required: (field.required && !field.valid && !field.error) }">
+				<label for="{{ field.uid }}">{{ field.title }}</label>
+				<input formula:field="field" />
+				<span>{{ field.error || field.description }}</span>
+			</div>
+			
+			<div ng-if="field.typeOf('object')">
+				<fieldset formula:field="field">
+					<legend>{{ field.title }}</legend>
+					
+					<div ng-repeat="field in field.fields" ng-show="field.visible">
+						<formula:field-instance field="field" />
+					</div>
+				</fieldset>
+			</div>
+			
+			<div ng-if="field.typeOf('array')">
+				<div formula:field="field">
+					<fieldset ng-class="{ valid: field.valid, error: field.error }">
+						<legend>{{ field.title }}</legend>
+					
+						<ul ng-if="field.typeOf('fieldset')">
+							<li ng-repeat="value in field.values">
+								<fieldset>
+									<legend><a href="" class="remove" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a></legend>
+									
+									<div ng-repeat="subfield in field.fields" ng-show="value[$index].visible">
+										<formula:field-instance field="value[$index]" />
+									</div>
+								</fieldset>
+							</li>
+							<li>
+								<span>{{ field.error || field.description }}</span>
+								<button class="add" ng-click="field.itemAdd()" type="button" title="{{ form.i18n.add[1] }}"><strong>+</strong> {{ form.i18n.add[0] }}</button>
+							</li>
+						</ul>
+						
+						<ul ng-if="field.typeOf('field')">
+							<li ng-repeat="value in field.values" ng-class="{ valid: value.valid, error: value.error }">
+								<input formula:field="value" />
+								<a href="" class="remove" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
+								<span ng-if="value.error">{{ value.error }}</span>
+							</li>
+							<li>
+								<span>{{ field.error || field.description }}</span>
+								<button class="add" ng-click="field.itemAdd()" type="button" title="{{ form.i18n.add[1] }}"><strong>+</strong> {{ form.i18n.add[0] }}</button>
+							</li>
+						</ul>
+					</fieldset>
+				</div>
+			</div>
+		</div>
+	</fieldset>
+	
+	<footer>
+		<span ng-if="form.errors" title="{{ form.errors.join('\n') }}">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span>
+		<button ng-click="form.validate()" title="{{ form.i18n.validate[1] }}"><strong>&#10003;</strong> {{ form.i18n.validate[0] }}</button>
+		<button ng-disabled="!form.valid" ng-click="form.save()" title="{{ form.i18n.save[1] }}"><strong>&#9921;</strong> {{ form.i18n.save[0] }}</button>
+	</footer>
+</form>
+
+<div class="formula" ng-if="!form.fieldsets">
+	<div class="loading">
+		<div class="spinner"></div>
+		<span>Loading schema</span>
+	</div>
+</div>

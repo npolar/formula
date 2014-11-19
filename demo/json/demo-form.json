@@ -1,0 +1,48 @@
+{
+	"title": "Formula Test Form",
+	
+	"fieldsets": [
+		{
+			"title": "strings",
+			"fields": [
+				"string",
+				"string_required",
+				"string_minlength_maxlength",
+				{
+					"id": "string_textarea",
+					"type": "textarea"
+				},
+				"string_datetime",
+				"string_enum_default",
+				"string_color"
+			]
+		},
+		{
+			"title": "numbers and boolean",
+			"fields": [
+				"integer_maximum",
+				"number_default",
+				{
+					"id": "number_minimum_maximum",
+					"step": 0.1
+				},
+				"boolean"
+			]
+		},
+		{
+			"title": "arrays and objects",
+			"fields": [
+				"array_object",
+				"array_string_enum",
+				"array_string",
+				"ref_object"
+			]
+		},
+		{
+			"title": "array hierarchy",
+			"fields": [
+				"array_hierarchy"
+			]
+		}
+	]
+}
