@@ -98,11 +98,11 @@ angular.module('formula')
 					}
 				}
 				
-				/*
-				scope.$watch('data.model', function() {
-					console.log(scope.data.model);
+				// Watch model changes and inject into controller used by formula directives
+				scope.$watch('data.model', function(model) {
+					controller.model = model;
 				}, true);
-				*/
+					
 			}
 		};
 	}]);
