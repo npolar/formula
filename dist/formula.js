@@ -276,7 +276,6 @@ angular.module('formula')
 						$scope.schema.then(function(schemaData) {
 							if(schemaData) {
 								formBuffer.pending = false;
-								//controller.model = $scope.data.model = {};
 								controller.form = $scope.form = new form(controller.model, formURI);
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
@@ -285,6 +284,7 @@ angular.module('formula')
 					}
 				}
                 
+				// Enable form definition hot-swapping
                 $scope.$watch('data.form', function(uri) {
                     if(uri) {
                         formBuffer.pending = true;
@@ -298,6 +298,7 @@ angular.module('formula')
                     }
                 });
 				
+				// Enable schema hot-swapping
 				$scope.$watch('data.schema', function(uri) {
 					if(($scope.schema.uri = uri)) {
 						$scope.schema.deref(uri).then(function(schemaData) {
@@ -306,6 +307,7 @@ angular.module('formula')
 					}
 				});
 				
+				// Enable language hot-swapping
 				$scope.$watch('data.language', function(uri) {
 					var code = i18n.code(uri);
 					
@@ -319,6 +321,11 @@ angular.module('formula')
 						$scope.form.translate(code);
 					}
 				});
+				
+				// Enable data hot-swapping
+				$scope.$watch('data.model', function(model) {
+					controller.model = model;
+				}, true);
 			}],
 			link: function(scope, element, attrs, controller) {
 				var template = angular.element($templateCache.get('default.html'));
@@ -347,11 +354,7 @@ angular.module('formula')
 					}
 				}
 				
-				/*
-				scope.$watch('data.model', function() {
-					console.log(scope.data.model);
-				}, true);
-				*/
+				console.log(element);
 			}
 		};
 	}]);
