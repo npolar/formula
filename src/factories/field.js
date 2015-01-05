@@ -272,7 +272,7 @@ angular.module('formula')
 				}
 				
 				// Automatically hide fields by default if ID starts with underscore
-				if(this.hidden !== true && (this.id && this.id[0] == '_')) {
+				if((this.id && this.id[0] == '_') && this.hidden !== false) {
 					log.debug(log.codes.FIELD_HIDDEN_DEFAULT, { field: this.path });
 					this.hidden = true;
 				}
