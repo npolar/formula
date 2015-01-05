@@ -15,9 +15,9 @@ angular.module('formula')
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
 				var controller = this, formBuffer = { pending: false, data: null };
 				
-				controller.model    = $scope.data.model || {};
+				controller.model    = $scope.model = $scope.data.model || {};
                 controller.schema   = $scope.schema = new schema();
-                controller.form     = $scope.form = new form($scope.model);
+                controller.form     = $scope.form = new form($scope.data.model);
 				
 				$scope.template = $scope.data.template || 'default';
 				$scope.language = { uri: $scope.data.language || null, code: null };
@@ -27,7 +27,7 @@ angular.module('formula')
 						$scope.schema.then(function(schemaData) {
 							if(schemaData) {
 								formBuffer.pending = false;
-								controller.form = $scope.form = new form(controller.model, formURI);
+								controller.form = $scope.form = new form($scope.model, formURI);
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
 							}
@@ -71,11 +71,9 @@ angular.module('formula')
 					}
 					
 					if($element.prop('tagName') == 'FORM') {
-						/*
 						$element.empty();
 						$element.append(templateElement.children());
 						$compile($element.children())($scope);
-						*/
 					} else {
 						$element.empty();
 						$element.prepend(templateElement);
@@ -100,7 +98,8 @@ angular.module('formula')
 				
 				// Enable data hot-swapping
 				$scope.$watch('data.model', function(model) {
-					controller.model = model;
+					controller.model = $scope.model = model;
+					formBuild();
 				}, true);
 			}]
 		};
