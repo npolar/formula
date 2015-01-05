@@ -261,7 +261,7 @@ angular.module('formula')
 		return {
 			restrict: 'A',
             scope: { data: '=formula' },
-			controller: ['$scope', '$attrs', function($scope, $attrs) {
+			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
 				var controller = this, formBuffer = { pending: false, data: null };
 				
 				controller.model    = $scope.data.model || {};
@@ -307,6 +307,31 @@ angular.module('formula')
 					}
 				});
 				
+				// Enable template hot-swapping
+				$scope.$watch('data.template', function(template) {
+					var templateName = (template || ""), templateElement;
+					
+					if(templateName.substr(0, -5) != '.html') {
+						templateName += '.html';
+					}
+					
+					if(!(templateElement = $templateCache.get(templateName))) {
+						templateElement = $templateCache.get('default.html');
+					}
+					
+					if($element.prop('tagName') == 'FORM') {
+						/*
+						$element.empty();
+						$element.append(templateElement.children());
+						$compile($element.children())($scope);
+						*/
+					} else {
+						$element.empty();
+						$element.prepend(templateElement);
+						$compile($element.children())($scope);
+					}
+				});
+				
 				// Enable language hot-swapping
 				$scope.$watch('data.language', function(uri) {
 					var code = i18n.code(uri);
@@ -326,34 +351,7 @@ angular.module('formula')
 				$scope.$watch('data.model', function(model) {
 					controller.model = model;
 				}, true);
-			}],
-			link: function(scope, element, attrs, controller) {
-				var template = angular.element($templateCache.get('default.html'));
-				
-				// TODO: Template hot-swapping
-				if(attrs.formulaTemplate) {
-					var templStr = attrs.formulaTemplate, templElem;
-					if(templStr.substr(0, -5) != '.html') {
-						templStr += '.html';
-					}
-					if((templElem = $templateCache.get(templStr))) {
-						template = templElem;
-					}
-				}
-				
-				if(element.prop('tagName') == 'FORM') {
-					if(!element.children().length) {
-						element.append(template.children());
-						$compile(element.children())(scope);
-					}
-				} else {
-					var formElem = element.find('form');
-					if(!formElem.length) {
-						element.prepend(template);
-						$compile(element.children())(scope);
-					}
-				}
-			}
+			}]
 		};
 	}]);
 
