@@ -50,7 +50,9 @@
 						<ul class="list-group">
 							<li class="list-group-item" ng-repeat="value in field.values">
 								<fieldset>
-									<legend style="border: none; margin-bottom: 10px;"><button class="btn btn-sm btn-danger pull-right" ng-click="field.itemRemove($index)" type="button" title="{{ form.i18n.remove[1] }}">X</button></legend>
+									<legend style="border: none; margin-bottom: 10px; text-align: right;">
+										<button class="btn btn-sm btn-danger" ng-click="field.itemRemove($index)" type="button" title="{{ form.i18n.remove[1] }}">X</button>
+									</legend>
 									<div ng-repeat="field in field.fields" ng-show="field.visible">
 										<formula:field-instance field="value[$index]" />
 									</div>
