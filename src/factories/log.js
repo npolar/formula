@@ -27,6 +27,7 @@ angular.module('formula')
 			FIELD_UNSUPPORTED_TYPE: 'unsupported field type: {type} ({field})',
 			FIELD_HIDDEN_DEFAULT: 'field hidden by default: {field}',
 			I18N_MISSING_CODE: 'missing ISO 639-3 language code: {uri}',
+			JSON_LOAD_ERROR: 'could not load JSON document: {uri}',
 			SCHEMA_INVALID_URI: 'invalid URI for schema deref: {uri}',
 			SCHEMA_MISSING_PROPERTY: 'missing required schema property: {property} ({schema})',
 			SCHEMA_MISSING_REFERENCE: 'missing schema reference: {schema}'

@@ -17,8 +17,8 @@ angular.module('formula')
 	 */
 	
 	.factory('formulaJsonLoader',
-	['$http', '$q',
-	function($http, $q) {
+	['$http', '$q', 'formulaLog',
+	function($http, $q, log) {
 		return function(uri, jsonp) {
 			var deferred = $q.defer();
 			
@@ -30,7 +30,8 @@ angular.module('formula')
 				.success(function(data, status, headers, config) {
 					deferred.resolve(data);
 				}).error(function(data, status, headers, config) {
-					deferred.reject('Could not load JSON from ' + uri);
+					log.error(log.codes.JSON_LOAD_ERROR, { uri: uri });
+					deferred.reject(uri);
 				});
 			return deferred.promise;
 		};
