@@ -634,7 +634,10 @@ angular.module('formula')
 				}
 				
 				this.visible = this.hidden ? false : true;
-				this.value = source.value || this.default || null;
+				
+				if(!this.value || source.value) {
+					this.value = source.value || this.default || null;
+				}
 				
 				// Ensure array typed default if required
 				if(this.default && source.type == 'array') {
