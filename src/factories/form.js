@@ -53,6 +53,10 @@ angular.module('formula')
 			this.title = null;
 			this.uri = uri || null;
 			this.valid = false;
+			
+			this.onsave = function(model) {
+				window.open("data:application/json," + JSON.stringify(model));
+			};
 		}
 		
 		form.prototype = {
@@ -143,10 +147,8 @@ angular.module('formula')
 					return;
 				}
 				
-				if(callback) {
-					callback(model.data);
-				} else {
-					window.open("data:application/json," + JSON.stringify(model.data));
+				if(typeof this.onsave == 'function') {
+					this.onsave(model.data);
 				}
 			},
 			

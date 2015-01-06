@@ -23,6 +23,7 @@ angular.module('formula')
 				controller.schema   = $scope.schema = new schema();
 				controller.form     = $scope.form = new form();
 				
+				$scope.onsave	= $scope.form.onsave;
 				$scope.template = $scope.data.template || 'default';
 				$scope.language = { uri: $scope.data.language || null, code: null };
 				
@@ -32,6 +33,7 @@ angular.module('formula')
 							if(schemaData) {
 								formBuffer.pending = false;
 								controller.form = $scope.form = new form(formURI);
+								$scope.form.onsave = $scope.onsave;
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
 							}
@@ -108,6 +110,13 @@ angular.module('formula')
 					
 					model.locked = false;
 				}, true);
+				
+				// Enable onsave callback hot-swapping
+				$scope.$watch('data.onsave', function(callback) {
+					if(callback) {
+						$scope.form.onsave = $scope.onsave = callback;
+					}
+				});
 			}]
 		};
 	}]);
