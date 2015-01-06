@@ -16,8 +16,8 @@ angular.module('formula')
 	 */
 	
 	.factory('formulaForm',
-	['formulaJsonLoader', 'formulaField', 'formulaI18n',
-	function(jsonLoader, field, i18n) {
+	['formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
+	function(jsonLoader, model, field, i18n) {
 		function fieldsetFromSchema(form, schema) {
 			if(schema && schema.type == 'object') {
 				var fields = [];
@@ -26,10 +26,7 @@ angular.module('formula')
 					var newField = new field(val, key);
 					newField.form = form;
 					newField.required = newField.required || (schema.required && schema.required.indexOf(key) != -1);
-					
-					if(form && form.model) {
-						newField.valueFromModel(form.model);
-					}
+					newField.valueFromModel(model.data);
 					
 					fields.push(newField);
 				});
@@ -45,14 +42,13 @@ angular.module('formula')
 		 * 
 		 * HTML form handler class.
 		 * 
-		 * @param model A model object reference used for storing form data
+		 * @param uri Optional URI to form definition object
 		 */
 		
-		function form(model, uri) {
+		function form(uri) {
 			this.errors = null;
 			this.fieldsets = null;
 			this.i18n = i18n(null);
-			this.model = model;
 			this.schema = null;
 			this.title = null;
 			this.uri = uri || null;
@@ -148,9 +144,9 @@ angular.module('formula')
 				}
 				
 				if(callback) {
-					callback(this.model);
+					callback(model.data);
 				} else {
-					window.open("data:application/json," + JSON.stringify(this.model));
+					window.open("data:application/json," + JSON.stringify(model.data));
 				}
 			},
 			
@@ -259,19 +255,26 @@ angular.module('formula')
 					return null; // Field not required, or untouched
 				}
 				
+				model.locked = true;
+				var tempModel = angular.copy(model.data);
+				
 				angular.forEach(this.fieldsets, function(fieldset) {
 					angular.forEach(fieldset.fields, function(field) {
 						var fieldValid = fieldValidate(field);
 						
 						if(fieldValid !== null) {
-							if(this.model && fieldValid) {
-								this.model[field.id] = field.value;
-							} else if(this.model) {
-								delete this.model[field.id];
+							if(fieldValid) {
+								model.data[field.id] = field.value;
+							} else {
+								delete model.data[field.id];
 							}
 						}
 					}, this);
 				}, this);
+				
+				if(angular.equals(tempModel, model.data)) {
+					model.locked = false;
+				}
 				
 				if((this.valid = !(this.errors.length))) {
 					this.errors = null;

@@ -67,8 +67,8 @@ angular.module('formula')
 
 angular.module('formula')
 	.directive('formulaField',
-	['$compile',
-	function($compile) {
+	['$compile', 'formulaModel',
+	function($compile, model) {
 		return {
 			restrict: 'A',
 			require: [ '^formula', '?^formulaFieldInstance' ],
@@ -181,7 +181,7 @@ angular.module('formula')
 				
 				// Evaluate condition
 				if(field.condition) {
-					scope.model = controller[0].model;
+					scope.model = model.data;
 					scope.$watchCollection('model', function(model) {
 						var pass = true, condition = (field.condition instanceof Array ? field.condition : [ field.condition ]);
 						
@@ -256,17 +256,21 @@ angular.module('formula')
 
 angular.module('formula')
 	.directive('formula',
-	['formulaJsonLoader', 'formulaSchema', 'formulaForm', 'formulaI18n', '$http', '$compile', '$templateCache',
-	function(jsonLoader, schema, form, i18n, $http, $compile, $templateCache) {
+	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n', '$http', '$compile', '$templateCache',
+	function(jsonLoader, model, schema, form, i18n, $http, $compile, $templateCache) {
 		return {
 			restrict: 'A',
             scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
 				var controller = this, formBuffer = { pending: false, data: null };
 				
-				controller.model    = $scope.model = $scope.data.model || {};
+				if($scope.data.model) {
+					model.data = $scope.data.model;
+					model.locked = true;
+				}
+				
                 controller.schema   = $scope.schema = new schema();
-                controller.form     = $scope.form = new form($scope.data.model);
+                controller.form     = $scope.form = new form();
 				
 				$scope.template = $scope.data.template || 'default';
 				$scope.language = { uri: $scope.data.language || null, code: null };
@@ -276,7 +280,7 @@ angular.module('formula')
 						$scope.schema.then(function(schemaData) {
 							if(schemaData) {
 								formBuffer.pending = false;
-								controller.form = $scope.form = new form($scope.model, formURI);
+								controller.form = $scope.form = new form(formURI);
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
 							}
@@ -346,9 +350,12 @@ angular.module('formula')
 				});
 				
 				// Enable data hot-swapping
-				$scope.$watch('data.model', function(model) {
-					controller.model = $scope.model = model;
-					formBuild();
+				$scope.$watch('data.model', function(data) {
+					if(!formBuffer.pending && model.set(data)) {
+						formBuild();
+					}
+					
+					model.locked = false;
 				}, true);
 			}]
 		};
@@ -1106,8 +1113,8 @@ angular.module('formula')
 	 */
 	
 	.factory('formulaForm',
-	['formulaJsonLoader', 'formulaField', 'formulaI18n',
-	function(jsonLoader, field, i18n) {
+	['formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
+	function(jsonLoader, model, field, i18n) {
 		function fieldsetFromSchema(form, schema) {
 			if(schema && schema.type == 'object') {
 				var fields = [];
@@ -1116,10 +1123,7 @@ angular.module('formula')
 					var newField = new field(val, key);
 					newField.form = form;
 					newField.required = newField.required || (schema.required && schema.required.indexOf(key) != -1);
-					
-					if(form && form.model) {
-						newField.valueFromModel(form.model);
-					}
+					newField.valueFromModel(model.data);
 					
 					fields.push(newField);
 				});
@@ -1135,14 +1139,13 @@ angular.module('formula')
 		 * 
 		 * HTML form handler class.
 		 * 
-		 * @param model A model object reference used for storing form data
+		 * @param uri Optional URI to form definition object
 		 */
 		
-		function form(model, uri) {
+		function form(uri) {
 			this.errors = null;
 			this.fieldsets = null;
 			this.i18n = i18n(null);
-			this.model = model;
 			this.schema = null;
 			this.title = null;
 			this.uri = uri || null;
@@ -1238,9 +1241,9 @@ angular.module('formula')
 				}
 				
 				if(callback) {
-					callback(this.model);
+					callback(model.data);
 				} else {
-					window.open("data:application/json," + JSON.stringify(this.model));
+					window.open("data:application/json," + JSON.stringify(model.data));
 				}
 			},
 			
@@ -1349,19 +1352,26 @@ angular.module('formula')
 					return null; // Field not required, or untouched
 				}
 				
+				model.locked = true;
+				var tempModel = angular.copy(model.data);
+				
 				angular.forEach(this.fieldsets, function(fieldset) {
 					angular.forEach(fieldset.fields, function(field) {
 						var fieldValid = fieldValidate(field);
 						
 						if(fieldValid !== null) {
-							if(this.model && fieldValid) {
-								this.model[field.id] = field.value;
-							} else if(this.model) {
-								delete this.model[field.id];
+							if(fieldValid) {
+								model.data[field.id] = field.value;
+							} else {
+								delete model.data[field.id];
 							}
 						}
 					}, this);
 				}, this);
+				
+				if(angular.equals(tempModel, model.data)) {
+					model.locked = false;
+				}
 				
 				if((this.valid = !(this.errors.length))) {
 					this.errors = null;
@@ -1664,6 +1674,41 @@ angular.module('formula')
 			}
 		};
 	}]);
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+	
+	/**
+	 * @factory model
+	 * 
+	 * Service used for data preservation.
+	 * 
+	 * @returns A singleton for preserving data
+	 */
+	
+	.service('formulaModel',
+	function() {
+        var model = {
+            data: {},
+            locked: false,
+            set: function(data) {
+                if(!this.locked) {
+                    this.data = data;
+					return true;
+				}
+				
+				return false;
+            }
+        };
+        
+        return model;
+	});
 
 /**
  * formula.js

@@ -7,8 +7,8 @@
 
 angular.module('formula')
 	.directive('formulaField',
-	['$compile',
-	function($compile) {
+	['$compile', 'formulaModel',
+	function($compile, model) {
 		return {
 			restrict: 'A',
 			require: [ '^formula', '?^formulaFieldInstance' ],
@@ -121,7 +121,7 @@ angular.module('formula')
 				
 				// Evaluate condition
 				if(field.condition) {
-					scope.model = controller[0].model;
+					scope.model = model.data;
 					scope.$watchCollection('model', function(model) {
 						var pass = true, condition = (field.condition instanceof Array ? field.condition : [ field.condition ]);
 						

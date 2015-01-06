@@ -7,17 +7,21 @@
 
 angular.module('formula')
 	.directive('formula',
-	['formulaJsonLoader', 'formulaSchema', 'formulaForm', 'formulaI18n', '$http', '$compile', '$templateCache',
-	function(jsonLoader, schema, form, i18n, $http, $compile, $templateCache) {
+	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n', '$http', '$compile', '$templateCache',
+	function(jsonLoader, model, schema, form, i18n, $http, $compile, $templateCache) {
 		return {
 			restrict: 'A',
             scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
 				var controller = this, formBuffer = { pending: false, data: null };
 				
-				controller.model    = $scope.model = $scope.data.model || {};
-                controller.schema   = $scope.schema = new schema();
-                controller.form     = $scope.form = new form($scope.data.model);
+				if($scope.data.model) {
+					model.data = $scope.data.model;
+					model.locked = true;
+				}
+				
+				controller.schema   = $scope.schema = new schema();
+				controller.form     = $scope.form = new form();
 				
 				$scope.template = $scope.data.template || 'default';
 				$scope.language = { uri: $scope.data.language || null, code: null };
@@ -27,7 +31,7 @@ angular.module('formula')
 						$scope.schema.then(function(schemaData) {
 							if(schemaData) {
 								formBuffer.pending = false;
-								controller.form = $scope.form = new form($scope.model, formURI);
+								controller.form = $scope.form = new form(formURI);
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
 							}
@@ -97,9 +101,12 @@ angular.module('formula')
 				});
 				
 				// Enable data hot-swapping
-				$scope.$watch('data.model', function(model) {
-					controller.model = $scope.model = model;
-					formBuild();
+				$scope.$watch('data.model', function(data) {
+					if(!formBuffer.pending && model.set(data)) {
+						formBuild();
+					}
+					
+					model.locked = false;
 				}, true);
 			}]
 		};
