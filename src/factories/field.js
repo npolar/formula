@@ -32,6 +32,7 @@ angular.module('formula')
 		
 		function field(data, id, parents) {
 			if(typeof data == 'object') {
+				this.dirty = false;
 				this.form = null;
 				this.id = id || data.id || null;
 				this.index = null;
@@ -295,7 +296,6 @@ angular.module('formula')
 					this.value = this.enum[0];
 				}
 				
-				this.dirty = (this.value !== null);
 				return this;
 			},
 			
@@ -424,8 +424,8 @@ angular.module('formula')
 								field.pathGen();
 							});
 						} else {
-							field.index = i;
-							field.pathGen();
+							fs.index = i;
+							fs.pathGen();
 						}
 					}, this);
 				}
@@ -629,8 +629,8 @@ angular.module('formula')
 						if(this.fields) {
 							// Populate value as object of valid fields
 							angular.forEach(this.fields, function(field, index) {
-								if(field.value !== null || field.typeOf('array object')) {
-									if(field.validate()) {
+								if(field.dirty || field.value !== null || field.typeOf('array object')) {
+									if(field.validate(field.dirty ? false : true)) {
 										this.value[field.id] = field.value;
 									}
 								}

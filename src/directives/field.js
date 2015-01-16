@@ -101,7 +101,7 @@ angular.module('formula')
 				
 				if(type.main == 'input') {
 					scope.$watch('field.value', function(n, o) {
-						if(!field.dirty && (n !== null)) {
+						if(!field.dirty && (n !== o)) {
 							field.dirty = true;
 						}
 						
