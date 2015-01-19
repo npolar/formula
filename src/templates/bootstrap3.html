@@ -54,7 +54,7 @@
 										<button class="btn btn-sm btn-danger" ng-click="field.itemRemove($index)" type="button" title="{{ form.i18n.remove[1] }}">X</button>
 									</legend>
 									<div ng-repeat="field in field.fields" ng-show="field.visible">
-										<formula:field-instance field="value[$index]" />
+										<formula:field-instance field="value.fields[$index]" />
 									</div>
 								</fieldset>
 							</li>

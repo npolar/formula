@@ -170,7 +170,7 @@ angular.module('formula')
 						});
 						
 						angular.forEach(field.values, function(fieldset) {
-							angular.forEach(fieldset, function(field) {
+							angular.forEach(fieldset.fields, function(field) {
 								fieldTranslate(field, fieldTranslation);
 							});
 						});
@@ -231,7 +231,7 @@ angular.module('formula')
 					if(field.typeOf('array')) {
 						angular.forEach(field.values, function(value) {
 							if(field.typeOf('fieldset')) {
-								angular.forEach(value, function(field) {
+								angular.forEach(value.fields, function(field) {
 									fieldValidate(field);
 								});
 							} else {

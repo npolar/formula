@@ -377,57 +377,31 @@ angular.module('formula')
 						this.values = [];
 					}
 					
-					var parents = [];
+					var parents = [], index;
 					angular.forEach(this.parents, function(parent) {
 						parents.push(parent);
 					});
 					parents.push({ id: this.id, index: this.index });
 					
 					if(this.typeOf('fieldset')) {
-						var fieldsets = this.values.push(angular.copy(this.fields));
-						angular.forEach(this.values[fieldsets - 1], function(field, index) {
-							field.index = fieldsets - 1;
+						index = this.values.push({ fields: angular.copy(this.fields), visible: true }) - 1;
+						
+						angular.forEach(this.values[index].fields, function(field) {
+							field.index = index;
 							field.parents = parents;
 							field.uidGen();
 							field.pathGen();
 						});
 					} else {
-						var fields = this.values.push(angular.copy(this.fields[0])), field = this.values[fields - 1];
-						field.index = fields - 1;
+						index = this.values.push(angular.copy(this.fields[0])) - 1;
+						var field = this.values[index];
+						field.index = index;
 						field.parents = parents;
 						field.uidGen();
 						field.pathGen();
 					}
 					
 					this.validate(true, false);
-				}
-			},
-			
-			/**
-			 * @method itemRemove
-			 * 
-			 * Function used to remove a fieldset from an array-typed field.
-			 * 
-			 * @param item Index number of the fieldset which should be removed
-			 */
-			
-			itemRemove: function(item) {
-				if(this.typeOf('array') && this.values) {
-					if(this.values.length > item) {
-						this.values.splice(item, 1);
-					}
-					
-					angular.forEach(this.values, function(fs, i) {
-						if(this.typeOf('fieldset')) {
-							angular.forEach(fs, function(field) {
-								field.index = i;
-								field.pathGen();
-							});
-						} else {
-							fs.index = i;
-							fs.pathGen();
-						}
-					}, this);
 				}
 			},
 			
@@ -446,6 +420,50 @@ angular.module('formula')
 					}
 				}
 				return -1;
+			},
+			
+			/**
+			 * @method itemRemove
+			 * 
+			 * Function used to remove a fieldset from an array-typed field.
+			 * 
+			 * @param item Index number of the fieldset which should be removed
+			 */
+			
+			itemRemove: function(item) {
+				if(this.typeOf('array') && this.values) {
+					if(this.values.length > item) {
+						this.values.splice(item, 1);
+					}
+					
+					angular.forEach(this.values, function(fs, i) {
+						if(this.typeOf('fieldset')) {
+							angular.forEach(fs.fields, function(field) {
+								field.index = i;
+								field.pathGen();
+							});
+						} else {
+							fs.index = i;
+							fs.pathGen();
+						}
+					}, this);
+				}
+			},
+			
+			/**
+			 * @method itemToggle
+			 * 
+			 * Function used to toggle visibility of a fieldset item.
+			 * 
+			 * @param item Index number of the fieldset which should be toggled
+			 */
+			
+			itemToggle: function(item) {
+				if(this.typeOf('array') && this.values) {
+					if(this.values.length > item) {
+						this.values[item].visible = !this.values[item].visible;
+					}
+				}
 			},
 			
 			/**
@@ -557,7 +575,7 @@ angular.module('formula')
 						angular.forEach(this.values, function(fieldset, index) {
 							this.value.push({});
 								
-							angular.forEach(fieldset, function(field) {
+							angular.forEach(fieldset.fields, function(field) {
 								if(field.dirty || (field.value !== null) || field.typeOf('array object')) {
 									if(field.validate(silent, false)) {
 										this.value[index][field.id] = field.value;
@@ -711,8 +729,8 @@ angular.module('formula')
 						for(i in model[this.id]) {
 							this.itemAdd();
 							
-							for(j in this.values[i]) {
-								this.values[i][j].valueFromModel(model[this.id][i]);
+							for(j in this.values[i].fields) {
+								this.values[i].fields[j].valueFromModel(model[this.id][i]);
 							}
 						}
 					} else if(this.type == "array:field") {

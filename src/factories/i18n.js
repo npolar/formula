@@ -28,6 +28,8 @@ angular.module('formula')
 			return {
 				add: 		[ 'Add', 'Click to add a new item' ],
 				invalid: 	'{count} invalid fields',
+				maximize: 	[ 'Maximize', 'Click to maximize item' ],
+				minimize:	[ 'Minimize', 'Click to minimize item' ],
 				remove:		[ 'Remove', 'Click to remove item' ],
 				required:	'Required field',
 				save:		[ 'Save', 'Click to save document' ],

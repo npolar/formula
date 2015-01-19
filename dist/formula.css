@@ -278,6 +278,19 @@
   border-color: #ac2925;
 }
 
+.formula .toggle,
+.formula button:not(:disabled).toggle {
+  background: #534fd9;
+  border-color: #3f3ad4;
+  color: #fff;
+}
+
+.formula .toggle:hover,
+.formula button:not(:disabled).toggle:hover {
+  background: #302cc9;
+  border-color: #2925ac;
+}
+
 .formula button {
   background: #e3e3e3;
   border: 1px solid #ddd;
@@ -306,7 +319,7 @@
 }
 
 .formula fieldset ul a.remove,
-.formula fieldset legend a.remove {
+.formula fieldset ul a.toggle {
   border-radius: 5px;
   box-sizing: border-box;
   display: inline-block;
@@ -314,7 +327,9 @@
   font-size: 14px;
   font-weight: bold;
   padding: 5px 10px;
+  text-align: center;
   text-decoration: none;
+  width: 30px;
 }
 
 .formula fieldset ul li > input {
