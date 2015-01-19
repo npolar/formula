@@ -50,7 +50,7 @@
 								<button class="add" ng-click="field.itemAdd()" type="button" title="{{ form.i18n.add[1] }}"><strong>+</strong> {{ form.i18n.add[0] }}</button>
 							</li>
 						</ul>
-						        <link rel="stylesheet" href="css/boostrap.min.css" />
+						
 						<ul ng-if="field.typeOf('field')">
 							<li ng-repeat="value in field.values" ng-class="{ valid: value.valid, error: value.error }">
 								<input formula:field="value" />
