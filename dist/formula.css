@@ -11,7 +11,7 @@
 }
 
 .formula > footer {
-  padding: 10px 0 0 0;
+  padding: 15px 0 0 0;
   position: relative;
   text-align: right;
 }
@@ -19,17 +19,13 @@
 .formula > footer span {
   color: #c00;
   font-size: 14px;
-  left: 10px;
+  left: 0;
   position: absolute;
   top: 16px;
 }
 
 .formula button {
   font-size: 14px;
-}
-
-.formula > footer button {
-  margin-right: 10px;
 }
 
 .formula > nav a {
