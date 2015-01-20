@@ -564,7 +564,7 @@ angular.module('formula')
 					case 'array:field':
 						this.value = [];
 						angular.forEach(this.values, function(field) {
-							if(field.dirty && field.validate()) {
+							if((field.dirty || field.value !== null) && field.validate()) {
 								this.value.push(field.value);
 							}
 						}, this);
