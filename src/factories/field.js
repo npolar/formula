@@ -384,7 +384,7 @@ angular.module('formula')
 					parents.push({ id: this.id, index: this.index });
 					
 					if(this.typeOf('fieldset')) {
-						index = this.values.push({ fields: angular.copy(this.fields), visible: true }) - 1;
+						index = this.values.push({ fields: angular.copy(this.fields), visible: true, valid: true }) - 1;
 						
 						angular.forEach(this.values[index].fields, function(field) {
 							field.index = index;
@@ -574,13 +574,14 @@ angular.module('formula')
 						this.value = [];
 						angular.forEach(this.values, function(fieldset, index) {
 							this.value.push({});
+							fieldset.valid = true;
 								
 							angular.forEach(fieldset.fields, function(field) {
 								if(field.dirty || (field.value !== null) || field.typeOf('array object')) {
 									if(field.validate(silent, false)) {
 										this.value[index][field.id] = field.value;
-									}
-								}
+									} else fieldset.valid = false;
+								} else fieldset.valid = false;
 							}, this);
 						}, this);
 							

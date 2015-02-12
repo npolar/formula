@@ -131,12 +131,19 @@
 
 .formula ul > li > fieldset > legend
 {
-	background: transparent;
+	background: transparent !important;
 	border: 0;
 	margin: 0;
 	padding: 0;
 	text-align: right;
 	width: 100%;
+}
+
+.formula ul > li > fieldset > legend span
+{
+	position: absolute;
+	left: 0;
+	top: .5em;
 }
 
 .formula ul > li

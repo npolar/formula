@@ -34,8 +34,9 @@
 					
 						<ul ng-if="field.typeOf('fieldset')">
 							<li ng-repeat="value in field.values">
-								<fieldset>
+								<fieldset ng-class="{ valid: value.valid }">
 									<legend>
+										<span ng-if="!value.visible">{{ value.fields | formulaInlineValues }}</span>
 										<a href="" class="toggle" ng-click="field.itemToggle($index)" title="{{ value.visible ? form.i18n.minimize[1] : form.i18n.maximize[1] }}">{{ value.visible ? '_' : '‾' }}</a>
 										<a href="" class="remove" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
 									</legend>
