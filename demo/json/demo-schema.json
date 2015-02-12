@@ -95,7 +95,7 @@
 			}
 		},
 		"ref_object": {
-			"$ref": "http://api.npolar.no/schema/location"
+			"$ref": "http://api.npolar.no/schema/user"
 		},
 		"array_hierarchy": {
 			"type": "array",
