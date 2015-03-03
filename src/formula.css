@@ -211,8 +211,8 @@
 .formula .error > span,
 .formula .error li:last-child > span
 {
-	border-color: #a94442;
-	color: #a94442;
+	border-color: #a94442 !important;
+	color: #a94442 !important;
 }
 
 .formula .error > legend
@@ -224,7 +224,7 @@
 .formula .error fieldset,
 .formula fieldset.error
 {
-	border-color: #ebccd1;
+	border-color: #ebccd1 !important;
 }
 
 .formula .required,
