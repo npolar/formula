@@ -11,7 +11,7 @@
 		<legend ng-if="fieldset.title">{{ fieldset.title }}</legend>
 		
 		<div ng-repeat="field in fieldset.fields" ng-show="field.visible" formula:field-definition>
-			<div ng-if="field.typeOf('input')" title="{{ field.description }}" ng-class="{ valid: field.valid, error: field.error, required: (field.required && !field.valid && !field.error) }">
+			<div ng-if="field.typeOf('input')" title="{{ field.description }}" ng-class="{ valid: field.valid, error: field.error, required: (field.required && field.value === null) }">
 				<label for="{{ field.uid }}">{{ field.title }}</label>
 				<input formula:field="field" />
 				<span>{{ field.error || field.description }}</span>
@@ -31,7 +31,7 @@
 				<div formula:field="field">
 					<fieldset ng-class="{ valid: field.valid, error: field.error }">
 						<legend>{{ field.title }}</legend>
-					
+						
 						<ul ng-if="field.typeOf('fieldset')">
 							<li ng-repeat="value in field.values">
 								<fieldset ng-class="{ valid: value.valid }">
