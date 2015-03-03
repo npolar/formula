@@ -30,7 +30,7 @@
 			<div ng-if="field.typeOf('array')">
 				<div formula:field="field">
 					<fieldset ng-class="{ valid: field.valid, error: field.error }">
-						<legend>{{ field.title }}</legend>
+						<legend>{{ field.title }} ({{ field.values.length || 0 }})</legend>
 						
 						<ul ng-if="field.typeOf('fieldset')">
 							<li ng-repeat="value in field.values">

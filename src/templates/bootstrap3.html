@@ -45,7 +45,7 @@
 			<div ng-if="field.typeOf('array')">
 				<div formula:field="field">
 					<div ng-if="field.typeOf('fieldset')" class="panel" ng-class="{ 'panel-danger': field.error, 'panel-success': field.valid }">
-						<div class="panel-heading">{{ field.title }}</div>
+						<div class="panel-heading">{{ field.title }} ({{ field.values.length || 0 }})</div>
 						
 						<ul class="list-group">
 							<li class="list-group-item" ng-repeat="value in field.values">
