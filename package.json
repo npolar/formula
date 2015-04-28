@@ -1,0 +1,19 @@
+{
+  "name": "formula",
+  "version": "1.0.0",
+  "description": "formula =======",
+  "main": "dist/formula.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/npolar/formula.git"
+  },
+  "author": "Remi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/npolar/formula/issues"
+  },
+  "homepage": "https://github.com/npolar/formula#readme"
+}
