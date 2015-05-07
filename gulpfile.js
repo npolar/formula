@@ -11,7 +11,7 @@ var ngTemplateCache = require('gulp-angular-templatecache');
 gulp.task('compile-templates', function() {
 	return gulp.src('./src/templates/*.html')
 	.pipe(minifyHtml({ empty: true, spare: true, quotes: true }))
-	.pipe(ngTemplateCache({ module: 'formula' }))
+	.pipe(ngTemplateCache({ module: 'formula', root: 'formula/' }))
 	.pipe(gulp.dest('./src/templates/'));
 });
 

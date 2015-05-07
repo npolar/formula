@@ -66,14 +66,14 @@ angular.module('formula')
 				
 				// Enable template hot-swapping
 				$scope.$watch('data.template', function(template) {
-					var templateName = (template || ""), templateElement;
+					var templateName = 'formula/' + (template || ""), templateElement;
 					
 					if(templateName.substr(0, -5) != '.html') {
 						templateName += '.html';
 					}
 					
 					if(!(templateElement = $templateCache.get(templateName))) {
-						templateElement = $templateCache.get('default.html');
+						templateElement = $templateCache.get('formula/default.html');
 					}
 					
 					if($element.prop('tagName') == 'FORM') {
