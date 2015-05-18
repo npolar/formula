@@ -652,8 +652,12 @@ angular.module('formula')
 				
 				this.visible = this.hidden ? false : true;
 				
-				if(!this.value || source.value) {
-					this.value = source.value || this.default || null;
+				if(this.value === undefined || source.value !== undefined) {
+					if((this.value = source.value) === undefined) {
+						if((this.value = this.default) === undefined) {
+							this.value = null;
+						}
+					}
 				}
 				
 				// Ensure array typed default if required
