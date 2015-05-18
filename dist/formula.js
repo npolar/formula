@@ -652,7 +652,7 @@ angular.module('formula')
 				
 				this.visible = this.hidden ? false : true;
 				
-				if(this.value === undefined || source.value !== undefined) {
+				if(this.value === undefined) {
 					if((this.value = source.value) === undefined) {
 						if((this.value = this.default) === undefined) {
 							this.value = null;
@@ -1091,7 +1091,7 @@ angular.module('formula')
 			 */
 			
 			valueFromModel: function(model) {
-				if(model[this.id]) {
+				if(model[this.id] !== undefined) {
 					var i, j;
 					
 					if(this.type == "object") {
