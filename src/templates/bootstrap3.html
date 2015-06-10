@@ -55,8 +55,8 @@
 										<button style="font-family: monospace;" class="btn btn-sm btn-info" ng-click="field.itemToggle($index)" type="button" title="{{ value.visible ? form.i18n.minimize[1] : form.i18n.maximize[1] }}">{{ value.visible ? '_' : '‾' }}</button>
 										<button class="btn btn-sm btn-danger" ng-click="field.itemRemove($index)" type="button" title="{{ form.i18n.remove[1] }}">X</button>
 									</legend>
-									<div ng-repeat="field in field.fields" ng-show="value.visible">
-										<formula:field-instance field="value.fields[$index]" ng-show="value.fields[$index].visible" />
+									<div ng-repeat="subfield in field.fields" ng-show="value.visible">
+										<formula:field-instance field="value.fields[$index]" ng-show="subfield.visible" />
 									</div>
 								</fieldset>
 							</li>
