@@ -71,8 +71,8 @@
 	
 	<footer>
 		<span ng-if="form.errors" title="{{ form.errors.join('\n') }}">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span>
-		<button ng-click="form.validate()" title="{{ form.i18n.validate[1] }}"><strong>&#10003;</strong> {{ form.i18n.validate[0] }}</button>
-		<button ng-disabled="!form.valid" ng-click="form.save()" title="{{ form.i18n.save[1] }}"><strong>&#9921;</strong> {{ form.i18n.save[0] }}</button>
+		<button ng-if="!form.uiValidateHidden" ng-click="form.validate()" title="{{ form.i18n.validate[1] }}"><strong>&#10003;</strong> {{ form.i18n.validate[0] }}</button>
+		<button ng-if="!form.uiSaveHidden" ng-disabled="!form.valid" ng-click="form.save()" title="{{ form.i18n.save[1] }}"><strong>&#9921;</strong> {{ form.i18n.save[0] }}</button>
 	</footer>
 </form>
 

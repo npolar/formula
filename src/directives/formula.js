@@ -20,12 +20,12 @@ angular.module('formula')
 					model.locked = true;
 				}
 				
-				controller.schema   = $scope.schema = new schema();
-				controller.form     = $scope.form = new form();
+				controller.schema	= $scope.schema = new schema();
+				controller.form  	= $scope.form = new form();
 				
-				$scope.onsave	= $scope.form.onsave;
-				$scope.template = $scope.data.template || 'default';
-				$scope.language = { uri: $scope.data.language || null, code: null };
+				$scope.onsave		= $scope.form.onsave;
+				$scope.template 	= $scope.data.template || 'default';
+				$scope.language 	= { uri: $scope.data.language || null, code: null };
 				
 				function formBuild(formURI) {
 					if(!formBuffer.pending || formURI) {
@@ -36,6 +36,9 @@ angular.module('formula')
 								$scope.form.onsave = $scope.onsave;
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
+								
+								$scope.form.uiSaveHidden		= $scope.data.saveHidden;
+								$scope.form.uiValidateHidden	= $scope.data.validateHidden;
 							}
 						});
 					}
