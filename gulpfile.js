@@ -65,6 +65,7 @@ gulp.task('default', [
 	'validate',
 	'compile-js',
 	'minify-js',
+	'compile-commonjs',
 	'compile-css',
 	'minify-css'
 ]);
@@ -74,7 +75,7 @@ gulp.task('watch', function() {
 });
 
 gulp.task('watch-js', function() {
-	gulp.watch(['./src/*.js', './src/**/*.js'], ['compile-js', 'minify-js']);
+	gulp.watch(['./src/*.js', './src/**/*.js'], ['compile-js', 'minify-js', 'compile-commonjs']);
 });
 
 gulp.task('watch-css', function() {
