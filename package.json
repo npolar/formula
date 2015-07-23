@@ -2,7 +2,7 @@
   "name": "formula",
   "version": "1.0.0",
   "description": "formula =======",
-  "main": "dist/formula.js",
+  "main": "dist/formula.commonjs.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,5 +15,20 @@
   "bugs": {
     "url": "https://github.com/npolar/formula/issues"
   },
-  "homepage": "https://github.com/npolar/formula#readme"
+  "homepage": "https://github.com/npolar/formula#readme",
+  "dependencies": {
+    "angular": "^1.4.3",
+    "tv4": "^1.1.12"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-angular-templatecache": "^1.7.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-concat-css": "^2.2.0",
+    "gulp-csso": "^1.0.0",
+    "gulp-define-module": "^0.1.3",
+    "gulp-jshint": "^1.11.2",
+    "gulp-minify-html": "^1.0.4",
+    "gulp-uglify": "^1.2.0"
+  }
 }

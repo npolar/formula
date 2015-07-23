@@ -1,3 +1,5 @@
+'use strict';
+
 var gulp = require('gulp');
 
 var concat = require('gulp-concat');
@@ -7,6 +9,7 @@ var concatCss = require('gulp-concat-css');
 var csso = require('gulp-csso');
 var minifyHtml = require('gulp-minify-html');
 var ngTemplateCache = require('gulp-angular-templatecache');
+var defineModule = require('gulp-define-module');
 
 gulp.task('compile-templates', function() {
 	return gulp.src('./src/templates/*.html')
@@ -32,6 +35,13 @@ gulp.task('validate-js', ['compile-templates'], function() {
 	return gulp.src(['./src/*.js', './src/**/*.js'])
 	.pipe(jshint())
 	.pipe(jshint.reporter('default'));
+});
+
+gulp.task('compile-commonjs', ['compile-templates'], function () {
+	return gulp.src(['src/**/*.js'])
+		.pipe(concat('formula.commonjs.js'))
+		.pipe(defineModule('commonjs', { require: {angular: 'angular', tv4: 'tv4'}}))
+		.pipe(gulp.dest('./dist/'));
 });
 
 gulp.task('compile-css', function() {
