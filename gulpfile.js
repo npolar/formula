@@ -33,7 +33,9 @@ gulp.task('minify-js', ['compile-templates'], function() {
 
 gulp.task('validate-js', ['compile-templates'], function() {
 	return gulp.src(['./src/*.js', './src/**/*.js'])
-	.pipe(jshint())
+	.pipe(jshint({
+		globals: {angular: true}
+	}))
 	.pipe(jshint.reporter('default'));
 });
 
