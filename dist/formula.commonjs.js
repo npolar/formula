@@ -61,6 +61,7 @@ angular.module('formula')
 		};
 	}]);
 
+"use strict";
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -97,7 +98,7 @@ angular.module('formula')
 				var type = field.type ? field.type.split(':') : null;
 				type = type ? { main: type[0], sub: type[1] } : null;
 
-				if(type.main == 'input') {
+				if(type.main === 'input') {
 					switch(type.sub) {
 					case 'textarea':
 						elem = angular.element('<textarea>');
@@ -163,7 +164,7 @@ angular.module('formula')
 					element.replaceWith(cloned);
 				});
 
-				if(type.main == 'input') {
+				if(type.main === 'input') {
 					scope.$watch('field.value', function(n, o) {
 						if(!field.dirty && (n !== o)) {
 							field.dirty = true;
@@ -173,11 +174,11 @@ angular.module('formula')
 							field.validate(true, true);
 						}
 					});
-				} else if(type.main == 'object') {
+				} else if(type.main === 'object') {
 					scope.$watch('field.fields', function() {
 						field.validate(false, true);
 					}, true);
-				} else if(type.main == 'array') {
+				} else if(type.main === 'array') {
 					scope.$watch('field.values', function() {
 						field.validate(false, true);
 					}, true);
@@ -190,15 +191,15 @@ angular.module('formula')
 						var pass = true, condition = (field.condition instanceof Array ? field.condition : [ field.condition ]);
 
 						angular.forEach(condition, function(cond) {
-							var local = model, subCond, parents = field.parents, pathSplitted;
+							var local = model, parents = field.parents, pathSplitted;
 
 							if(pass) {
 								// Absolute JSON path
-								if(cond[0] == '#') {
+								if(cond[0] === '#') {
 									parents = [];
 
 									// Slash-delimited resolution
-									if(cond[1] == '/') {
+									if(cond[1] === '/') {
 										pathSplitted = cond.substr(1).split('/');
 									}
 
@@ -239,7 +240,7 @@ angular.module('formula')
 							}
 						});
 
-						if(field.visible != (field.visible = field.hidden ? false : pass)) {
+						if(field.visible !== (field.visible = field.hidden ? false : pass)) {
 							var currentValue = field.value;
 							field.value = scope.backupValue;
 							scope.backupValue = currentValue;
@@ -405,28 +406,107 @@ angular.module('formula')
 angular.module('formula')
 	
 	/**
-	 * @factory field
+	 * @filter inlineValues
 	 * 
-	 * Service used to create HTML form field handler class instances.
-	 * 
-	 * @returns field class constructor
+	 * Filter used to inline an array of values.
 	 */
 	
+	.filter('formulaInlineValues', function() {
+		return function(input, params) {
+			var result = [];
+			
+			angular.forEach(input, function(field) {
+				if(field.value === null) {
+					result.push('null');
+				} else if(field.value === undefined) {
+					result.push('undefined');
+				} else if(field.value instanceof Array) {
+					result.push('Array[' + field.value.length + ']');
+				} else switch(typeof field.value) {
+					case 'string':
+						var strlen = field.value.length;
+						
+						if(strlen && strlen < 10) {
+							result.push(field.value);
+						} else if(strlen) {
+							result.push(field.value.substr(0, 10) + '...');
+						}
+						
+						break;
+						
+					case 'number':
+					case 'boolean':
+						result.push(field.value);
+						break;
+						
+					default:
+						result.push('Object');
+				}
+			});
+			
+			return result.join(', ');
+		};
+	});
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+	
+	/**
+	 * @filter replace
+	 * 
+	 * Filter used to replace placeholders in a string.
+	 */
+	
+	.filter('formulaReplace', function() {
+		return function(input, params) {
+			var result = input, match = input.match(/\{[^\}]*\}/g);
+			
+			angular.forEach(match, function(v, k) {
+				result = result.replace(v, params[v.substr(1, v.length - 2)]);
+			});
+			
+			return result;
+		};
+	});
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @factory field
+	 *
+	 * Service used to create HTML form field handler class instances.
+	 *
+	 * @returns field class constructor
+	 */
+
 	.factory('formulaField',
 	['$filter', 'formulaLog', 'formulaFormat',
 	function($filter, log, format) {
 		/**
 		 * @class field
-		 * 
+		 *
 		 * HTML form field handler class.
 		 * If the second (id) parameter is specified, the field will be recognized as a schema field.
 		 * Schema fields are fields generated from JSON Schemas, and does not inherit overloaded data.
-		 * 
+		 *
 		 * @param data A mandatory object containing default data values
 		 * @param id An optional string representing the unique field ID
 		 * @param parents An optional array of the field parents
 		 */
-		
+
 		function field(data, id, parents) {
 			if(typeof data == 'object') {
 				this.dirty = false;
@@ -437,34 +517,34 @@ angular.module('formula')
 				this.parents = parents || null;
 				this.path = null;
 				this.schema = data.schema || data;
-				
+
 				var invalidCharacters = ['.', '/', '#'];
 				angular.forEach(invalidCharacters, function(char) {
 					if(this.id && this.id.indexOf(char) >= 0) {
 						log.warning(log.codes.FIELD_INVALID_ID, { character: char, field: this.path });
 					}
 				}, this);
-				
+
 				this.uidGen();
 				this.pathGen();
 				this.attrsSet(data);
 			}
 		}
-		
+
 		field.uids = [];
-		
+
 		field.prototype = {
-			
+
 			/**
 			 * @method attrsSet
 			 *
 			 * Function used to copy attributes from a source object.
 			 * Useful when creating fields inheriting data from a fomr definition file.
-			 * 
+			 *
 			 * @param source Source object the data should be copied from
 			 * @returns The updated field instance
 			 */
-			
+
 			attrsSet: function(source) {
 				var attribs = 'condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,pattern,required,step,title,values'.split(',');
 				angular.forEach(source, function(v, k) {
@@ -472,7 +552,7 @@ angular.module('formula')
 						this[k] = v;
 					}
 				}, this);
-				
+
 				// Translate default value tokens
 				if(typeof this.default == 'string') {
 					var match = this.default.match(/^%(.*)%$/), replace;
@@ -481,33 +561,33 @@ angular.module('formula')
 						case 'date':
 							replace = $filter('date')(new Date(), 'yyyy-MM-dd', 'UTC');
 							break;
-							
+
 						case 'datetime':
 							replace = $filter('date')(new Date(), 'yyyy-MM-ddThh:mm:ss', 'UTC') + 'Z';
 							break;
-							
+
 						case 'time':
 							replace = $filter('date')(new Date(), 'hh:mm:ss', 'UTC');
 							break;
-							
+
 						default:
 							log.warning(log.codes.FIELD_UNSUPPORTED_TOKEN, { token: match[1], field: this.path });
 						}
-						
+
 						if(replace) {
 							this.default = replace;
 						}
 					}
 				}
-				
+
 				if(this.fields && source.fields) {
 					var formFields = [];
-					
+
 					// Update field properties based on form specification
 					angular.forEach(source.fields, function(field) {
 						if(typeof field == 'object') {
 							var fieldMatch = this.fieldFromID(field.id);
-							
+
 							if(fieldMatch) {
 								formFields.push(field.id);
 								fieldMatch.attrsSet(field);
@@ -516,7 +596,7 @@ angular.module('formula')
 							formFields.push(field);
 						}
 					}, this);
-					
+
 					// Remove unused fields
 					for(var f in this.fields) {
 						if(formFields.indexOf(this.fields[f].id) == -1) {
@@ -524,7 +604,7 @@ angular.module('formula')
 						}
 					}
 				}
-				
+
 				if(source.type instanceof Array) {
 					if(source.type.length == 1) {
 						source.type = source.type[0];
@@ -538,14 +618,14 @@ angular.module('formula')
 						}
 					}
 				}
-				
+
 				if(source.type == 'select' || source.enum) {
 					this.type = 'input:select';
 					this.multiple = !!source.multiple;
 				} else {
 					if(this.format) {
 						var formatNoDash = this.format.replace('-', '');
-						
+
 						if(format[formatNoDash]) {
 							switch(formatNoDash) {
 							case 'date':
@@ -553,11 +633,11 @@ angular.module('formula')
 							case 'time':
 								this.type = 'input:' + formatNoDash;
 								break;
-								
+
 							default:
 								this.type = 'input:text';
 							}
-							
+
 							tv4.addFormat(this.format, format[formatNoDash]);
 						} else {
 							log.warning(log.codes.FIELD_UNSUPPORTED_FORMAT, { format: this.format, field: this.path });
@@ -569,7 +649,7 @@ angular.module('formula')
 						case 'input:any':
 							this.type = 'input:any';
 							break;
-							
+
 						case 'array':
 						case 'array:field':
 						case 'array:fieldset':
@@ -602,26 +682,26 @@ angular.module('formula')
 								this.type = null;
 							}
 							break;
-							
+
 						case 'boolean':
 						case 'checkbox':
 						case 'input:checkbox':
 							this.type = 'input:checkbox';
 							break;
-							
+
 						case 'input:number':
 						case 'integer':
 						case 'number':
 							this.step = source.step || null;
 							this.type = 'input:number';
 							break;
-							
+
 						case 'input:range':
 						case 'range':
 							this.step = source.step || null;
 							this.type = 'input:range';
 							break;
-							
+
 						case 'object':
 							if(source.properties) {
 								this.type = 'object';
@@ -634,49 +714,49 @@ angular.module('formula')
 								this.type = null;
 							}
 							break;
-							
+
 						case 'input:textarea':
 						case 'textarea':
 							this.type = 'input:textarea';
 							break;
-							
+
 						case 'input:text':
 						case 'string':
 						case 'text':
 							this.type = 'input:text';
 							break;
-							
+
 						case undefined:
 							this.type = (this.type || 'input:text');
 							break;
-							
+
 						default:
 							log.warning(log.codes.FIELD_UNSUPPORTED_TYPE, { type: source.type, field: this.path });
 							this.type = null;
 						}
 					}
 				}
-				
+
 				// Set schema pattern if not set and pattern is defined
 				if(this.pattern && this.schema && !this.schema.pattern) {
 					this.schema.pattern = this.pattern;
 				}
-				
+
 				// Add one element to arrays which requires at least one element
 				if(this.typeOf('array') && this.schema.minItems) {
 					if(!this.values) {
 						this.itemAdd();
 					}
 				}
-				
+
 				// Automatically hide fields by default if ID starts with underscore
 				if((this.id && this.id[0] == '_') && this.hidden !== false) {
 					log.debug(log.codes.FIELD_HIDDEN_DEFAULT, { field: this.path });
 					this.hidden = true;
 				}
-				
+
 				this.visible = this.hidden ? false : true;
-				
+
 				if(this.value === undefined) {
 					if((this.value = source.value) === undefined) {
 						if((this.value = this.default) === undefined) {
@@ -684,48 +764,48 @@ angular.module('formula')
 						}
 					}
 				}
-				
+
 				// Ensure array typed default if required
 				if(this.default && source.type == 'array') {
 					if(!(this.default instanceof Array)) {
 						this.default = [ this.default ];
 					}
 				}
-				
+
 				// Set intial value for select fields with no default
 				if(this.type == 'input:select' && !this.multiple && (this.value === null)) {
 					this.value = this.enum[0];
 				}
-				
+
 				return this;
 			},
-			
+
 			/**
 			 * @method fieldAdd
-			 * 
+			 *
 			 * Function used to add subfields to object and array-typed field.
-			 * 
+			 *
 			 * @param schema JSON Schema defining the field being added
 			 * @returns true if the field was successfully added, otherwise false
 			 */
-			
+
 			fieldAdd: function(schema) {
 				if(typeof schema == 'object') {
 					if(!this.fields) {
 						this.fields = [];
 					}
-					
+
 					var parents = [];
 					angular.forEach(this.parents, function(parent) {
 						parents.push(parent);
 					});
 					parents.push({ id: this.id, index: this.index });
-					
+
 					if(schema.type == 'object') {
 						angular.forEach(schema.properties, function(val, key) {
 							var newField = new field(val, key, parents);
 							newField.required = (schema.required && schema.required.indexOf(key) != -1);
-							
+
 							if(newField.type) {
 								newField.index = this.fields.length;
 								this.fields.push(newField);
@@ -736,57 +816,57 @@ angular.module('formula')
 						newField.index = this.fields.length;
 						this.fields.push(newField);
 					}
-					
+
 					return true;
 				}
-				
+
 				// TODO: Warning
 				return false;
 			},
-			
+
 			/**
 			 * @method fieldFromID
-			 * 
+			 *
 			 * Function used to get a subfield from specified ID.
-			 * 
+			 *
 			 * @param id ID used for subfield look-up
 			 * @returns The subfield which matches the specified ID, otherwise null
 			 */
-			
+
 			fieldFromID: function(id) {
 				var fieldMatch = null;
-				
+
 				angular.forEach(this.fields, function(field) {
 					if(!fieldMatch && field.id == id) {
 						fieldMatch = field;
 					}
 				});
-				
+
 				return fieldMatch;
 			},
-			
+
 			/**
 			 * @method itemAdd
-			 * 
+			 *
 			 * Function used to add a copy of the subfields for validating.
 			 * The values of each fieldset are automatically monitored.
 			 */
-			
+
 			itemAdd: function() {
 				if(this.typeOf('array') && this.fields) {
 					if(!this.values) {
 						this.values = [];
 					}
-					
+
 					var parents = [], index;
 					angular.forEach(this.parents, function(parent) {
 						parents.push(parent);
 					});
 					parents.push({ id: this.id, index: this.index });
-					
+
 					if(this.typeOf('fieldset')) {
 						index = this.values.push({ fields: angular.copy(this.fields), visible: true, valid: true }) - 1;
-						
+
 						angular.forEach(this.values[index].fields, function(field) {
 							field.index = index;
 							field.parents = parents;
@@ -801,19 +881,19 @@ angular.module('formula')
 						field.uidGen();
 						field.pathGen();
 					}
-					
+
 					this.validate(true, false);
 				}
 			},
-			
+
 			/**
 			 * @method itemIndex
-			 * 
+			 *
 			 * Function used to return the fieldset index of a subfield based on ID.
-			 * 
+			 *
 			 * @param id Field ID of the subfield as a string
 			 */
-			
+
 			itemIndex: function(id) {
 				for(var index in this.fields) {
 					if(this.fields[index].id == id) {
@@ -822,21 +902,21 @@ angular.module('formula')
 				}
 				return -1;
 			},
-			
+
 			/**
 			 * @method itemRemove
-			 * 
+			 *
 			 * Function used to remove a fieldset from an array-typed field.
-			 * 
+			 *
 			 * @param item Index number of the fieldset which should be removed
 			 */
-			
+
 			itemRemove: function(item) {
 				if(this.typeOf('array') && this.values) {
 					if(this.values.length > item) {
 						this.values.splice(item, 1);
 					}
-					
+
 					angular.forEach(this.values, function(fs, i) {
 						if(this.typeOf('fieldset')) {
 							angular.forEach(fs.fields, function(field) {
@@ -850,15 +930,15 @@ angular.module('formula')
 					}, this);
 				}
 			},
-			
+
 			/**
 			 * @method itemToggle
-			 * 
+			 *
 			 * Function used to toggle visibility of a fieldset item.
-			 * 
+			 *
 			 * @param item Index number of the fieldset which should be toggled
 			 */
-			
+
 			itemToggle: function(item) {
 				if(this.typeOf('array') && this.values) {
 					if(this.values.length > item) {
@@ -866,27 +946,27 @@ angular.module('formula')
 					}
 				}
 			},
-			
+
 			/**
 			 * @method pathGen
-			 * 
+			 *
 			 * Function used to generate full JSON path for fields.
 			 */
-			
+
 			pathGen: function() {
 				this.path = '#/';
-				
+
 				angular.forEach(this.parents, function(parent) {
 					if(parent.index !== null) {
 						this.path += parent.index + '/';
 					}
-					
+
 					this.path += parent.id + '/';
 				}, this);
-				
+
 				if(this.index !== null) {
 					this.path += this.index;
-					
+
 					if(this.id) {
 						this.path += '/' + this.id;
 					}
@@ -894,73 +974,73 @@ angular.module('formula')
 					this.path += this.id;
 				}
 			},
-			
+
 			/**
 			 * @method typeOf
-			 * 
+			 *
 			 * Function used to check if field in a specific type.
-			 * 
+			 *
 			 * @param type Type to check
 			 * @returns true if field type matches with specified type, otherwise false
 			 */
-			
+
 			typeOf: function(type) {
 				if(this.type && typeof type == 'string') {
 					var types = this.type.split(':'), match = false;
-					
+
 					angular.forEach(type.split(' '), function(type) {
 						if(!match && type === this.type || type === types[0] || type === types[1]) {
 							match = true;
 						}
 					}, this);
-						
+
 					return match;
 				}
-				
+
 				return false;
 			},
-			
+
 			/**
 			 * @method uidGen
-			 * 
+			 *
 			 * Function used to generate a new Unique field ID.
-			 * 
+			 *
 			 * @param len Optional number parameter to specify the UID-length
 			 * @returns The newly generated UID
 			 */
-			
+
 			uidGen: function(len) {
 				var uid = 'formula-', chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-				
+
 				for(var i = 0; i < (len ? len : 8); ++i) {
 					uid += chars[Math.floor(Math.random() * chars.length)];
 				}
-				
+
 				if(field.uids.indexOf(uid) != -1) {
 					return this.uidGen(len);
 				} else {
 					this.uid = uid;
 				}
-				
+
 				return uid;
 			},
-			
+
 			/**
 			 * @method validate
-			 * 
+			 *
 			 * Function used to validate the field based on its schema.
 			 * This function also sets the field error memeber value if the validation fails,
 			 * and additionally sets the form valid state if a parent form is specified.
-			 * 
+			 *
 			 * @param silent Prevent setting error flags during validation if true
 			 * @param form Validate entire form during validation if true
 			 * @returns true if the field is valid, otherwise false
 			 */
-			
+
 			validate: function(silent, form) {
 				if(this.schema) {
 					var fieldError = null, tempValue, match;
-					
+
 					switch(this.type) {
 					case 'array:field':
 						this.value = [];
@@ -970,13 +1050,13 @@ angular.module('formula')
 							}
 						}, this);
 						break;
-						
+
 					case 'array:fieldset':
 						this.value = [];
 						angular.forEach(this.values, function(fieldset, index) {
 							this.value.push({});
 							fieldset.valid = true;
-								
+
 							angular.forEach(fieldset.fields, function(field) {
 								if(field.dirty || (field.value !== null) || field.typeOf('array object')) {
 									if(field.validate(silent, false)) {
@@ -985,7 +1065,7 @@ angular.module('formula')
 								} else fieldset.valid = false;
 							}, this);
 						}, this);
-							
+
 						// Remove invalid array elements
 						for(var i = 0; i < this.value.length; ++i) {
 							if(!tv4.validate([this.value[i]], this.schema)) {
@@ -995,7 +1075,7 @@ angular.module('formula')
 							}
 						}
 						break;
-						
+
 					case 'input:any':
 						if(this.value) {
 							if(!isNaN(this.value)) {
@@ -1007,11 +1087,11 @@ angular.module('formula')
 								case 'true':
 									tempValue = true;
 									break;
-									
+
 								case 'false':
 									tempValue = false;
 									break;
-									
+
 								case 'null':
 									tempValue = null;
 									break;
@@ -1019,17 +1099,17 @@ angular.module('formula')
 							}
 						}
 						break;
-						
+
 					case 'input:checkbox':
 						this.value = !!this.value;
 						break;
-						
+
 					case 'input:integer':
 					case 'input:number':
 					case 'input:range':
 						tempValue = (this.value === null ? NaN : Number(this.value));
 						break;
-						
+
 					case 'input:select':
 						if(this.multiple && !this.value) {
 							this.value = [];
@@ -1042,10 +1122,10 @@ angular.module('formula')
 							}
 						}
 						break;
-						
+
 					case 'object':
 						this.value = {};
-						
+
 						if(this.fields) {
 							// Populate value as object of valid fields
 							angular.forEach(this.fields, function(field, index) {
@@ -1058,9 +1138,9 @@ angular.module('formula')
 						}
 						break;
 					}
-					
+
 					var valid = tv4.validate((tempValue !== undefined ? tempValue : this.value), this.schema);
-					
+
 					if(!valid && this.nullable) {
 						switch(typeof this.value) {
 						case 'string':
@@ -1068,57 +1148,57 @@ angular.module('formula')
 								this.value = null;
 							}
 							break;
-							
+
 						case 'number':
 							if(isNaN(this.value)) {
 								this.value = null;
 							}
 							break;
-							
+
 						case 'object':
 							var items = 0;
 							angular.forEach(this.value, function() { items++; });
-							
+
 							if(!items) {
 								this.value = null;
 							}
 							break;
 						}
-						
+
 						// TODO: Add support for null-types in tv4
 						if(this.value === null) {
 							fieldError = null;
 							valid = true;
 						}
 					}
-					
+
 					if(silent !== true) {
 						this.valid = (valid && !fieldError);
 						this.error = fieldError ? fieldError.message : (valid ? null : tv4.error.message);
 					}
-					
+
 					if((form === true) && this.form) {
 						this.form.validate(true);
 					}
-					
+
 					return valid;
 				}
-				
+
 				return false;
 			},
-			
+
 			/**
 			 * @method valueFromModel
-			 * 
+			 *
 			 * Function used to set field value based on model object.
-			 * 
+			 *
 			 * @param model
 			 */
-			
+
 			valueFromModel: function(model) {
 				if(model[this.id] !== undefined) {
 					var i, j;
-					
+
 					if(this.type == "object") {
 						for(i in this.fields) {
 							if(model[this.id][this.fields[i].id]) {
@@ -1127,17 +1207,17 @@ angular.module('formula')
 						}
 					} else if(this.type == "array:fieldset") {
 						this.values = [];
-						
+
 						for(i in model[this.id]) {
 							this.itemAdd();
-							
+
 							for(j in this.values[i].fields) {
 								this.values[i].fields[j].valueFromModel(model[this.id][i]);
 							}
 						}
 					} else if(this.type == "array:field") {
 						this.values = [];
-						
+
 						for(i in model[this.id]) {
 							this.itemAdd();
 							this.values[i].value = model[this.id][i];
@@ -1148,7 +1228,7 @@ angular.module('formula')
 				}
 			}
 		};
-		
+
 		return field;
 	}]);
 
@@ -2005,85 +2085,6 @@ angular.module('formula')
 		
 		return schema;
 	}]);
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-	
-	/**
-	 * @filter inlineValues
-	 * 
-	 * Filter used to inline an array of values.
-	 */
-	
-	.filter('formulaInlineValues', function() {
-		return function(input, params) {
-			var result = [];
-			
-			angular.forEach(input, function(field) {
-				if(field.value === null) {
-					result.push('null');
-				} else if(field.value === undefined) {
-					result.push('undefined');
-				} else if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-						var strlen = field.value.length;
-						
-						if(strlen && strlen < 10) {
-							result.push(field.value);
-						} else if(strlen) {
-							result.push(field.value.substr(0, 10) + '...');
-						}
-						
-						break;
-						
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-						
-					default:
-						result.push('Object');
-				}
-			});
-			
-			return result.join(', ');
-		};
-	});
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-	
-	/**
-	 * @filter replace
-	 * 
-	 * Filter used to replace placeholders in a string.
-	 */
-	
-	.filter('formulaReplace', function() {
-		return function(input, params) {
-			var result = input, match = input.match(/\{[^\}]*\}/g);
-			
-			angular.forEach(match, function(v, k) {
-				result = result.replace(v, params[v.substr(1, v.length - 2)]);
-			});
-			
-			return result;
-		};
-	});
 
 angular.module("formula").run(["$templateCache", function($templateCache) {$templateCache.put("formula/bootstrap3.html","<form class=\"form-horizontal\" ng-if=\"form.fieldsets\"><header ng-if=\"form.title\" class=\"page-header\" style=\"margin-top: -10px\"><h2>{{ form.title }}</h2></header><ul class=\"nav nav-tabs\"><li ng-repeat=\"fieldset in form.fieldsets\" ng-if=\"form.fieldsets.length > 1\" ng-class=\"{ active: fieldset.active }\"><a href=\"\" ng-click=\"form.activate(fieldset)\">{{ fieldset.title }}</a></li></ul><fieldset ng-repeat=\"fieldset in form.fieldsets\" ng-if=\"fieldset.active\" style=\"border: 1px solid #ddd; border-radius: 0 0 5px 5px; border-top: 0; padding: 15px; padding-bottom: 0;\"><div ng-repeat=\"field in fieldset.fields\" ng-show=\"field.visible\" formula:field-definition=\"\"><div ng-if=\"field.typeOf(\'input\')\" title=\"{{ field.description }}\" class=\"form-group has-feedback\"><label for=\"{{ field.uid }}\" class=\"col-sm-3 control-label\">{{ field.title }}</label><div class=\"col-sm-9\" ng-class=\"{ \'has-error\': field.error, \'has-success\': field.valid, \'has-warning\': (field.required && field.value === null) }\"><div ng-if=\"!field.typeOf(\'select\')\"><input class=\"form-control input-md\" formula:field=\"field\"><div ng-if=\"!field.typeOf(\'checkbox\') && (field.error || field.valid)\"><span ng-if=\"field.valid\" class=\"glyphicon glyphicon-ok form-control-feedback\"></span> <span ng-if=\"field.error\" class=\"glyphicon glyphicon-remove form-control-feedback\"></span></div></div><select ng-if=\"field.typeOf(\'select\')\" class=\"form-control input-md\" formula:field=\"field\"><option ng-repeat=\"value in field.values\" value=\"{{ value.id }}\">{{ value.label }}</option></select><span class=\"help-block\">{{ field.error || field.description }}</span></div></div><div ng-if=\"field.typeOf(\'object\')\"><div class=\"panel\" ng-class=\"{ \'panel-danger\': field.error, \'panel-success\': field.valid }\" formula:field=\"field\"><div class=\"panel-heading\">{{ field.title }}</div><div class=\"panel-body\"><div ng-repeat=\"field in field.fields\" ng-show=\"field.visible\"><formula:field-instance field=\"field\"></formula:field-instance></div></div></div></div><div ng-if=\"field.typeOf(\'array\')\"><div formula:field=\"field\"><div ng-if=\"field.typeOf(\'fieldset\')\" class=\"panel\" ng-class=\"{ \'panel-danger\': field.error, \'panel-success\': field.valid }\"><div class=\"panel-heading\">{{ field.title }} ({{ field.values.length || 0 }})</div><ul class=\"list-group\"><li class=\"list-group-item\" ng-repeat=\"value in field.values\"><fieldset><legend style=\"border: none; margin-bottom: 10px; text-align: right;\"><span ng-class=\"{ \'text-danger\': !value.valid, \'text-success\': value.valid }\" class=\"pull-left\" ng-if=\"!value.visible\">{{ value.fields | formulaInlineValues }}</span> <button style=\"font-family: monospace;\" class=\"btn btn-sm btn-info\" ng-click=\"field.itemToggle($index)\" type=\"button\" title=\"{{ value.visible ? form.i18n.minimize[1] : form.i18n.maximize[1] }}\">{{ value.visible ? \'_\' : \'‾\' }}</button> <button class=\"btn btn-sm btn-danger\" ng-click=\"field.itemRemove($index)\" type=\"button\" title=\"{{ form.i18n.remove[1] }}\">X</button></legend><div ng-repeat=\"subfield in field.fields\" ng-show=\"value.visible\"><formula:field-instance field=\"value.fields[$index]\" ng-show=\"subfield.visible\"></formula:field-instance></div></fieldset></li></ul><div class=\"panel-footer clearfix has-feedback\" ng-class=\"{ \'has-error\': field.error, \'has-success\': field.valid }\"><span class=\"help-block\"><span>{{ field.error || field.description }}</span> <button class=\"btn btn-sm btn-primary pull-right\" ng-click=\"field.itemAdd()\" type=\"button\" title=\"{{ form.i18n.add[1] }}\">{{ form.i18n.add[0] }}</button></span></div></div><div ng-if=\"field.typeOf(\'field\')\" class=\"panel\" ng-class=\"{ \'panel-danger\': field.error, \'panel-success\': field.valid }\"><div class=\"panel-heading\">{{ field.title }}</div><ul class=\"list-group\"><li class=\"list-group-item\" ng-repeat=\"value in field.values\"><div class=\"input-group\"><input formula:field=\"value\" class=\"form-control input-md\"> <span class=\"input-group-btn\"><button class=\"btn btn-danger\" ng-click=\"field.itemRemove($index)\" type=\"button\" title=\"{{ form.i18n.remove[1] }}\">X</button></span></div></li></ul><div class=\"panel-footer clearfix has-feedback\" ng-class=\"{ \'has-error\': field.error, \'has-success\': field.valid }\"><span class=\"help-block\"><span>{{ field.error || field.description }}</span> <button class=\"btn btn-sm btn-primary pull-right\" ng-click=\"field.itemAdd()\" type=\"button\" title=\"{{ form.i18n.add[1] }}\">{{ form.i18n.add[0] }}</button></span></div></div></div></div></div></fieldset><div class=\"has-feedback\" ng-class=\"{ \'has-error\': !form.valid, \'has-success\': form.valid }\" style=\"margin-top: 10px;\"><span class=\"help-block\"><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span><div class=\"btn-group pull-right\"><button ng-if=\"!form.uiValidateHidden\" type=\"button\" class=\"btn btn-info\" ng-click=\"form.validate()\" title=\"{{ form.i18n.validate[1] }}\">{{ form.i18n.validate[0] }}</button> <button ng-if=\"!form.uiSaveHidden\" type=\"button\" class=\"btn btn-success\" ng-class=\"{ disabled: !form.valid }\" ng-click=\"form.save()\" title=\"{{ form.i18n.save[1] }}\">{{ form.i18n.save[0] }}</button></div></span></div></form><div ng-if=\"!form.fieldsets\" class=\"alert alert-info\" style=\"text-align: center; overflow: hidden;\"><span>Loading schema...</span></div>");
 $templateCache.put("formula/default.html","<form class=\"formula\" ng-if=\"form.fieldsets\"><header ng-if=\"form.title\">{{ form.title }}</header><nav ng-if=\"form.fieldsets.length > 1\"><a ng-repeat=\"fieldset in form.fieldsets\" ng-class=\"{ active: fieldset.active }\" href=\"\" ng-click=\"form.activate(fieldset)\">{{ fieldset.title }}</a></nav><fieldset ng-repeat=\"fieldset in form.fieldsets\" ng-if=\"fieldset.active\"><legend ng-if=\"fieldset.title\">{{ fieldset.title }}</legend><div ng-repeat=\"field in fieldset.fields\" ng-show=\"field.visible\" formula:field-definition=\"\"><div ng-if=\"field.typeOf(\'input\')\" title=\"{{ field.description }}\" ng-class=\"{ valid: field.valid, error: field.error, required: (field.required && field.value === null) }\"><label for=\"{{ field.uid }}\">{{ field.title }}</label> <input formula:field=\"field\"> <span>{{ field.error || field.description }}</span></div><div ng-if=\"field.typeOf(\'object\')\"><fieldset formula:field=\"field\"><legend>{{ field.title }}</legend><div ng-repeat=\"field in field.fields\" ng-show=\"field.visible\"><formula:field-instance field=\"field\"></formula:field-instance></div></fieldset></div><div ng-if=\"field.typeOf(\'array\')\"><div formula:field=\"field\"><fieldset ng-class=\"{ valid: field.valid, error: field.error }\"><legend>{{ field.title }} ({{ field.values.length || 0 }})</legend><ul ng-if=\"field.typeOf(\'fieldset\')\"><li ng-repeat=\"value in field.values\"><fieldset ng-class=\"{ valid: value.valid }\"><legend><span ng-if=\"!value.visible\">{{ value.fields | formulaInlineValues }}</span> <a href=\"\" class=\"toggle\" ng-click=\"field.itemToggle($index)\" title=\"{{ value.visible ? form.i18n.minimize[1] : form.i18n.maximize[1] }}\">{{ value.visible ? \'_\' : \'‾\' }}</a> <a href=\"\" class=\"remove\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.remove[1] }}\">X</a></legend><div ng-repeat=\"subfield in field.fields\" ng-show=\"value.visible\"><formula:field-instance field=\"value.fields[$index]\" ng-show=\"subfield.visible\"></formula:field-instance></div></fieldset></li><li><span>{{ field.error || field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" type=\"button\" title=\"{{ form.i18n.add[1] }}\"><strong>+</strong> {{ form.i18n.add[0] }}</button></li></ul><ul ng-if=\"field.typeOf(\'field\')\"><li ng-repeat=\"value in field.values\" ng-class=\"{ valid: value.valid, error: value.error }\"><input formula:field=\"value\"> <a href=\"\" class=\"remove\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.remove[1] }}\">X</a> <span ng-if=\"value.error\">{{ value.error }}</span></li><li><span>{{ field.error || field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" type=\"button\" title=\"{{ form.i18n.add[1] }}\"><strong>+</strong> {{ form.i18n.add[0] }}</button></li></ul></fieldset></div></div></div></fieldset><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-if=\"!form.uiValidateHidden\" ng-click=\"form.validate()\" title=\"{{ form.i18n.validate[1] }}\"><strong>&#10003;</strong> {{ form.i18n.validate[0] }}</button> <button ng-if=\"!form.uiSaveHidden\" ng-disabled=\"!form.valid\" ng-click=\"form.save()\" title=\"{{ form.i18n.save[1] }}\"><strong>&#9921;</strong> {{ form.i18n.save[0] }}</button></footer></form><div class=\"formula\" ng-if=\"!form.fieldsets\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div>");}]);;

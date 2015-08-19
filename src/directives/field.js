@@ -1,3 +1,4 @@
+"use strict";
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -34,7 +35,7 @@ angular.module('formula')
 				var type = field.type ? field.type.split(':') : null;
 				type = type ? { main: type[0], sub: type[1] } : null;
 
-				if(type.main == 'input') {
+				if(type.main === 'input') {
 					switch(type.sub) {
 					case 'textarea':
 						elem = angular.element('<textarea>');
@@ -100,7 +101,7 @@ angular.module('formula')
 					element.replaceWith(cloned);
 				});
 
-				if(type.main == 'input') {
+				if(type.main === 'input') {
 					scope.$watch('field.value', function(n, o) {
 						if(!field.dirty && (n !== o)) {
 							field.dirty = true;
@@ -110,11 +111,11 @@ angular.module('formula')
 							field.validate(true, true);
 						}
 					});
-				} else if(type.main == 'object') {
+				} else if(type.main === 'object') {
 					scope.$watch('field.fields', function() {
 						field.validate(false, true);
 					}, true);
-				} else if(type.main == 'array') {
+				} else if(type.main === 'array') {
 					scope.$watch('field.values', function() {
 						field.validate(false, true);
 					}, true);
@@ -127,15 +128,15 @@ angular.module('formula')
 						var pass = true, condition = (field.condition instanceof Array ? field.condition : [ field.condition ]);
 
 						angular.forEach(condition, function(cond) {
-							var local = model, subCond, parents = field.parents, pathSplitted;
+							var local = model, parents = field.parents, pathSplitted;
 
 							if(pass) {
 								// Absolute JSON path
-								if(cond[0] == '#') {
+								if(cond[0] === '#') {
 									parents = [];
 
 									// Slash-delimited resolution
-									if(cond[1] == '/') {
+									if(cond[1] === '/') {
 										pathSplitted = cond.substr(1).split('/');
 									}
 
@@ -176,7 +177,7 @@ angular.module('formula')
 							}
 						});
 
-						if(field.visible != (field.visible = field.hidden ? false : pass)) {
+						if(field.visible !== (field.visible = field.hidden ? false : pass)) {
 							var currentValue = field.value;
 							field.value = scope.backupValue;
 							scope.backupValue = currentValue;
