@@ -1,3 +1,4 @@
+"use strict";
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -14,7 +15,7 @@ angular.module('formula')
 			compile: function(element, attrs) {
 				attrs.$set('formulaFieldDefinition'); // unset
 				var html = element.html();
-				
+
 				return function(scope, element, attrs, controller) {
 					controller.fieldDefinition = html;
 				};

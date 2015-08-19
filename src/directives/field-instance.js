@@ -1,3 +1,4 @@
+"use strict";
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -15,11 +16,12 @@ angular.module('formula')
 			scope: { field: '=' },
 			compile: function() {
 				// TODO: append element.html() to element?
-				
+
 				return function(scope, element, attrs, controller) {
 					var elem = angular.element(controller.fieldDefinition);
-					$compile(elem)(scope);
-					element.prepend(elem);
+					$compile(elem)(scope, function (cloned, scope) {
+						element.prepend(cloned);
+					});
 				};
 			}
 		};

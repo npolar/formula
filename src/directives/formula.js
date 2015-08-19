@@ -1,3 +1,4 @@
+"use strict";
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -11,7 +12,7 @@ angular.module('formula')
 	function(jsonLoader, model, schema, form, i18n, $http, $compile, $templateCache, $templateRequest, $q) {
 		return {
 			restrict: 'A',
-            scope: { data: '=formula' },
+      scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
 				var controller = this, formBuffer = { pending: false, data: null };
 
@@ -95,12 +96,14 @@ angular.module('formula')
 					loadTemplate(template).then(function (templateElement) {
 						if($element.prop('tagName') === 'FORM') {
 							$element.empty();
-							$element.append(templateElement.children());
-							$compile($element.children())($scope);
+							$compile(templateElement.children())($scope, function (cloned, scope) {
+								$element.append(cloned);
+							});
 						} else {
 							$element.empty();
-							$element.prepend(templateElement);
-							$compile($element.children())($scope);
+							$compile(templateElement)($scope, function (cloned, scope) {
+								$element.prepend(cloned);
+							});
 						}
 					});
 				});
