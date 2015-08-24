@@ -11,6 +11,10 @@ var minifyHtml = require('gulp-minify-html');
 var ngTemplateCache = require('gulp-angular-templatecache');
 var defineModule = require('gulp-define-module');
 
+gulp.on('error', function(err){
+  console.log(err);
+});
+
 gulp.task('compile-templates', function() {
 	return gulp.src('./src/templates/*.html')
 	.pipe(minifyHtml({ empty: true, spare: true, quotes: true }))
@@ -24,7 +28,7 @@ gulp.task('compile-js', ['compile-templates'], function() {
 	.pipe(gulp.dest('./dist/'));
 });
 
-gulp.task('minify-js', ['compile-templates'], function() {
+gulp.task('minify-js', ['compile-templates'], function(cb) {
 	return gulp.src(['./src/*.js', './src/**/*.js'])
 	.pipe(concat('formula.min.js'))
 	.pipe(uglify())
@@ -72,7 +76,7 @@ gulp.task('default', [
 	'minify-css'
 ]);
 
-gulp.task('watch', function() {
+gulp.task('watch', ['default'], function() {
 	gulp.watch('./src/**', ['default']);
 });
 

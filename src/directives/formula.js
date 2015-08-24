@@ -47,14 +47,14 @@ angular.module('formula')
 
 				function loadTemplate (template) {
 					return $q(function(resolve, reject) {
-						var templateName = 'formula/' + (template || ""), templateElement;
+						var templateName = 'formula/' + (template || 'default'), templateElement;
 
 						if (templateName.substr(0, -5) !== '.html') {
 							templateName += '.html';
 						}
 
 						if(!(templateElement = $templateCache.get(templateName))) {
-							$templateRequest(template, true).then(function (tmpl) {
+							$templateRequest(template, false /* ingoreErrors */).then(function (tmpl) {
 								templateElement = tmpl;
 								resolve(templateElement);
 							},
@@ -92,19 +92,12 @@ angular.module('formula')
 				});
 
 				// Enable template hot-swapping
-				$scope.$watch('data.template', function(template) {
+				$scope.$watch('data.template', function(template, oldVal) {
 					loadTemplate(template).then(function (templateElement) {
-						if($element.prop('tagName') === 'FORM') {
-							$element.empty();
-							$compile(templateElement.children())($scope, function (cloned, scope) {
-								$element.append(cloned);
-							});
-						} else {
-							$element.empty();
-							$compile(templateElement)($scope, function (cloned, scope) {
-								$element.prepend(cloned);
-							});
-						}
+						$element.empty();
+						$compile(angular.element(templateElement))($scope, function (cloned, scope) {
+							$element.prepend(cloned);
+						});
 					});
 				});
 
