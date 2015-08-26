@@ -177,7 +177,12 @@ angular.module('formula')
 					}
 					
 					if(fieldTranslation) {
-						field.title = fieldTranslation.title || field.title || field.id;
+						field.title = fieldTranslation.title || field.title;
+
+						if(field.title === undefined) {
+							field.title = field.id;
+						}
+
 						field.description = fieldTranslation.description || field.description;
 						
 						if(field.typeOf('select')) {
@@ -188,7 +193,11 @@ angular.module('formula')
 							});
 						}
 					} else {
-						field.title = field.title || field.id;
+						field.title = field.title;
+
+						if(field.title === undefined) {
+							field.title = field.id;
+						}
 						
 						if(field.typeOf('select')) {
 							field.values = [];

@@ -19,7 +19,7 @@
 			
 			<div ng-if="field.typeOf('object')">
 				<fieldset formula:field="field">
-					<legend>{{ field.title }}</legend>
+					<legend ng-if="field.title">{{ field.title }}</legend>
 					
 					<div ng-repeat="field in field.fields" ng-show="field.visible">
 						<formula:field-instance field="field" />
