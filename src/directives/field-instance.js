@@ -1,3 +1,4 @@
+(function() {
 "use strict";
 /**
  * formula.js
@@ -26,3 +27,7 @@ angular.module('formula')
 			}
 		};
 	}]);
+
+// End of strict
+})();
+

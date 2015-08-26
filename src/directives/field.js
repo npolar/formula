@@ -1,3 +1,4 @@
+(function() {
 "use strict";
 /**
  * formula.js
@@ -188,3 +189,7 @@ angular.module('formula')
 			terminal: true
 		};
 	}]);
+
+// End of strict
+})();
+
