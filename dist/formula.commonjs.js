@@ -7,6 +7,7 @@ var angular = require("angular");var tv4 = require("tv4");module.exports = /**
 
 angular.module('formula', []);
 
+(function() {
 "use strict";
 /**
  * formula.js
@@ -32,6 +33,11 @@ angular.module('formula')
 		};
 	});
 
+// End of strict
+})();
+
+
+(function() {
 "use strict";
 /**
  * formula.js
@@ -61,6 +67,11 @@ angular.module('formula')
 		};
 	}]);
 
+// End of strict
+})();
+
+
+(function() {
 "use strict";
 /**
  * formula.js
@@ -252,6 +263,11 @@ angular.module('formula')
 		};
 	}]);
 
+// End of strict
+})();
+
+
+(function() {
 "use strict";
 /**
  * formula.js
@@ -263,20 +279,24 @@ angular.module('formula')
 angular.module('formula')
 	.directive('formula',
 	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n', '$http', '$compile', '$templateCache', '$templateRequest', '$q',
-	function(jsonLoader, model, schema, form, i18n, $http, $compile, $templateCache, $templateRequest, $q) {
+	function(jsonLoader, model, Schema, Form, i18n, $http, $compile, $templateCache, $templateRequest, $q) {
 		return {
 			restrict: 'A',
       scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
 				var controller = this, formBuffer = { pending: false, data: null };
 
+				if(!$scope.data) {
+					$scope.data = {};
+				}
+
 				if($scope.data.model) {
 					model.data = $scope.data.model;
 					model.locked = true;
 				}
 
-				controller.schema	= $scope.schema = new schema();
-				controller.form  	= $scope.form = new form();
+				controller.schema	= $scope.schema = new Schema();
+				controller.form  	= $scope.form = new Form();
 
 				$scope.onsave		= $scope.form.onsave;
 				$scope.template 	= $scope.data.template || 'default';
@@ -287,7 +307,7 @@ angular.module('formula')
 						$scope.schema.then(function(schemaData) {
 							if(schemaData) {
 								formBuffer.pending = false;
-								controller.form = $scope.form = new form(formURI);
+								controller.form = $scope.form = new Form(formURI);
 								$scope.form.onsave = $scope.onsave;
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
@@ -323,18 +343,18 @@ angular.module('formula')
 				}
 
 				// Enable form definition hot-swapping
-        $scope.$watch('data.form', function(uri) {
-            if(uri) {
-                formBuffer.pending = true;
-                jsonLoader(uri).then(function(data) {
-                    formBuffer.data = data;
-                    formBuild(uri);
-                });
-            } else {
-                formBuffer.data = null;
-                formBuild(null);
-            }
-        });
+				$scope.$watch('data.form', function(uri) {
+					if(uri) {
+						formBuffer.pending = true;
+						jsonLoader(uri).then(function(data) {
+							formBuffer.data = data;
+							 formBuild(uri);
+						});
+					} else {
+						formBuffer.data = null;
+						formBuild(null);
+					}
+				});
 
 				// Enable schema hot-swapping
 				$scope.$watch('data.schema', function(uri) {
@@ -388,6 +408,10 @@ angular.module('formula')
 			}]
 		};
 	}]);
+
+// End of strict
+})();
+
 
 /**
  * formula.js
