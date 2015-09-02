@@ -9,7 +9,7 @@
 				margin: 0;
 				overflow-y: scroll;
 			}
-			
+
 			.container
 			{
 				box-sizing: border-box;
@@ -20,15 +20,15 @@
 			}
 		</style>
 	</head>
-	
+
 	<body ng-app="demo" ng-controller="demoController">
 		<div class="container" formula="formulaData">
 		</div>
-		
+
 		<script src="js/angular.min.js"></script>
 		<script src="js/tv4.min.js"></script>
-		<script src="../dist/formula.min.js"></script>
-		
+		<script src="../dist/formula.js"></script>
+
 		<script>
 			angular.module('demo', ['formula'])
 				.controller('demoController', function($scope) {
@@ -36,8 +36,11 @@
 						schema: "json/demo-schema.json",
 						form: "json/demo-form.json",
 						template: null,
-						language: null,
-						model: {
+						language: null
+					};
+
+					setTimeout(function () {
+						$scope.formulaData.model = {
 							_id: 'foobarID',
 							string: 'foobar',
 							boolean: true,
@@ -62,8 +65,8 @@
 									]
 								}
 							]
-						}
-					};
+						};
+					}, 1000);
 				});
 		</script>
 	</body>

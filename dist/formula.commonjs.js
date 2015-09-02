@@ -327,7 +327,7 @@ angular.module('formula')
 
 						templateId = templateId || defaultTemplate;
 
-						if (templateId.substr(0, -5) !== '.html') {
+						if (templateId.substr(-5) !== '.html') {
 							templateId += '.html';
 						}
 
