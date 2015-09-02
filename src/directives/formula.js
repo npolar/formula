@@ -50,21 +50,27 @@ angular.module('formula')
 					}
 				}
 
-				function loadTemplate (template) {
+				function loadTemplate (templateId) {
 					return $q(function(resolve, reject) {
-						var templateName = 'formula/' + (template || 'default'), templateElement;
+						var prefix = 'formula/';
+						var defaultTemplate = 'default.html';
+						var templateCahceKey, templateElement;
 
-						if (templateName.substr(0, -5) !== '.html') {
-							templateName += '.html';
+						templateId = templateId || defaultTemplate;
+
+						if (templateId.substr(0, -5) !== '.html') {
+							templateId += '.html';
 						}
 
-						if(!(templateElement = $templateCache.get(templateName))) {
-							$templateRequest(template, false /* ingoreErrors */).then(function (tmpl) {
+						templateCahceKey = prefix + templateId;
+
+						if(!(templateElement = $templateCache.get(templateCahceKey))) {
+							$templateRequest(templateId, false /* ingoreErrors */).then(function (tmpl) {
 								templateElement = tmpl;
 								resolve(templateElement);
 							},
 							function () {
-								templateElement = $templateCache.get('formula/default.html');
+								templateElement = $templateCache.get(prefix + defaultTemplate);
 								resolve(templateElement);
 							});
 						} else {
@@ -142,4 +148,3 @@ angular.module('formula')
 
 // End of strict
 })();
-
