@@ -26,23 +26,17 @@
 		</div>
 
 		<script src="js/angular.min.js"></script>
+		<script src="../node_modules/angular-resource/angular-resource.min.js"></script>
 		<script src="js/tv4.min.js"></script>
 		<script src="../dist/formula.js"></script>
 
 		<script>
-			angular.module('demo', ['formula'])
-				.controller('demoController', function($scope) {
-					$scope.formulaData = {
-						schema: "json/demo-schema.json",
-						form: "json/demo-form.json",
-						template: null,
-						language: null
-					};
-
-					setTimeout(function () {
+			angular.module('demo', ['formula', 'ngResource'])
+				.controller('demoController', function($scope, $timeout, $resource) {
+					var updateModel = function () {
 						$scope.formulaData.model = {
 							_id: 'foobarID',
-							string: 'foobar',
+							string: 'timeoutfoobar',
 							boolean: true,
 							array_object: [
 								{ string_default: 'foo', number: 1 },
@@ -66,7 +60,33 @@
 								}
 							]
 						};
-					}, 1000);
+						console.log("timeout", $scope.formulaData.model.string);
+					};
+
+					var clearModel = function () {
+						$scope.formulaData.model.string = 'häst';
+					};
+
+					var getResource = function () {
+						resource.get({}, function (data) {
+							console.log("resource", data.string);
+							$scope.formulaData.model = data;
+						});
+					};
+
+					var resource = $resource('json/data.json');
+
+					$scope.formulaData = {
+						schema: "json/demo-schema.json",
+						form: "json/demo-form.json",
+						template: null,
+						language: null,
+						model: { string : 'initfoobar' }
+					};
+
+					getResource();
+					$timeout(updateModel, 1000);
+
 				});
 		</script>
 	</body>

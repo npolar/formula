@@ -398,7 +398,7 @@ angular.module('formula')
 
 				// Enable data hot-swapping
 				$scope.$watch('data.model', function(data) {
-					if(!formBuffer.pending && model.set(data)) {
+					if(model.set(data)) {
 						formBuild();
 					}
 
