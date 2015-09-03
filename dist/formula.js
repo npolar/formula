@@ -1778,32 +1778,32 @@ angular.module('formula')
  */
 
 angular.module('formula')
-	
-	/**
-	 * @factory model
-	 * 
-	 * Service used for data preservation.
-	 * 
-	 * @returns A singleton for preserving data
-	 */
-	
-	.service('formulaModel',
-	function() {
-        var model = {
-            data: {},
-            locked: false,
-            set: function(data) {
-                if(!this.locked) {
-                    this.data = data;
-					return true;
-				}
-				
-				return false;
-            }
-        };
-        
-        return model;
-	});
+
+/**
+ * @factory model
+ *
+ * Service used for data preservation.
+ *
+ * @returns A singleton for preserving data
+ */
+
+.service('formulaModel',
+  function() {
+    var model = {
+      data: {},
+      locked: false,
+      set: function(data) {
+        if (!this.locked && data) {
+          this.data = data;
+          return true;
+        }
+
+        return false;
+      }
+    };
+
+    return model;
+  });
 
 /**
  * formula.js
