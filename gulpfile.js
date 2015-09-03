@@ -76,14 +76,14 @@ gulp.task('default', [
 	'minify-css'
 ]);
 
-gulp.task('watch', ['default'], function() {
+gulp.task('watch', ['watch-js', 'watch-css'], function() {
 	gulp.watch('./src/**', ['default']);
 });
 
-gulp.task('watch-js', function() {
-	gulp.watch(['./src/*.js', './src/**/*.js'], ['compile-js', 'minify-js', 'compile-commonjs']);
+gulp.task('watch-js', ['default'], function() {
+	gulp.watch(['./src/**/*.js'], ['validate', 'compile-js', 'minify-js', 'compile-commonjs']);
 });
 
-gulp.task('watch-css', function() {
+gulp.task('watch-css', ['default'], function() {
 	gulp.watch('./src/*.css', ['compile-css', 'minify-css']);
 });
