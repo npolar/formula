@@ -311,9 +311,6 @@ angular.module('formula')
 								$scope.form.onsave = $scope.onsave;
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
-
-								$scope.form.uiSaveHidden		= $scope.data.saveHidden;
-								$scope.form.uiValidateHidden	= $scope.data.validateHidden;
 							}
 						});
 					}
@@ -409,6 +406,17 @@ angular.module('formula')
 				$scope.$watch('data.onsave', function(callback) {
 					if(callback) {
 						$scope.form.onsave = $scope.onsave = callback;
+					}
+				});
+
+				$scope.$watch('data', function(n, o) {
+					// Enable saveHidden and validateHidden toggling
+					if(n.saveHidden != o.saveHidden) {
+						$scope.form.uiSaveHidden = !!n.saveHidden;
+					}
+					
+					if(n.validateHidden != o.validateHidden) {
+						$scope.form.uiValidateHidden = !!n.validateHidden;
 					}
 				});
 			}]
