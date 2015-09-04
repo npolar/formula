@@ -42,6 +42,8 @@ angular.module('formula')
 								$scope.form.onsave = $scope.onsave;
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
+								$scope.form.uiSaveHidden = !!$scope.data.saveHidden;
+								$scope.form.uiValidateHidden = !!$scope.data.validateHidden;
 							}
 						});
 					}
