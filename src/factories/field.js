@@ -92,6 +92,10 @@ angular.module('formula')
 						case 'time':
 							replace = $filter('date')(new Date(), 'hh:mm:ss', 'UTC');
 							break;
+						
+						case 'year':
+							replace = $filter('date')(new Date(), 'yyyy', 'UTC');
+							break;
 
 						default:
 							log.warning(log.codes.FIELD_UNSUPPORTED_TOKEN, { token: match[1], field: this.path });

@@ -48,6 +48,14 @@ angular.module('formula')
 				
 				return 'ISO 8601 datetime';
 			},
+			datefullyear: // RCF 3339 four-digit year
+			function(data, schema) {
+				if(typeof data == 'string' && /^\d{4}$/.test(data)) {
+					return null;
+				}
+				
+				return 'RFC 3339 fullyear';
+			},
 			email: // RCF 3696 email
 			function(data, schema) {
 				var local = /^[-+a-z0-9!#$%&'*=?^_`{|}~\/]([-+a-z0-9!#$%&'*=?^_`{|}~\/]|\.(?!\.)){0,62}[-+a-z0-9!#$%&'*=?^_`{|}~\/]$/i,
