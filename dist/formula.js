@@ -525,6 +525,10 @@ angular.module('formula')
 						case 'time':
 							replace = $filter('date')(new Date(), 'hh:mm:ss', 'UTC');
 							break;
+						
+						case 'year':
+							replace = $filter('date')(new Date(), 'yyyy', 'UTC');
+							break;
 
 						default:
 							log.warning(log.codes.FIELD_UNSUPPORTED_TOKEN, { token: match[1], field: this.path });
@@ -1537,6 +1541,14 @@ angular.module('formula')
 				}
 				
 				return 'ISO 8601 datetime';
+			},
+			datefullyear: // RCF 3339 four-digit year
+			function(data, schema) {
+				if(typeof data == 'string' && /^\d{4}$/.test(data)) {
+					return null;
+				}
+				
+				return 'RFC 3339 fullyear';
 			},
 			email: // RCF 3696 email
 			function(data, schema) {
