@@ -27,6 +27,11 @@
 			"description": "string input with date-time format property set",
 			"format": "date-time"
 		},
+		"string_date": {
+			"type": "string",
+			"description": "string input with date format property set",
+			"format": "date"
+		},
 		"string_enum_default": {
 			"type": "string",
 			"description": "string input with enum and default properties set",
