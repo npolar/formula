@@ -144,6 +144,9 @@ angular.module('formula')
 							break;
 
 						case 'any':
+						case 'date':
+						case 'datetime':
+						case 'time':
 							elem.attr('type', 'text');
 							break;
 						}
