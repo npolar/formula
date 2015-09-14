@@ -38,7 +38,7 @@ angular.module('formula')
 					return null;
 				}
 				
-				return 'ISO 8601 date';
+				return 'ISO 8601 date, e.g. 2015-11-30 (year-month-day)';
 			},
 			datetime: // ISO 8601 datetime combination
 			function(data, schema) {
@@ -46,7 +46,7 @@ angular.module('formula')
 					return null;
 				}
 				
-				return 'ISO 8601 datetime';
+				return 'ISO 8601 datetime, e.g. 2015-11-30T23:45:30Z';
 			},
 			datefullyear: // RCF 3339 four-digit year
 			function(data, schema) {
@@ -54,7 +54,7 @@ angular.module('formula')
 					return null;
 				}
 				
-				return 'RFC 3339 fullyear';
+				return 'RFC 3339 fullyear, e.g. 2015';
 			},
 			email: // RCF 3696 email
 			function(data, schema) {
@@ -77,7 +77,7 @@ angular.module('formula')
 					return null;
 				}
 				
-				return 'ISO 8601 time';
+				return 'ISO 8601 time, e.g. 23:45:30';
 			},
 			uri: // RFC 3986 URI
 			function(data, schema) {
