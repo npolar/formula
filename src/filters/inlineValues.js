@@ -26,16 +26,6 @@ angular.module('formula')
 					result.push('Array[' + field.value.length + ']');
 				} else switch(typeof field.value) {
 					case 'string':
-						var strlen = field.value.length;
-						
-						if(strlen && strlen < 10) {
-							result.push(field.value);
-						} else if(strlen) {
-							result.push(field.value.substr(0, 10) + '...');
-						}
-						
-						break;
-						
 					case 'number':
 					case 'boolean':
 						result.push(field.value);
