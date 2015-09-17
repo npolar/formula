@@ -51,7 +51,7 @@
 							<li class="list-group-item" ng-repeat="value in field.values">
 								<fieldset>
 									<legend style="border: none; margin-bottom: 10px; text-align: right;">
-										<span ng-class="{ 'text-danger': !value.valid, 'text-success': value.valid }" class="pull-left" ng-if="!value.visible">{{ value.fields | formulaInlineValues }}</span>
+										<span ng-class="{ 'text-danger': !value.valid, 'text-success': value.valid }" class="pull-left" ng-if="!value.visible" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 80%; text-align: left;">{{ value.fields | formulaInlineValues }}</span>
 										<button style="font-family: monospace;" class="btn btn-sm btn-info" ng-click="field.itemToggle($index)" type="button" title="{{ value.visible ? form.i18n.minimize[1] : form.i18n.maximize[1] }}">{{ value.visible ? '_' : '‾' }}</button>
 										<button class="btn btn-sm btn-danger" ng-click="field.itemRemove($index)" type="button" title="{{ form.i18n.remove[1] }}">X</button>
 									</legend>
