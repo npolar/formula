@@ -146,6 +146,7 @@
 	top: .5em;
 	width: 90%;
 	overflow: hidden;
+	text-align: left;
 	text-overflow: ellipsis;
 	white-space: nowrap; 
 }
