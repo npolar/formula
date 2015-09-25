@@ -1,6 +1,6 @@
 {
   "name": "formula",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "formula =======",
   "main": "dist/formula.commonjs.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/npolar/formula.git"
   },
-  "author": "Remi",
+  "author": "@npolar",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/npolar/formula/issues"
