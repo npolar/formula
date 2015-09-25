@@ -1162,7 +1162,7 @@ angular.module('formula')
 					if(this.type == "object") {
 						for(i in this.fields) {
 							if(model[this.id][this.fields[i].id]) {
-								this.fields[i].value = model[this.id][this.fields[i].id];
+								this.fields[i].valueFromModel(model[this.id]);
 							}
 						}
 					} else if(this.type == "array:fieldset") {
