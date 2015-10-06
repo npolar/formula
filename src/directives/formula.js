@@ -151,6 +151,8 @@ angular.module('formula')
 					if(n.validateHidden != o.validateHidden) {
 						$scope.form.uiValidateHidden = !!n.validateHidden;
 					}
+					
+					$scope.data.formula = $scope.form;
 				});
 			}]
 		};
