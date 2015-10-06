@@ -38,7 +38,7 @@ angular.module('formula')
 						$scope.schema.then(function(schemaData) {
 							if(schemaData) {
 								formBuffer.pending = false;
-								controller.form = $scope.form = new Form(formURI);
+								controller.form = $scope.form = $scope.data.formula = new Form(formURI);
 								$scope.form.onsave = $scope.onsave;
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
@@ -151,8 +151,6 @@ angular.module('formula')
 					if(n.validateHidden != o.validateHidden) {
 						$scope.form.uiValidateHidden = !!n.validateHidden;
 					}
-					
-					$scope.data.formula = $scope.form;
 				});
 			}]
 		};
