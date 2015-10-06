@@ -56,6 +56,6 @@ The following layout templates are bundled with Formula:
 ## Supported string formats
 * **color** for CSS 2.1 colors
 * **date** for ISO 8601 date
-* **date-time** for ISO 8601 date-time combindations
+* **date-time** for ISO 8601 date-time combinations
 * **time** for ISO 8601 time
 * **uri** for RFC 3986 uniform resource identifier
