@@ -46,6 +46,7 @@ angular.module('formula')
 		 */
 		
 		function form(uri) {
+			this.dirty = false;
 			this.errors = null;
 			this.fieldsets = null;
 			this.i18n = i18n(null);

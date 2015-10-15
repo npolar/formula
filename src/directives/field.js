@@ -109,6 +109,10 @@ angular.module('formula')
 					scope.$watch('field.value', function(n, o) {
 						if(!field.dirty && (n !== o)) {
 							field.dirty = true;
+							
+							if(field.form && !field.form.dirty) {
+								field.form.dirty = true;
+							}
 						}
 
 						if(!field.parents) {
