@@ -238,6 +238,10 @@ angular.module('formula')
 				this.errors = [];
 				
 				function fieldValidate(field) {
+					if(!self.dirty && field.dirty) {
+						self.dirty = true;
+					}
+					
 					if(field.typeOf('array')) {
 						angular.forEach(field.values, function(value) {
 							if(field.typeOf('fieldset')) {
