@@ -1327,6 +1327,22 @@ angular.module('formula')
 			},
 			
 			/**
+			 * @method toggleArrays
+			 *
+			 * Function used to collapse/expand all arrays in the form.
+			 */
+			
+			toggleArrays: function() {
+				angular.forEach(this.fieldsets, function(fieldset) {
+					angular.forEach(fieldset.fields, function(field) {
+						angular.forEach(field.values, function(value, index) {
+							field.itemToggle(index);
+						});
+					});
+				});
+			},
+			
+			/**
 			 * @method save
 			 * 
 			 * Function calling a provided callback function used to save the form.
