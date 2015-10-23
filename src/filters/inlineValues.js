@@ -2,7 +2,7 @@
  * formula.js
  * Generic JSON Schema form builder
  *
- * Norsk Polarinstutt 2014, http://npolar.no/
+ * Norsk Polarinstutt 2015, http://npolar.no/
  */
 
 angular.module('formula')
@@ -18,11 +18,7 @@ angular.module('formula')
 			var result = [];
 			
 			angular.forEach(input, function(field) {
-				if(field.value === null) {
-					result.push('null');
-				} else if(field.value === undefined) {
-					result.push('undefined');
-				} else if(field.value instanceof Array) {
+				if(field.value instanceof Array) {
 					result.push('Array[' + field.value.length + ']');
 				} else switch(typeof field.value) {
 					case 'string':
@@ -32,7 +28,6 @@ angular.module('formula')
 						break;
 						
 					default:
-						result.push('Object');
 				}
 			});
 			
