@@ -66,6 +66,10 @@
   padding: 15px 15px 0 15px;
 }
 
+.formula > fieldset input ~ * {
+  font-size: 14px;
+}
+
 .formula > fieldset > legend {
   display: none;
 }
@@ -255,7 +259,7 @@
   left: 0;
 }
 
-.formula label + * + span {
+.formula label ~ span {
   padding-left: 30%;
 }
 
