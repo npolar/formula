@@ -32,7 +32,7 @@ angular.module('formula')
 					attrs.$set('disabled', 'disabled');
 				}
 
-				var elem = angular.element(element);
+				var elem = angular.element(element), schemaType;
 				var type = field.type ? field.type.split(':') : null;
 				type = type ? { main: type[0], sub: type[1] } : null;
 
@@ -100,6 +100,15 @@ angular.module('formula')
 				}
 
 				elem.addClass(path);
+
+				// Add css class of schema type
+				if((schemaType = field.schema.type)) {
+					elem.addClass(
+						"formula" +
+						schemaType.charAt(0).toUpperCase() +
+						schemaType.slice(1)
+					);
+				}
 
 				$compile(elem)(scope, function (cloned, scope) {
 					element.replaceWith(cloned);
