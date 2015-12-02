@@ -158,9 +158,9 @@ angular.module('formula')
 							case 'date':
 							case 'datetime':
 							case 'time':
+							case 'file':
 								this.type = 'input:' + formatNoDash;
 								break;
-
 							default:
 								this.type = 'input:text';
 							}
@@ -252,7 +252,10 @@ angular.module('formula')
 						case 'text':
 							this.type = 'input:text';
 							break;
-
+						case 'file':
+						case 'input:file':
+							this.type = 'input:file';
+							break;
 						case undefined:
 							this.type = (this.type || 'input:text');
 							break;
