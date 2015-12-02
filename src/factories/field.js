@@ -92,7 +92,7 @@ angular.module('formula')
 						case 'time':
 							replace = $filter('date')(new Date(), 'hh:mm:ss', 'UTC');
 							break;
-						
+
 						case 'year':
 							replace = $filter('date')(new Date(), 'yyyy', 'UTC');
 							break;
@@ -334,7 +334,6 @@ angular.module('formula')
 							newField.required = (schema.required && schema.required.indexOf(key) != -1);
 
 							if(newField.type) {
-								newField.index = this.fields.length;
 								this.fields.push(newField);
 							}
 						}, this);
