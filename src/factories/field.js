@@ -379,6 +379,8 @@ angular.module('formula')
 			 *
 			 * Function used to add a copy of the subfields for validating.
 			 * The values of each fieldset are automatically monitored.
+			 *
+			 * @returns Reference to the item just added
 			 */
 
 			itemAdd: function() {
@@ -412,7 +414,10 @@ angular.module('formula')
 					}
 
 					this.validate(true, false);
+					return this.values[index];
 				}
+
+				return null;
 			},
 
 			/**
