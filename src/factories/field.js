@@ -69,7 +69,7 @@ angular.module('formula')
 			 */
 
 			attrsSet: function(source) {
-				var attribs = 'condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,pattern,required,step,title,values'.split(',');
+				var attribs = 'condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,pattern,readonly,required,step,title,values'.split(',');
 				angular.forEach(source, function(v, k) {
 					if(attribs.indexOf(k) != -1) {
 						this[k] = v;
@@ -158,7 +158,6 @@ angular.module('formula')
 							case 'date':
 							case 'datetime':
 							case 'time':
-							case 'file':
 								this.type = 'input:' + formatNoDash;
 								break;
 							default:
@@ -251,10 +250,6 @@ angular.module('formula')
 						case 'string':
 						case 'text':
 							this.type = 'input:text';
-							break;
-						case 'file':
-						case 'input:file':
-							this.type = 'input:file';
 							break;
 						case undefined:
 							this.type = (this.type || 'input:text');

@@ -32,6 +32,10 @@ angular.module('formula')
 					attrs.$set('disabled', 'disabled');
 				}
 
+				if(field.readonly) {
+					attrs.$set('readonly', 'readonly');
+				}
+
 				var elem = angular.element(element), schemaType;
 				var type = field.type ? field.type.split(':') : null;
 				type = type ? { main: type[0], sub: type[1] } : null;
@@ -204,4 +208,3 @@ angular.module('formula')
 
 // End of strict
 })();
-
