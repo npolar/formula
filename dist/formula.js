@@ -1781,18 +1781,18 @@ angular.module('formula')
  */
 
 angular.module('formula')
-	
+
 	/**
 	 * @factory log
-	 * 
+	 *
 	 * Service used for logging debug information.
-	 * 
+	 *
 	 * @returns A singleton for logging debug, warning and error messages
 	 */
-	
+
 	.factory('formulaLog',
-	['$log',
-	function($log) {
+	[
+	function() {
 		var codes = {
 			FIELD_INVALID_ID: 'field ID contains an illegal character: {character} ({field})',
 			FIELD_MISSING_PROPERTY: 'missing required field property: {property} ({field})',
@@ -1807,7 +1807,7 @@ angular.module('formula')
 			SCHEMA_MISSING_PROPERTY: 'missing required schema property: {property} ({schema})',
 			SCHEMA_MISSING_REFERENCE: 'missing schema reference: {schema}'
 		};
-		
+
 		function codeTranslate(code, params) {
 			var msg = code, match = msg.match(/\{[^\}]*\}/g);
 			angular.forEach(match, function(v, k) {
@@ -1815,21 +1815,21 @@ angular.module('formula')
 			});
 			return msg;
 		}
-		
+
 		return {
 			codes: codes,
 			debug: function(msg, params) {
 				if(params) {
-					$log.debug(codeTranslate(msg, params));
+					console.debug(codeTranslate(msg, params));
 				} else {
-					$log.debug(msg);
+					console.debug(msg);
 				}
 			},
 			error: function(code, params) {
-				$log.error(codeTranslate(code, params));
+				console.error(codeTranslate(code, params));
 			},
 			warning: function(code, params) {
-				$log.warn(codeTranslate(code, params));
+				console.warn(codeTranslate(code, params));
 			}
 		};
 	}]);
