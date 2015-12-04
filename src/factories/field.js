@@ -69,7 +69,7 @@ angular.module('formula')
 			 */
 
 			attrsSet: function(source) {
-				var attribs = 'condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,pattern,readonly,required,step,title,values'.split(',');
+				var attribs = 'autocomplete,condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,pattern,readonly,required,step,title,values'.split(',');
 				angular.forEach(source, function(v, k) {
 					if(attribs.indexOf(k) != -1) {
 						this[k] = v;
