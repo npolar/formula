@@ -389,15 +389,31 @@ angular.module('formula')
 						parents.push(parent);
 					});
 					parents.push({ id: this.id, index: this.index });
-
+					var self = this;
 					if(this.typeOf('fieldset')) {
-						index = this.values.push({ fields: angular.copy(this.fields), visible: true, valid: true }) - 1;
-
+						index = this.values.length;
+						// Anders super hack to treat all values as field! (no clue what I'm doing)
+						var arrObj = Object.create(this);
+						angular.extend(arrObj, {
+						  fields: angular.copy(this.fields),
+						  visible: true,
+						  valid: true,
+						  type: 'object',
+						  schema: this.schema.items,
+						  //form: this.form,
+							id: this.id + index,
+							path: this.path + '/' + index,
+							index: index,
+							parents: parents,
+							uid: arrObj.uidGen()
+						});
+						this.values.push(arrObj);
 						angular.forEach(this.values[index].fields, function(field) {
 							field.index = index;
 							field.parents = parents;
 							field.uidGen();
 							field.pathGen();
+							field.visible = true;
 						});
 					} else {
 						index = this.values.push(angular.copy(this.fields[0])) - 1;
@@ -571,6 +587,7 @@ angular.module('formula')
 					var fieldError = null, tempValue, match;
 
 					switch(this.type) {
+					case 'array:fieldset':
 					case 'array:field':
 						this.value = [];
 						angular.forEach(this.values, function(field) {
@@ -580,30 +597,28 @@ angular.module('formula')
 						}, this);
 						break;
 
-					case 'array:fieldset':
-						this.value = [];
-						angular.forEach(this.values, function(fieldset, index) {
-							this.value.push({});
-							fieldset.valid = true;
-
-							angular.forEach(fieldset.fields, function(field) {
-								if(field.dirty || (field.value !== null) || field.typeOf('array object')) {
-									if(field.validate(silent, false)) {
-										this.value[index][field.id] = field.value;
-									} else fieldset.valid = false;
-								} else fieldset.valid = false;
-							}, this);
-						}, this);
-
-						// Remove invalid array elements
-						for(var i = 0; i < this.value.length; ++i) {
-							if(!tv4.validate([this.value[i]], this.schema)) {
-								this.value.splice(i--, 1);
-								fieldError = tv4.error;
-								continue;
-							}
-						}
-						break;
+					//case 'array:fieldset':
+						// this.value = [];
+						// angular.forEach(this.values, function(field, index) {
+						// 	this.value.push({});
+						// 	field.valid = true;
+						//
+						// 	if(field.dirty || (field.value !== null) || field.typeOf('array object')) {
+						// 		if(field.validate(silent, false)) {
+						// 			this.value[index][field.id] = field.value;
+						// 		} else field.valid = false;
+						// 	} else field.valid = false;
+						// }, this);
+						//
+						// // Remove invalid array elements
+						// for(var i = 0; i < this.value.length; ++i) {
+						// 	if(!tv4.validate([this.value[i]], this.schema)) {
+						// 		this.value.splice(i--, 1);
+						// 		fieldError = tv4.error;
+						// 		continue;
+						// 	}
+						// }
+						//break;
 
 					case 'input:any':
 						if(this.value) {
@@ -739,7 +754,7 @@ angular.module('formula')
 
 						for(i in model[this.id]) {
 							this.itemAdd();
-
+							this.values[i].value = model[this.id][i];
 							for(j in this.values[i].fields) {
 								this.values[i].fields[j].valueFromModel(model[this.id][i]);
 							}

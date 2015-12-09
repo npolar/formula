@@ -261,13 +261,15 @@ angular.module('formula')
 
 					if(field.typeOf('array')) {
 						angular.forEach(field.values, function(value) {
-							if(field.typeOf('fieldset')) {
-								angular.forEach(value.fields, function(field) {
-									fieldValidate(field);
-								});
-							} else {
-								fieldValidate(value);
-							}
+							fieldValidate(value);
+							// Anders hack, only fields in arrays
+							// if(field.typeOf('fieldset')) {
+							// 	angular.forEach(value.fields, function(field) {
+							// 		fieldValidate(field);
+							// 	});
+							// } else {
+							// 	fieldValidate(value);
+							// }
 						});
 					} else if(field.typeOf('object')) {
 						angular.forEach(field.fields, function(subfield) {

@@ -30,4 +30,3 @@ angular.module('formula')
 
 // End of strict
 })();
-

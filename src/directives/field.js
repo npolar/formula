@@ -133,8 +133,8 @@ angular.module('formula')
 						field.validate(false, true);
 					}, true);
 				} else if(type.main === 'array') {
-					scope.$watch('field.values', function() {
-						field.validate(false, true);
+					scope.$watch('field.values', function(n,o) {
+					 	field.validate(false, true);
 					}, true);
 				}
 

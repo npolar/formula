@@ -147,7 +147,7 @@ angular.module('formula')
 					if(n.saveHidden != o.saveHidden) {
 						$scope.form.uiSaveHidden = !!n.saveHidden;
 					}
-					
+
 					if(n.validateHidden != o.validateHidden) {
 						$scope.form.uiValidateHidden = !!n.validateHidden;
 					}

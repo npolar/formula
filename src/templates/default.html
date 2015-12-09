@@ -2,36 +2,37 @@
 	<header ng-if="form.title">
 		{{ form.title }}
 	</header>
-	
+
 	<nav ng-if="form.fieldsets.length > 1">
 		<a ng-repeat="fieldset in form.fieldsets" ng-class="{ active: fieldset.active }" href="" ng-click="form.activate(fieldset)">{{ fieldset.title }}</a>
 	</nav>
-	
+
 	<fieldset ng-repeat="fieldset in form.fieldsets" ng-if="fieldset.active">
 		<legend ng-if="fieldset.title">{{ fieldset.title }}</legend>
-		
+
 		<div ng-repeat="field in fieldset.fields" ng-show="field.visible" formula:field-definition>
+
 			<div ng-if="field.typeOf('input')" title="{{ field.description }}" ng-class="{ valid: field.valid, error: field.error, required: (field.required && field.value === null) }">
 				<label for="{{ field.uid }}">{{ field.title }}</label>
 				<input formula:field="field" />
 				<span>{{ field.error || field.description }}</span>
 			</div>
-			
+
 			<div ng-if="field.typeOf('object')">
 				<fieldset formula:field="field">
 					<legend ng-if="field.title">{{ field.title }}</legend>
-					
+
 					<div ng-repeat="field in field.fields" ng-show="field.visible">
 						<formula:field-instance field="field" />
 					</div>
 				</fieldset>
 			</div>
-			
+
 			<div ng-if="field.typeOf('array')">
 				<div formula:field="field">
 					<fieldset ng-class="{ valid: field.valid, error: field.error }">
 						<legend>{{ field.title }} ({{ field.values.length || 0 }})</legend>
-						
+
 						<ul ng-if="field.typeOf('fieldset')">
 							<li ng-repeat="value in field.values">
 								<fieldset ng-class="{ valid: value.valid }">
@@ -40,10 +41,8 @@
 										<a href="" class="toggle" ng-click="field.itemToggle($index)" title="{{ value.visible ? form.i18n.minimize[1] : form.i18n.maximize[1] }}">{{ value.visible ? '_' : '‾' }}</a>
 										<a href="" class="remove" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
 									</legend>
-									
-									<div ng-repeat="subfield in field.fields" ng-show="value.visible">
-										<formula:field-instance field="value.fields[$index]" ng-show="subfield.visible" />
-									</div>
+
+									<formula:field-instance field="value" ng-show="value.visible"/>
 								</fieldset>
 							</li>
 							<li>
@@ -51,7 +50,7 @@
 								<button class="add" ng-click="field.itemAdd()" type="button" title="{{ form.i18n.add[1] }}"><strong>+</strong> {{ form.i18n.add[0] }}</button>
 							</li>
 						</ul>
-						
+
 						<ul ng-if="field.typeOf('field')">
 							<li ng-repeat="value in field.values" ng-class="{ valid: value.valid, error: value.error }">
 								<input formula:field="value" />
@@ -68,7 +67,7 @@
 			</div>
 		</div>
 	</fieldset>
-	
+
 	<footer>
 		<span ng-if="form.errors" title="{{ form.errors.join('\n') }}">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span>
 		<button ng-if="!form.uiValidateHidden" ng-click="form.validate()" title="{{ form.i18n.validate[1] }}"><strong>&#10003;</strong> {{ form.i18n.validate[0] }}</button>
