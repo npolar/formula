@@ -1,5 +1,7 @@
-(function() {
 "use strict";
+/* globals angular */
+
+(function() {
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -28,5 +30,5 @@ angular.module('formula')
 		};
 	}]);
 
-// End of strict
+
 })();

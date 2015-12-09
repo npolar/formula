@@ -1,3 +1,6 @@
+"use strict";
+/* globals angular,tv4 */
+
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -17,15 +20,15 @@ angular.module('formula')
 
 	.factory('formulaForm',
 	['formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
-	function(jsonLoader, model, field, i18n) {
+	function(jsonLoader, model, Field, i18n) {
 		function fieldsetFromSchema(form, schema) {
-			if(schema && schema.type == 'object') {
+			if(schema && schema.type === 'object') {
 				var fields = [];
 
 				angular.forEach(schema.properties, function(val, key) {
-					var newField = new field(val, key);
+					var newField = new Field(val, key);
 					newField.form = form;
-					newField.required = newField.required || (schema.required && schema.required.indexOf(key) != -1);
+					newField.required = newField.required || (schema.required && schema.required.indexOf(key) !== -1);
 					newField.valueFromModel(model.data);
 
 					fields.push(newField);
@@ -45,8 +48,7 @@ angular.module('formula')
 		 * @param uri Optional URI to form definition object
 		 */
 
-		function form(uri) {
-			this.dirty = false;
+		function Form(uri) {
 			this.errors = null;
 			this.fieldsets = null;
 			this.i18n = i18n(null);
@@ -60,7 +62,7 @@ angular.module('formula')
 			};
 		}
 
-		form.prototype = {
+		Form.prototype = {
 
 			/**
 			 * @method activate
@@ -73,8 +75,8 @@ angular.module('formula')
 
 			activate: function(fieldset) {
 				angular.forEach(this.fieldsets, function(f, i) {
-					if(typeof fieldset == 'object' || typeof fieldset == 'number') {
-						if((typeof fieldset == 'object') ? (f === fieldset) : (i === fieldset)) {
+					if(typeof fieldset === 'object' || typeof fieldset === 'number') {
+						if((typeof fieldset === 'object') ? (f === fieldset) : (i === fieldset)) {
 							f.active = true;
 						} else {
 							f.active = false;
@@ -93,17 +95,17 @@ angular.module('formula')
 			 */
 
 			build: function(schema, form) {
-				if(typeof schema == 'object') {
+				if(typeof schema === 'object') {
 					var baseForm = fieldsetFromSchema(this, schema);
 					baseForm.fieldExtended = function(formField) {
 						for(var i = 0; i < this.length; ++i) {
-							var obj = (typeof formField == 'object');
-							if(this[i].id == (obj ? formField.id : formField)) {
+							var obj = (typeof formField === 'object');
+							if(this[i].id === (obj ? formField.id : formField)) {
 								if(obj) {
-									var ret = new field(this[i]);
+									var ret = new Field(this[i]);
 									return ret.attrsSet(formField);
 								}
-								return new field(this[i]);
+								return new Field(this[i]);
 							}
 						}
 						return null;
@@ -165,7 +167,7 @@ angular.module('formula')
 					throw this.errors;
 				}
 
-				if(typeof this.onsave == 'function') {
+				if(typeof this.onsave === 'function') {
 					this.onsave(model.data);
 				}
 			},
@@ -182,7 +184,7 @@ angular.module('formula')
 				function fieldTranslate(field, parent) {
 					var fieldTranslation = (parent && parent.fields ? (parent.fields[field.id] || null) : null);
 
-					if(field.type == 'array:fieldset' || field.type == 'object') {
+					if(field.type === 'array:fieldset' || field.type === 'object') {
 						angular.forEach(field.fields, function(field) {
 							fieldTranslate(field, fieldTranslation);
 						});
@@ -259,36 +261,16 @@ angular.module('formula')
 						self.dirty = true;
 					}
 
-					if(field.typeOf('array')) {
-						angular.forEach(field.values, function(value) {
-							fieldValidate(value);
-							// Anders hack, only fields in arrays
-							// if(field.typeOf('fieldset')) {
-							// 	angular.forEach(value.fields, function(field) {
-							// 		fieldValidate(field);
-							// 	});
-							// } else {
-							// 	fieldValidate(value);
-							// }
-						});
-					} else if(field.typeOf('object')) {
-						angular.forEach(field.fields, function(subfield) {
-							fieldValidate(subfield);
-						});
-					}
-
 					if((field.typeOf('array checkbox object select')) || (field.required || field.dirty || field.value !== null)) {
-						// Fields with a default value are always validated verbosely
 						if(!field.validate(field.dirty ? false : silent, false)) {
 							self.errors.push(field.path + ' (' + tv4.error.message + ')');
 							return false;
 						}
-
 						return true;
 					}
-
 					return null; // Field not required, or untouched
 				}
+
 
 				model.locked = true;
 				var tempModel = angular.copy(model.data);
@@ -304,8 +286,8 @@ angular.module('formula')
 								delete model.data[field.id];
 							}
 						}
-					}, this);
-				}, this);
+					});
+				});
 
 				if(angular.equals(tempModel, model.data)) {
 					model.locked = false;
@@ -319,5 +301,5 @@ angular.module('formula')
 			}
 		};
 
-		return form;
+		return Form;
 	}]);

@@ -1,210 +1,224 @@
-(function() {
 "use strict";
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
+/* globals angular */
 
-angular.module('formula')
-	.directive('formulaField',
-	['$compile', 'formulaModel',
-	function($compile, model) {
-		return {
-			restrict: 'A',
-			require: [ '^formula', '?^formulaFieldInstance' ],
-			scope: { field: '=formulaField' },
-			link: function(scope, element, attrs, controller) {
-				var field = scope.field;
-				scope.form = controller[0].form;
-				scope.backupValue = null;
+(function() {
 
-				if(controller[1]) {
-					scope.field = controller[1].field;
-				}
+  /**
+   * formula.js
+   * Generic JSON Schema form builder
+   *
+   * Norsk Polarinstutt 2014, http://npolar.no/
+   */
 
-				attrs.$set('id', field.uid);
-				attrs.$set('ngModel', 'field.value');
-				attrs.$set('formulaField'); // unset
+  angular.module('formula')
+    .directive('formulaField', ['$compile', 'formulaModel',
+      function($compile, model) {
+        return {
+          restrict: 'A',
+          require: ['^formula', '?^formulaFieldInstance'],
+          scope: {
+            field: '=formulaField'
+          },
+          link: function(scope, element, attrs, controller) {
+            var field = scope.field;
+            scope.form = controller[0].form;
+            scope.backupValue = null;
 
-				if(field.disabled) {
-					attrs.$set('disabled', 'disabled');
-				}
+            if (controller[1]) {
+              scope.field = controller[1].field;
+            }
 
-				if(field.readonly) {
-					attrs.$set('readonly', 'readonly');
-				}
+            attrs.$set('id', field.uid);
+            attrs.$set('ngModel', 'field.value');
+            attrs.$set('formulaField'); // unset
 
-				var elem = angular.element(element), schemaType;
-				var type = field.type ? field.type.split(':') : null;
-				type = type ? { main: type[0], sub: type[1] } : null;
+            if (field.disabled) {
+              attrs.$set('disabled', 'disabled');
+            }
 
-				if(type.main === 'input') {
-					switch(type.sub) {
-					case 'textarea':
-						elem = angular.element('<textarea>');
-						break;
+            if (field.readonly) {
+              attrs.$set('readonly', 'readonly');
+            }
 
-					case 'select':
-						elem = angular.element('<select>');
+            var elem = angular.element(element),
+              schemaType;
+            var type = field.type ? field.type.split(':') : null;
+            type = type ? {
+              main: type[0],
+              sub: type[1]
+            } : null;
 
-						if(element.children().length) {
-							angular.forEach(element.children(), function(child) {
-								elem.append(child);
-							});
-						} else {
-							elem.attr('ng-options', 'value.id as value.label for value in field.values');
-						}
+            if (type.main === 'input') {
+              switch (type.sub) {
+                case 'textarea':
+                  elem = angular.element('<textarea>');
+                  break;
 
-						if(field.multiple) {
-							elem.attr('multiple', 'multiple');
-						}
-						break;
+                case 'select':
+                  elem = angular.element('<select>');
 
-					default:
-						elem = angular.element('<input>');
-						elem.attr('type', type.sub);
+                  if (element.children().length) {
+                    angular.forEach(element.children(), function(child) {
+                      elem.append(child);
+                    });
+                  } else {
+                    elem.attr('ng-options', 'value.id as value.label for value in field.values');
+                  }
 
-						switch(type.sub) {
-						case 'number':
-						case 'range':
-							if(field.step !== null) {
-								elem.attr('step', field.step);
-							}
-							break;
+                  if (field.multiple) {
+                    elem.attr('multiple', 'multiple');
+                  }
+                  break;
 
-						case 'any':
-						case 'date':
-						case 'datetime':
-						case 'time':
-							elem.attr('type', 'text');
-							break;
-						}
-					}
+                default:
+                  elem = angular.element('<input>');
+                  elem.attr('type', type.sub);
 
-					angular.forEach(attrs, function(val, key) {
-						if(attrs.$attr[key]) {
-							elem.attr(attrs.$attr[key], val);
-						}
-					});
-				}
+                  switch (type.sub) {
+                    case 'number':
+                    case 'range':
+                      if (field.step !== null) {
+                        elem.attr('step', field.step);
+                      }
+                      break;
 
-				// Add class based on field parents and ID
-				var path = 'formula-';
+                    case 'any':
+                    case 'date':
+                    case 'datetime':
+                    case 'time':
+                      elem.attr('type', 'text');
+                      break;
+                  }
+              }
 
-				angular.forEach(field.parents, function(parent) {
-					path += parent.id + '/';
-				});
+              angular.forEach(attrs, function(val, key) {
+                if (attrs.$attr[key]) {
+                  elem.attr(attrs.$attr[key], val);
+                }
+              });
+            }
 
-				if(field.id) {
-					path += field.id;
-				} else if(field.parents) {
-					path = path.substr(0, path.length - 1);
-				}
+            // Add class based on field parents and ID
+            var path = 'formula-';
 
-				elem.addClass(path);
+            angular.forEach(field.parents, function(parent) {
+              path += parent.id + '/';
+            });
 
-				// Add css class of schema type
-				if((schemaType = field.schema.type)) {
-					elem.addClass(
-						"formula" +
-						schemaType.charAt(0).toUpperCase() +
-						schemaType.slice(1)
-					);
-				}
+            if (field.id) {
+              path += field.id;
+            } else if (field.parents) {
+              path = path.substr(0, path.length - 1);
+            }
 
-				$compile(elem)(scope, function (cloned, scope) {
-					element.replaceWith(cloned);
-				});
+            elem.addClass(path);
 
-				if(type.main === 'input') {
-					scope.$watch('field.value', function(n, o) {
-						if(!field.dirty && (n !== o)) {
-							field.dirty = true;
-						}
+            // Add css class of schema type
+            if ((schemaType = field.schema.type)) {
+              elem.addClass(
+                "formula" +
+                schemaType.charAt(0).toUpperCase() +
+                schemaType.slice(1)
+              );
+            }
 
-						if(!field.parents) {
-							field.validate(true, true);
-						}
-					});
-				} else if(type.main === 'object') {
-					scope.$watch('field.fields', function() {
-						field.validate(false, true);
-					}, true);
-				} else if(type.main === 'array') {
-					scope.$watch('field.values', function(n,o) {
-					 	field.validate(false, true);
-					}, true);
-				}
+            $compile(elem)(scope, function(cloned, scope) {
+              element.replaceWith(cloned);
+            });
 
-				// Evaluate condition
-				if(field.condition) {
-					scope.model = model.data;
-					scope.$watchCollection('model', function(model) {
-						var pass = true, condition = (field.condition instanceof Array ? field.condition : [ field.condition ]);
+            if (type.main === 'input') {
+              scope.$watch('field.value', function(n, o) {
+                if (!field.dirty && (n !== o)) {
+                  field.dirty = true;
+                }
 
-						angular.forEach(condition, function(cond) {
-							var local = model, parents = field.parents, pathSplitted;
+                if (!field.parents) {
+                  field.validate(true, true);
+                }
+              });
+            } else if (type.main === 'object') {
+              scope.$watch('field.fields', function() {
+                field.validate(false, true);
+              }, true);
+            } else if (type.main === 'array') {
+              scope.$watch('field.values', function() {
+                field.validate(false, true);
+              }, true);
+            }
 
-							if(pass) {
-								// Absolute JSON path
-								if(cond[0] === '#') {
-									parents = [];
+            // Evaluate condition
+            if (field.condition) {
+              scope.model = model.data;
+              scope.$watchCollection('model', function(model) {
+                var pass = true,
+                  condition = (field.condition instanceof Array ? field.condition : [field.condition]);
 
-									// Slash-delimited resolution
-									if(cond[1] === '/') {
-										pathSplitted = cond.substr(1).split('/');
-									}
+                angular.forEach(condition, function(cond) {
+                  var local = model,
+                    parents = field.parents,
+                    pathSplitted;
 
-									// Dot-delimited resolution
-									else {
-										pathSplitted = cond.substr(1).split('.');
-										if(!pathSplitted[0].length) {
-											parents.splice(0, 1);
-										}
-									}
+                  if (pass) {
+                    // Absolute JSON path
+                    if (cond[0] === '#') {
+                      parents = [];
 
-									angular.forEach(pathSplitted, function(split, index) {
-										if(isNaN(split)) {
-											parents.push({ id: split, index: null });
-										} else if(index > 0) {
-											parents[index - 1].index = Number(split);
-										}
-									});
+                      // Slash-delimited resolution
+                      if (cond[1] === '/') {
+                        pathSplitted = cond.substr(1).split('/');
+                      }
 
-									cond = parents[parents.length - 1].id;
-									parents.splice(parents.length - 1, 1);
-								}
+                      // Dot-delimited resolution
+                      else {
+                        pathSplitted = cond.substr(1).split('.');
+                        if (!pathSplitted[0].length) {
+                          parents.splice(0, 1);
+                        }
+                      }
 
-								angular.forEach(parents, function(parent) {
-									if(local) {
-										local = (parent.index !== null ? local[parent.index][parent.id] : local[parent.id]);
-									}
-								});
+                      angular.forEach(pathSplitted, function(split, index) {
+                        if (isNaN(split)) {
+                          parents.push({
+                            id: split,
+                            index: null
+                          });
+                        } else if (index > 0) {
+                          parents[index - 1].index = Number(split);
+                        }
+                      });
 
-								if(local && field.index !== null) {
-									local = local[field.index];
-								}
+                      cond = parents[parents.length - 1].id;
+                      parents.splice(parents.length - 1, 1);
+                    }
 
-								var evaluate = scope.$eval(cond, local);
-								if(!local || evaluate === undefined || evaluate === false) {
-									pass = false;
-								}
-							}
-						});
+                    angular.forEach(parents, function(parent) {
+                      if (local) {
+                        local = (parent.index !== null ? local[parent.index][parent.id] : local[parent.id]);
+                      }
+                    });
 
-						if(field.visible !== (field.visible = field.hidden ? false : pass)) {
-							var currentValue = field.value;
-							field.value = scope.backupValue;
-							scope.backupValue = currentValue;
-						}
-					});
-				}
-			},
-			terminal: true
-		};
-	}]);
+                    if (local && field.index !== null) {
+                      local = local[field.index];
+                    }
 
-// End of strict
+                    var evaluate = scope.$eval(cond, local);
+                    if (!local || evaluate === undefined || evaluate === false) {
+                      pass = false;
+                    }
+                  }
+                });
+
+                if (field.visible !== (field.visible = field.hidden ? false : pass)) {
+                  var currentValue = field.value;
+                  field.value = scope.backupValue;
+                  scope.backupValue = currentValue;
+                }
+              });
+            }
+          },
+          terminal: true
+        };
+      }
+    ]);
+
 })();

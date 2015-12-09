@@ -1,5 +1,7 @@
-(function() {
 "use strict";
+/* globals angular */
+
+(function() {
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -42,8 +44,6 @@ angular.module('formula')
 								$scope.form.onsave = $scope.onsave;
 								$scope.form.build(schemaData, formBuffer.data);
 								$scope.form.translate($scope.language.code);
-								$scope.form.uiSaveHidden = !!$scope.data.saveHidden;
-								$scope.form.uiValidateHidden = !!$scope.data.validateHidden;
 							}
 						});
 					}
@@ -78,36 +78,26 @@ angular.module('formula')
 					});
 				}
 
-				// Enable form definition hot-swapping
-				$scope.$watch('data.form', function(uri) {
-					if(uri) {
-						formBuffer.pending = true;
-						jsonLoader(uri).then(function(data) {
-							formBuffer.data = data;
-							 formBuild(uri);
-						});
-					} else {
-						formBuffer.data = null;
-						formBuild(null);
-					}
+
+				if($scope.data.form) {
+					formBuffer.pending = true;
+					jsonLoader($scope.data.form).then(function(data) {
+						formBuffer.data = data;
+						 formBuild($scope.data.form);
+					});
+				} else {
+					formBuffer.data = null;
+					formBuild(null);
+				}
+
+				$scope.schema.uri = $scope.data.schema;
+				$scope.schema.deref($scope.schema.uri).then(function(schemaData) {
+					formBuild();
 				});
 
-				// Enable schema hot-swapping
-				$scope.$watch('data.schema', function(uri) {
-					if(($scope.schema.uri = uri)) {
-						$scope.schema.deref(uri).then(function(schemaData) {
-							formBuild();
-						});
-					}
-				});
-
-				// Enable template hot-swapping
-				$scope.$watch('data.template', function(template, oldVal) {
-					loadTemplate(template).then(function (templateElement) {
-						$element.empty();
-						$compile(angular.element(templateElement))($scope, function (cloned, scope) {
-							$element.prepend(cloned);
-						});
+				loadTemplate($scope.data.template).then(function (templateElement) {
+					$compile(angular.element(templateElement))($scope, function (cloned, scope) {
+						$element.prepend(cloned);
 					});
 				});
 
@@ -142,19 +132,8 @@ angular.module('formula')
 					}
 				});
 
-				$scope.$watch('data', function(n, o) {
-					// Enable saveHidden and validateHidden toggling
-					if(n.saveHidden != o.saveHidden) {
-						$scope.form.uiSaveHidden = !!n.saveHidden;
-					}
-
-					if(n.validateHidden != o.validateHidden) {
-						$scope.form.uiValidateHidden = !!n.validateHidden;
-					}
-				});
 			}]
 		};
 	}]);
 
-// End of strict
 })();
