@@ -128,7 +128,7 @@
 
             if (type.main === 'input') {
               scope.$watch('field.value', function(n, o) {
-                if (n !== o) {
+                if (n !== o && scope.form) {
                   field.dirty = true;
                   field.parents.forEach(function (parent) {
                     parent.dirty = true;

@@ -17,36 +17,17 @@ angular.module('formula')
 			restrict: 'A',
       scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
-				var controller = this, formBuffer = { pending: false, data: null };
-
 				if(!$scope.data) {
-					$scope.data = {};
+					throw "No formula options provided!";
 				}
 
+				$scope.schema = new Schema();
 				if($scope.data.model) {
 					model.data = $scope.data.model;
 				}
 
-				controller.schema	= $scope.schema = new Schema();
-				controller.form  	= $scope.form = new Form();
-
-				$scope.onsave		= $scope.form.onsave;
-				$scope.template 	= $scope.data.template || 'default';
-				$scope.language 	= { uri: $scope.data.language || null, code: null };
-
-				function formBuild(formURI) {
-					if(!formBuffer.pending || formURI) {
-						$scope.schema.then(function(schemaData) {
-							if(schemaData) {
-								formBuffer.pending = false;
-								controller.form = $scope.form = $scope.data.formula = new Form(formURI);
-								$scope.form.onsave = $scope.onsave;
-								$scope.form.build(schemaData, formBuffer.data);
-								$scope.form.translate($scope.language.code);
-							}
-						});
-					}
-				}
+				$scope.template = $scope.data.template || 'default';
+				$scope.language = { uri: $scope.data.language || null, code: null };
 
 				function loadTemplate (templateId) {
 					return $q(function(resolve, reject) {
@@ -77,21 +58,16 @@ angular.module('formula')
 					});
 				}
 
-
-				if($scope.data.form) {
-					formBuffer.pending = true;
-					jsonLoader($scope.data.form).then(function(data) {
-						formBuffer.data = data;
-						 formBuild($scope.data.form);
-					});
-				} else {
-					formBuffer.data = null;
-					formBuild(null);
+				var asyncs = [$scope.schema.deref($scope.data.schema)];
+				if ($scope.data.form) {
+					asyncs.push(jsonLoader($scope.data.form));
 				}
 
-				$scope.schema.uri = $scope.data.schema;
-				$scope.schema.deref($scope.schema.uri).then(function(schemaData) {
-					formBuild();
+				$q.all(asyncs).then(function(data) {
+					$scope.form = $scope.data.formula = new Form($scope.data.form);
+					$scope.onsave = $scope.form.onsave;
+					$scope.form.build(data[0], data[1]);
+					$scope.form.translate($scope.language.code);
 				});
 
 				loadTemplate($scope.data.template).then(function (templateElement) {
@@ -101,19 +77,33 @@ angular.module('formula')
 				});
 
 				// Enable language hot-swapping
-				$scope.$watch('data.language', function(uri) {
-					var code = i18n.code(uri);
-
-					if(uri && !code) {
-						i18n.add(uri).then(function(code) {
-							$scope.language.code = code;
-							$scope.form.translate(code);
+				$scope.$watch('data.language', function(newUri, oldUri) {
+					if (newUri && newUri !== oldUri) {
+						var code = i18n.code(newUri);
+						$q.all(asyncs).then(function () {
+							if(!code) {
+								i18n.add(newUri).then(function(code) {
+									$scope.language.code = code;
+									$scope.form.translate(code);
+								});
+							} else {
+								$scope.language.code = code;
+								$scope.form.translate(code);
+							}
 						});
-					} else {
-						$scope.language.code = code;
-						$scope.form.translate(code);
 					}
 				});
+
+				// Enable data hot-swapping
+				$scope.$watch('data.model', function(newData, oldData) {
+					if (newData && newData !== oldData) {
+						$q.all(asyncs).then(function () {
+							if(model.set(newData)) {
+								$scope.form.updateValues();
+							}
+						});
+					}
+				}, true);
 
 			}]
 		};

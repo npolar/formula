@@ -59,6 +59,14 @@ angular.module('formula')
 
     Form.prototype = {
 
+			updateValues: function () {
+				this.fieldsets.forEach(function (fieldset) {
+					fieldset.fields.forEach(function (field) {
+						field.valueFromModel(model.data);
+					});
+				});
+			},
+
       /**
        * @method activate
        *
@@ -68,7 +76,7 @@ angular.module('formula')
        * @param fieldset An object or an index number representing the fieldset
        */
       activate: function(fieldset) {
-        angular.forEach(this.fieldsets, function(f, i) {
+        this.fieldsets.forEach(function(f, i) {
           if (typeof fieldset === 'object' || typeof fieldset === 'number') {
             if ((typeof fieldset === 'object') ? (f === fieldset) : (i === fieldset)) {
               f.active = true;

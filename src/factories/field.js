@@ -707,7 +707,7 @@ angular.module('formula')
               if (model[this.id][field.id]) {
                 field.valueFromModel(model[this.id]);
               }
-            });
+            }, this);
           } else if (this.type === "array:fieldset") {
             this.values = [];
             model[this.id].forEach(function(item, index) {
