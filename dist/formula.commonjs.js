@@ -837,6 +837,7 @@ angular.module('formula')
           field.uidGen();
           field.pathGen();
 
+          this.dirty = true;
           this.validate(false);
           return field;
         }
@@ -877,6 +878,8 @@ angular.module('formula')
             fs.index = i;
             fs.pathGen();
           }, this);
+
+          this.dirty = true;
           this.validate(false);
         }
       },
@@ -1117,24 +1120,23 @@ angular.module('formula')
                 field.valueFromModel(model[this.id]);
               }
             }, this);
-          } else if (this.type === "array:fieldset") {
-            this.values = [];
-            model[this.id].forEach(function(item, index) {
-              this.itemAdd();
-              this.values[index].fields.forEach(function(field, index) {
-                field.valueFromModel(item);
-              });
-            }, this);
-          } else if (this.type === "array:field") {
+          } else if (this.typeOf("array")) {
             this.values = [];
 
             model[this.id].forEach(function(item, index) {
               this.itemAdd();
-              this.values[index].value = item;
+              console.log(this, item, index);
+              if (item instanceof Object) {
+                this.values[index].valueFromModel(item); // @todo continue here
+              } else {
+                this.values[index].value = item;
+              }
             }, this);
           } else {
             this.value = model[this.id];
+            this.dirty = true;
           }
+          this.validate(false);
         }
       }
     };

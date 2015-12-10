@@ -34,6 +34,7 @@
 			angular.module('demo', ['formula', 'ngResource'])
 				.controller('demoController', function($scope, $timeout, $resource) {
 					var updateModel = function () {
+						console.log('update!');
 						$scope.formulaData.model = {
 							_id: 'foobarID',
 							string: 'timeoutfoobar',
