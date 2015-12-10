@@ -22,9 +22,8 @@ angular.module('formula')
   function() {
     var model = {
       data: {},
-      locked: false,
       set: function(data) {
-        if (!this.locked && data) {
+        if (data) {
           this.data = data;
           return true;
         }

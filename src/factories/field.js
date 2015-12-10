@@ -34,12 +34,10 @@ angular.module('formula')
 
     function Field(data, id, parents) {
       if (typeof data === 'object') {
-				this.dirty = false;
-        this.form = null;
         this.id = id || data.id || null;
         this.index = null;
         this.nullable = data.nullable || false;
-        this.parents = parents || null;
+        this.parents = parents || [];
         this.path = null;
         this.schema = data.schema || data;
 
@@ -191,6 +189,7 @@ angular.module('formula')
               case 'array':
               case 'array:field':
               case 'array:fieldset':
+                this.values = [];
                 if (source.items) {
                   if (source.items.type === 'object') {
                     this.type = 'array:fieldset';
@@ -237,6 +236,7 @@ angular.module('formula')
               case 'checkbox':
               case 'input:checkbox':
                 this.type = 'input:checkbox';
+                this.value = false;
                 break;
 
               case 'input:number':
@@ -299,9 +299,7 @@ angular.module('formula')
 
         // Add one element to arrays which requires at least one element
         if (this.typeOf('array') && this.schema.minItems) {
-          if (!this.values) {
-            this.itemAdd();
-          }
+          this.itemAdd();
         }
 
         // Automatically hide fields by default if ID starts with underscore
@@ -412,16 +410,10 @@ angular.module('formula')
        *
        * @returns Reference to the item just added
        */
-
       itemAdd: function() {
         if (this.typeOf('array') && this.fields) {
-          if (!this.values) {
-            this.values = [];
-          }
-
-          var parents = [],
-            index;
-          angular.forEach(this.parents, function(parent) {
+          var parents = [], index;
+          this.parents.forEach(function(parent) {
             parents.push(parent);
           });
           parents.push({
@@ -436,7 +428,7 @@ angular.module('formula')
           field.uidGen();
           field.pathGen();
 
-          this.validate(true, false);
+          this.validate(false);
           return field;
         }
 
@@ -450,7 +442,6 @@ angular.module('formula')
        *
        * @param id Field ID of the subfield as a string
        */
-
       itemIndex: function(id) {
         for (var index in this.fields) {
           if (this.fields[index].id === id) {
@@ -467,17 +458,17 @@ angular.module('formula')
        *
        * @param item Index number of the fieldset which should be removed
        */
-
       itemRemove: function(item) {
-        if (this.typeOf('array') && this.values) {
+        if (this.typeOf('array')) {
           if (this.values.length > item) {
             this.values.splice(item, 1);
           }
 
-          angular.forEach(this.values, function(fs, i) {
+          this.values.forEach(function(fs, i) {
             fs.index = i;
             fs.pathGen();
           }, this);
+          this.validate(false);
         }
       },
 
@@ -488,9 +479,8 @@ angular.module('formula')
        *
        * @param item Index number of the fieldset which should be toggled
        */
-
       itemToggle: function(item) {
-        if (this.typeOf('array') && this.values) {
+        if (this.typeOf('array')) {
           if (this.values.length > item) {
             this.values[item].visible = !this.values[item].visible;
           }
@@ -502,7 +492,6 @@ angular.module('formula')
        *
        * Function used to generate full JSON path for fields.
        */
-
       pathGen: function() {
         this.path = '#/';
 
@@ -533,7 +522,6 @@ angular.module('formula')
        * @param type Type to check
        * @returns true if field type matches with specified type, otherwise false
        */
-
       typeOf: function(type) {
         if (this.type && typeof type === 'string') {
           var types = this.type.split(':'),
@@ -559,7 +547,6 @@ angular.module('formula')
        * @param len Optional number parameter to specify the UID-length
        * @returns The newly generated UID
        */
-
       uidGen: function(len) {
         var uid = 'formula-',
           chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -576,7 +563,11 @@ angular.module('formula')
 
         return uid;
       },
-
+      isEmpty: function () {
+        // intetional ==
+        // jshint -W116
+        return (this.value == null || this.value.length === 0);
+      },
       /**
        * @method validate
        *
@@ -584,36 +575,25 @@ angular.module('formula')
        * This function also sets the field error memeber value if the validation fails,
        * and additionally sets the form valid state if a parent form is specified.
        *
-       * @param silent Prevent setting error flags during validation if true
-       * @param form Validate entire form during validation if true
        * @returns true if the field is valid, otherwise false
        */
-      validate: function(silent, form) {
-        console.log('field validate', this);
+      validate: function(force) {
         if (this.schema) {
-          var fieldError = null,
-            tempValue, match;
+          var tempValue, match;
+          this.valid = true;
 
           switch (this.type) {
             case 'array:fieldset':
             case 'array:field':
               this.value = [];
               angular.forEach(this.values, function(field) {
-                if ((field.dirty || field.value !== null || field.typeOf('array object')) &&
-                  field.validate(silent, false)) {
-                  this.value.push(field.value);
+                if (field.dirty || force) {
+                  field.validate(force);
                 }
+                this.value.push(field.value);
               }, this);
-
-              // Remove invalid array elements
-              for (var i = 0; i < this.value.length; ++i) {
-                if (!tv4.validate([this.value[i]], this.schema)) {
-                  this.value.splice(i--, 1);
-                  fieldError = tv4.error;
-                  continue;
-                }
-              }
               break;
+
             case 'input:any':
               if (this.value) {
                 if (!isNaN(this.value)) {
@@ -625,11 +605,9 @@ angular.module('formula')
                     case 'true':
                       tempValue = true;
                       break;
-
                     case 'false':
                       tempValue = false;
                       break;
-
                     case 'null':
                       tempValue = null;
                       break;
@@ -663,23 +641,22 @@ angular.module('formula')
 
             case 'object':
               this.value = {};
-
               if (this.fields) {
-                // Populate value as object of valid fields
                 angular.forEach(this.fields, function(field, index) {
-                  if (field.dirty || field.value !== null || field.typeOf('array object')) {
-                    if (field.validate(field.dirty ? false : true)) {
-                      this.value[field.id] = field.value;
-                    }
+                  if (field.dirty || force) {
+                    field.validate(force);
                   }
+                  this.value[field.id] = field.value;
                 }, this);
               }
               break;
           }
 
-          var valid = tv4.validate((tempValue !== undefined ? tempValue : this.value), this.schema);
+          if ((this.dirty || force) && (this.required || !this.isEmpty())) {
+            this.valid = tv4.validate((tempValue !== undefined ? tempValue : this.value), this.schema);
+          }
 
-          if (!valid && this.nullable) {
+          if (!this.valid && this.nullable) {
             switch (typeof this.value) {
               case 'string':
                 if (!this.value || !this.value.length) {
@@ -701,22 +678,14 @@ angular.module('formula')
             }
 
             // TODO: Add support for null-types in tv4
-            if (this.value === null) {
-              fieldError = null;
-              valid = true;
+            if (this.isEmpty()) {
+              this.valid = true;
             }
           }
 
-          if (silent !== true) {
-            this.valid = (valid && !fieldError);
-            this.error = fieldError ? fieldError.message : (valid ? null : tv4.error.message);
-          }
-
-          if ((form === true) && this.form) {
-            this.form.validate(true);
-          }
-
-          return valid;
+          this.error = !this.valid ? tv4.error.message: null;
+          this.dirty = false;
+          return this.valid;
         }
 
         return false;

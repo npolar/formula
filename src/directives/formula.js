@@ -25,7 +25,6 @@ angular.module('formula')
 
 				if($scope.data.model) {
 					model.data = $scope.data.model;
-					model.locked = true;
 				}
 
 				controller.schema	= $scope.schema = new Schema();
@@ -113,22 +112,6 @@ angular.module('formula')
 					} else {
 						$scope.language.code = code;
 						$scope.form.translate(code);
-					}
-				});
-
-				// Enable data hot-swapping
-				$scope.$watch('data.model', function(data) {
-					if(model.set(data)) {
-						formBuild();
-					}
-
-					model.locked = false;
-				}, true);
-
-				// Enable onsave callback hot-swapping
-				$scope.$watch('data.onsave', function(callback) {
-					if(callback) {
-						$scope.form.onsave = $scope.onsave = callback;
 					}
 				});
 

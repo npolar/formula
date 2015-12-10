@@ -128,22 +128,14 @@
 
             if (type.main === 'input') {
               scope.$watch('field.value', function(n, o) {
-                if (!field.dirty && (n !== o)) {
+                if (n !== o) {
                   field.dirty = true;
-                }
-
-                if (!field.parents) {
-                  field.validate(true, true);
+                  field.parents.forEach(function (parent) {
+                    parent.dirty = true;
+                  });
+                  scope.form.validate();
                 }
               });
-            } else if (type.main === 'object') {
-              scope.$watch('field.fields', function() {
-                field.validate(false, true);
-              }, true);
-            } else if (type.main === 'array') {
-              scope.$watch('field.values', function() {
-                field.validate(false, true);
-              }, true);
             }
 
             // Evaluate condition
