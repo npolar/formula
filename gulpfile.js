@@ -31,7 +31,9 @@ gulp.task('compile-js', ['compile-templates'], function() {
 gulp.task('minify-js', ['compile-templates'], function(cb) {
 	return gulp.src(['./src/*.js', './src/**/*.js'])
 	.pipe(concat('formula.min.js'))
-	.pipe(uglify())
+	.pipe(uglify().on('error', function(err){
+    console.log(err);
+  }))
 	.pipe(gulp.dest('./dist/'));
 });
 

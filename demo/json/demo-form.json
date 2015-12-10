@@ -36,7 +36,8 @@
 				"array_object",
 				"array_string_enum",
 				"array_string",
-				"ref_object"
+				"ref_object",
+				"nested_array"
 			]
 		},
 		{

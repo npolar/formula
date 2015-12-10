@@ -79,6 +79,11 @@ angular.module('formula')
           }
         }, this);
 
+        if (!this.id) {
+          this.id = source.title ||
+            /\/(.*?)\/$/.exec(this.path)[1] + '_' + source.type;
+        }
+
         // Translate default value tokens
         if (typeof this.default === 'string') {
           var match = this.default.match(/^%(.*)%$/),
@@ -150,7 +155,14 @@ angular.module('formula')
               source.type = source.type[0];
               this.nullable = true;
             }
+          } else {
+            source.types = source.type;
+            source.type = 'any';
+            // @TODO support any
           }
+          this.nullable = source.type.some(function (type) {
+            return type === 'null';
+          });
         }
 
         if (source.type === 'select' || source.enum) {
@@ -181,34 +193,39 @@ angular.module('formula')
             }
           } else {
             switch (source.type) {
-              case 'any':
               case 'input:any':
                 this.type = 'input:any';
                 break;
-
               case 'array':
               case 'array:field':
               case 'array:fieldset':
+              case 'array:array':
                 this.values = [];
                 if (source.items) {
                   if (source.items.type === 'object') {
                     this.type = 'array:fieldset';
+                    this.fieldAdd(source.items);
+                  } else if (source.items.type === 'array') {
+                    this.type = 'array:array';
                     this.fieldAdd(source.items);
                   } else if (source.items.enum) {
                     this.enum = source.items.enum;
                     this.multiple = true;
                     this.type = 'input:select';
                   } else if (source.items.allOf) {
+                    // @TODO
                     log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
                       property: 'allOf',
                       field: this.path
                     });
                   } else if (source.items.anyOf) {
+                    // @TODO
                     log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
                       property: 'anyOf',
                       field: this.path
                     });
                   } else if (source.items.oneOf) {
+                    // @TODO
                     log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
                       property: 'oneOf',
                       field: this.path
@@ -714,13 +731,18 @@ angular.module('formula')
           } else if (this.typeOf("array")) {
             this.values = [];
 
+
             model[this.id].forEach(function(item, index) {
               this.itemAdd();
-              console.log(this, item, index);
-              if (item instanceof Object) {
-                this.values[index].valueFromModel(item); // @todo continue here
-              } else {
+              if (this.typeOf('fieldset')) {
+                var valueModel = {};
+                valueModel[this.values[index].id] = item;
+                this.values[index].valueFromModel(valueModel);
+              } else if (this.typeOf('field')) {
                 this.values[index].value = item;
+              } else {
+                // @TODO Support array:array
+                // jshint -W035
               }
             }, this);
           } else {

@@ -102,6 +102,15 @@
 		"ref_object": {
 			"$ref": "http://api.npolar.no/schema/user"
 		},
+		"nested_array": {
+			"type": "array",
+			"items": {
+				"type": "array",
+				"items": {
+					"type": "number"
+				}
+			}
+		},
 		"array_hierarchy": {
 			"type": "array",
 			"description": "first level array",
