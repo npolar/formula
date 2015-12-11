@@ -371,10 +371,11 @@ angular.module('formula')
 					asyncs.push(jsonLoader($scope.data.form));
 				}
 
-				$q.all(asyncs).then(function(data) {
+				var formLoaded = $q.all(asyncs).then(function(data) {
 					$scope.form = $scope.data.formula = new Form($scope.data.form);
 					$scope.form.build(data[0], data[1]);
 					$scope.form.translate($scope.language.code);
+					return true;
 				});
 
 				loadTemplate($scope.data.template).then(function (templateElement) {
@@ -387,7 +388,7 @@ angular.module('formula')
 				$scope.$watch('data.language', function(newUri, oldUri) {
 					if (newUri && newUri !== oldUri) {
 						var code = i18n.code(newUri);
-						$q.all(asyncs).then(function () {
+						formLoaded.then(function () {
 							if(!code) {
 								i18n.add(newUri).then(function(code) {
 									$scope.language.code = code;
@@ -404,7 +405,7 @@ angular.module('formula')
 				// Enable data hot-swapping
 				$scope.$watch('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
-						$q.all(asyncs).then(function () {
+						formLoaded.then(function () {
 							if(model.set(newData)) {
 								$scope.form.updateValues();
 							}
@@ -500,11 +501,6 @@ angular.module('formula')
           }
         }, this);
 
-        if (!this.id) {
-          this.id = source.title ||
-            /\/(.*?)\/$/.exec(this.path)[1] + '_' + source.type;
-        }
-
         // Translate default value tokens
         if (typeof this.default === 'string') {
           var match = this.default.match(/^%(.*)%$/),
@@ -540,30 +536,31 @@ angular.module('formula')
           }
         }
 
-        if (this.fields && source.fields) {
-          var formFields = [];
-
-          // Update field properties based on form specification
-          angular.forEach(source.fields, function(field) {
-            if (typeof field === 'object') {
-              var fieldMatch = this.fieldFromID(field.id);
-
-              if (fieldMatch) {
-                formFields.push(field.id);
-                fieldMatch.attrsSet(field);
-              }
-            } else if (typeof field === 'string') {
-              formFields.push(field);
-            }
-          }, this);
-
-          // Remove unused fields
-          for (var f in this.fields) {
-            if (formFields.indexOf(this.fields[f].id) === -1) {
-              this.fields.splice(f, 1);
-            }
-          }
-        }
+        // @TODO what is this?
+        // if (this.fields && source.fields) {
+        //   var formFields = [];
+        //
+        //   // Update field properties based on form specification
+        //   source.fields.forEach(function(field) {
+        //     if (typeof field === 'object') {
+        //       var fieldMatch = this.fieldFromID(field.id);
+        //
+        //       if (fieldMatch) {
+        //         formFields.push(field.id);
+        //         fieldMatch.attrsSet(field);
+        //       }
+        //     } else if (typeof field === 'string') {
+        //       formFields.push(field);
+        //     }
+        //   }, this);
+        //
+        //   // Remove unused fields
+        //   for (var f in this.fields) {
+        //     if (formFields.indexOf(this.fields[f].id) === -1) {
+        //       this.fields.splice(f, 1);
+        //     }
+        //   }
+        // }
 
         if (source.type instanceof Array) {
           this.nullable = source.type.some(function (type) {
@@ -805,7 +802,8 @@ angular.module('formula')
               }
             }, this);
           } else {
-            var newField = new Field(schema, null, parents);
+            var id = schema.id || (this.id || /\/(.*?)$/.exec(this.path)[1]) + '_' + schema.type;
+            var newField = new Field(schema, id, parents);
             newField.index = this.fields.length;
             this.fields.push(newField);
           }

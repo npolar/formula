@@ -63,10 +63,11 @@ angular.module('formula')
 					asyncs.push(jsonLoader($scope.data.form));
 				}
 
-				$q.all(asyncs).then(function(data) {
+				var formLoaded = $q.all(asyncs).then(function(data) {
 					$scope.form = $scope.data.formula = new Form($scope.data.form);
 					$scope.form.build(data[0], data[1]);
 					$scope.form.translate($scope.language.code);
+					return true;
 				});
 
 				loadTemplate($scope.data.template).then(function (templateElement) {
@@ -79,7 +80,7 @@ angular.module('formula')
 				$scope.$watch('data.language', function(newUri, oldUri) {
 					if (newUri && newUri !== oldUri) {
 						var code = i18n.code(newUri);
-						$q.all(asyncs).then(function () {
+						formLoaded.then(function () {
 							if(!code) {
 								i18n.add(newUri).then(function(code) {
 									$scope.language.code = code;
@@ -96,7 +97,7 @@ angular.module('formula')
 				// Enable data hot-swapping
 				$scope.$watch('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
-						$q.all(asyncs).then(function () {
+						formLoaded.then(function () {
 							if(model.set(newData)) {
 								$scope.form.updateValues();
 							}
