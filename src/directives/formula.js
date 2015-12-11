@@ -65,7 +65,6 @@ angular.module('formula')
 
 				$q.all(asyncs).then(function(data) {
 					$scope.form = $scope.data.formula = new Form($scope.data.form);
-					$scope.onsave = $scope.form.onsave;
 					$scope.form.build(data[0], data[1]);
 					$scope.form.translate($scope.language.code);
 				});
@@ -105,6 +104,7 @@ angular.module('formula')
 					}
 				}, true);
 
+				this.data = $scope.data; // Others need this
 			}]
 		};
 	}]);

@@ -3,13 +3,23 @@
 
 (function() {
 
+  var getCustomTemplate = function (tmpls, field) {
+    if (tmpls) {
+      for (var i in tmpls) {
+        if (tmpls[i].match && tmpls[i].match.call({}, field)) {
+          return angular.element(tmpls[i].template);
+        }
+      }
+    }
+    return undefined;
+  };
+
   /**
    * formula.js
    * Generic JSON Schema form builder
    *
    * Norsk Polarinstutt 2014, http://npolar.no/
    */
-
   angular.module('formula')
     .directive('formulaField', ['$compile', 'formulaModel',
       function($compile, model) {
@@ -41,14 +51,16 @@
             }
 
             var elem = angular.element(element),
-              schemaType;
+              schemaType, customTmpl = getCustomTemplate(controller[0].data.templates, field);
             var type = field.type ? field.type.split(':') : null;
             type = type ? {
               main: type[0],
               sub: type[1]
             } : null;
 
-            if (type.main === 'input') {
+            if (customTmpl) {
+              elem = customTmpl;
+            } else if (type.main === 'input') {
               switch (type.sub) {
                 case 'textarea':
                   elem = angular.element('<textarea>');
