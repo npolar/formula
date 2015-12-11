@@ -566,24 +566,22 @@ angular.module('formula')
         }
 
         if (source.type instanceof Array) {
+          this.nullable = source.type.some(function (type) {
+            return type === 'null';
+          });
           if (source.type.length === 1) {
             source.type = source.type[0];
           } else if (source.type.length === 2) {
             if (source.type[0] === 'null') {
               source.type = source.type[1];
-              this.nullable = true;
             } else if (source.type[1] === 'null') {
               source.type = source.type[0];
-              this.nullable = true;
             }
           } else {
             source.types = source.type;
             source.type = 'any';
             // @TODO support any
           }
-          this.nullable = source.type.some(function (type) {
-            return type === 'null';
-          });
         }
 
         if (source.type === 'select' || source.enum) {
