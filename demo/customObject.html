@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<div>
+  <h1>Super basic custom object</h1>
+  <h2>{{field.title}}</h2>
+  <p>{{field.value}}</p>
+  <div ng-repeat="field in field.fields">
+    <label for="{{field.id}}">{{field.title}}</label>
+    <input id="{{field.id}}" type="text" ng-model="field.value">
+  </div>
+</div>

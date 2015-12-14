@@ -67,10 +67,6 @@
 						console.log("timeout", $scope.formulaData.model.string);
 					};
 
-					var clearModel = function () {
-						$scope.formulaData.model.string = 'häst';
-					};
-
 					var getResource = function () {
 						resource.get({}, function (data) {
 							console.log("resource", data.string);
@@ -85,7 +81,16 @@
 						form: "json/demo-form.json",
 						template: null,
 						language: null,
-						model: { string : 'initfoobar' }
+						model: { string : 'initfoobar' },
+						templates: [
+			        {
+			          match(field) {
+			            return field.id === "ref_object";
+			          },
+			          templateUrl: 'customObject.html',
+								//template: '<p>{{field.title}}</p>'
+			        }
+			      ]
 					};
 
 					getResource();

@@ -429,3 +429,7 @@
   box-shadow: -1.4em 0.6em 0 0.1em #eee;
   transform: scale(0.8, 0.8) rotate(-90deg);
 }
+
+.formula .formulaCustomObject {
+  font-size: 14px;
+}

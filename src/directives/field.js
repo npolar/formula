@@ -3,16 +3,6 @@
 
 (function() {
 
-  var getCustomTemplate = function (tmpls, field) {
-    if (tmpls) {
-      for (var i in tmpls) {
-        if (tmpls[i].match && tmpls[i].match.call({}, field)) {
-          return angular.element(tmpls[i].template);
-        }
-      }
-    }
-    return undefined;
-  };
 
   /**
    * formula.js
@@ -21,204 +11,189 @@
    * Norsk Polarinstutt 2014, http://npolar.no/
    */
   angular.module('formula')
-    .directive('formulaField', ['$compile', 'formulaModel',
-      function($compile, model) {
+    .directive('formulaField', ['$compile', '$q', 'formulaModel', 'formulaCustomTemplateService',
+    'formulaEvaluateConditionsService',
+      function($compile, $q, model, formulaCustomTemplateService, formulaEvaluateConditionsService) {
+
+        var getInputElement = function (attrs, element, field, type) {
+          var elem;
+          switch (type.sub) {
+            case 'textarea':
+              elem = angular.element('<textarea>');
+              break;
+
+            case 'select':
+              elem = angular.element('<select>');
+
+              if (element.children().length) {
+                angular.forEach(element.children(), function(child) {
+                  elem.append(child);
+                });
+              } else {
+                elem.attr('ng-options', 'value.id as value.label for value in field.values');
+              }
+
+              if (field.multiple) {
+                elem.attr('multiple', 'multiple');
+              }
+              break;
+
+            default:
+              elem = angular.element('<input>');
+              elem.attr('type', type.sub);
+
+              switch (type.sub) {
+                case 'number':
+                case 'range':
+                  if (field.step !== null) {
+                    elem.attr('step', field.step);
+                  }
+                  break;
+
+                case 'any':
+                case 'date':
+                case 'datetime':
+                case 'time':
+                  elem.attr('type', 'text');
+                  break;
+              }
+          }
+
+          angular.forEach(attrs, function(val, key) {
+            if (attrs.$attr[key]) {
+              elem.attr(attrs.$attr[key], val);
+            }
+          });
+
+          return elem;
+        };
+
+
+        var getType = function (field) {
+          var type = field.type ? field.type.split(':') : null;
+          type = type ? {
+            main: type[0],
+            sub: type[1]
+          } : null;
+          return type;
+        };
+
+
+        var setAttrs = function (field, attrs) {
+          attrs.$set('id', field.uid);
+          attrs.$set('ngModel', 'field.value');
+          attrs.$set('formulaField'); // unset
+
+          if (field.disabled) {
+            attrs.$set('disabled', 'disabled');
+          }
+
+          if (field.readonly) {
+            attrs.$set('readonly', 'readonly');
+          }
+        };
+
+        var initScope = function (scope, controllers) {
+          scope.form = controllers[0].form;
+          scope.backupValue = null;
+
+          if (controllers[1]) {
+            scope.field = controllers[1].field;
+          }
+        };
+
+        // Add class based on field parents and ID
+        var addPathClass = function (field, elem) {
+          var path = 'formula-';
+
+          angular.forEach(field.parents, function(parent) {
+            path += parent.id + '/';
+          });
+
+          if (field.id) {
+            path += field.id;
+          } else if (field.parents) {
+            path = path.substr(0, path.length - 1);
+          }
+
+          elem.addClass(path);
+        };
+
+        // Add css class of schema type
+        var addSchemaClass = function (field, elem) {
+          var schemaType = field.schema.type;
+          if (schemaType) {
+            elem.addClass(
+              "formula" +
+              schemaType.charAt(0).toUpperCase() +
+              schemaType.slice(1)
+            );
+          }
+        };
+
+        var getElement = function (attrs, element, field, controllers) {
+          var deferred = $q.defer();
+          var type = getType(field);
+          formulaCustomTemplateService.getCustomTemplate(controllers[0].data.templates, field)
+          .then(
+            // custom template
+            function (template) {
+              var elem = angular.element(template);
+              elem.addClass('formulaCustomObject');
+              deferred.resolve(elem);
+          },
+
+          // no custom template
+          function () {
+            if (type.main === 'input') {
+              deferred.resolve(getInputElement(attrs, element, field, type));
+            } else {
+              deferred.resolve(angular.element(element));
+            }
+          });
+
+          return deferred.promise;
+        };
+
+        var watchFields = function (scope, field) {
+          var type = getType(field);
+          if (type.main === 'input') {
+            scope.$watch('field.value', function(n, o) {
+              if (n !== o && scope.form) {
+                field.dirty = true;
+                field.parents.forEach(function (parent) {
+                  parent.dirty = true;
+                });
+                scope.form.validate();
+              }
+            });
+          }
+        };
+
         return {
           restrict: 'A',
           require: ['^formula', '?^formulaFieldInstance'],
           scope: {
             field: '=formulaField'
           },
-          link: function(scope, element, attrs, controller) {
+          link: function(scope, element, attrs, controllers) {
             var field = scope.field;
-            scope.form = controller[0].form;
-            scope.backupValue = null;
 
-            if (controller[1]) {
-              scope.field = controller[1].field;
-            }
+            initScope(scope, controllers);
+            setAttrs(field, attrs);
 
-            attrs.$set('id', field.uid);
-            attrs.$set('ngModel', 'field.value');
-            attrs.$set('formulaField'); // unset
+            getElement(attrs, element, field, controllers).then(function (elem) {
+              addPathClass(field, elem);
+              addSchemaClass(field, elem);
 
-            if (field.disabled) {
-              attrs.$set('disabled', 'disabled');
-            }
-
-            if (field.readonly) {
-              attrs.$set('readonly', 'readonly');
-            }
-
-            var elem = angular.element(element),
-              schemaType, customTmpl = getCustomTemplate(controller[0].data.templates, field);
-            var type = field.type ? field.type.split(':') : null;
-            type = type ? {
-              main: type[0],
-              sub: type[1]
-            } : null;
-
-            if (customTmpl) {
-              elem = customTmpl;
-            } else if (type.main === 'input') {
-              switch (type.sub) {
-                case 'textarea':
-                  elem = angular.element('<textarea>');
-                  break;
-
-                case 'select':
-                  elem = angular.element('<select>');
-
-                  if (element.children().length) {
-                    angular.forEach(element.children(), function(child) {
-                      elem.append(child);
-                    });
-                  } else {
-                    elem.attr('ng-options', 'value.id as value.label for value in field.values');
-                  }
-
-                  if (field.multiple) {
-                    elem.attr('multiple', 'multiple');
-                  }
-                  break;
-
-                default:
-                  elem = angular.element('<input>');
-                  elem.attr('type', type.sub);
-
-                  switch (type.sub) {
-                    case 'number':
-                    case 'range':
-                      if (field.step !== null) {
-                        elem.attr('step', field.step);
-                      }
-                      break;
-
-                    case 'any':
-                    case 'date':
-                    case 'datetime':
-                    case 'time':
-                      elem.attr('type', 'text');
-                      break;
-                  }
-              }
-
-              angular.forEach(attrs, function(val, key) {
-                if (attrs.$attr[key]) {
-                  elem.attr(attrs.$attr[key], val);
-                }
+              $compile(elem)(scope, function(cloned, scope) {
+                element.replaceWith(cloned);
               });
-            }
-
-            // Add class based on field parents and ID
-            var path = 'formula-';
-
-            angular.forEach(field.parents, function(parent) {
-              path += parent.id + '/';
             });
 
-            if (field.id) {
-              path += field.id;
-            } else if (field.parents) {
-              path = path.substr(0, path.length - 1);
-            }
+            watchFields(scope, field);
 
-            elem.addClass(path);
-
-            // Add css class of schema type
-            if ((schemaType = field.schema.type)) {
-              elem.addClass(
-                "formula" +
-                schemaType.charAt(0).toUpperCase() +
-                schemaType.slice(1)
-              );
-            }
-
-            $compile(elem)(scope, function(cloned, scope) {
-              element.replaceWith(cloned);
-            });
-
-            if (type.main === 'input') {
-              scope.$watch('field.value', function(n, o) {
-                if (n !== o && scope.form) {
-                  field.dirty = true;
-                  field.parents.forEach(function (parent) {
-                    parent.dirty = true;
-                  });
-                  scope.form.validate();
-                }
-              });
-            }
-
-            // Evaluate condition
-            if (field.condition) {
-              scope.model = model.data;
-              scope.$watchCollection('model', function(model) {
-                var pass = true,
-                  condition = (field.condition instanceof Array ? field.condition : [field.condition]);
-
-                angular.forEach(condition, function(cond) {
-                  var local = model,
-                    parents = field.parents,
-                    pathSplitted;
-
-                  if (pass) {
-                    // Absolute JSON path
-                    if (cond[0] === '#') {
-                      parents = [];
-
-                      // Slash-delimited resolution
-                      if (cond[1] === '/') {
-                        pathSplitted = cond.substr(1).split('/');
-                      }
-
-                      // Dot-delimited resolution
-                      else {
-                        pathSplitted = cond.substr(1).split('.');
-                        if (!pathSplitted[0].length) {
-                          parents.splice(0, 1);
-                        }
-                      }
-
-                      angular.forEach(pathSplitted, function(split, index) {
-                        if (isNaN(split)) {
-                          parents.push({
-                            id: split,
-                            index: null
-                          });
-                        } else if (index > 0) {
-                          parents[index - 1].index = Number(split);
-                        }
-                      });
-
-                      cond = parents[parents.length - 1].id;
-                      parents.splice(parents.length - 1, 1);
-                    }
-
-                    angular.forEach(parents, function(parent) {
-                      if (local) {
-                        local = (parent.index !== null ? local[parent.index][parent.id] : local[parent.id]);
-                      }
-                    });
-
-                    if (local && field.index !== null) {
-                      local = local[field.index];
-                    }
-
-                    var evaluate = scope.$eval(cond, local);
-                    if (!local || evaluate === undefined || evaluate === false) {
-                      pass = false;
-                    }
-                  }
-                });
-
-                if (field.visible !== (field.visible = field.hidden ? false : pass)) {
-                  var currentValue = field.value;
-                  field.value = scope.backupValue;
-                  scope.backupValue = currentValue;
-                }
-              });
-            }
+            formulaEvaluateConditionsService.evaluateConditions(scope, field);
           },
           terminal: true
         };
