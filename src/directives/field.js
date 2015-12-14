@@ -15,8 +15,11 @@
     'formulaEvaluateConditionsService',
       function($compile, $q, model, formulaCustomTemplateService, formulaEvaluateConditionsService) {
 
-        var getInputElement = function (attrs, element, field, type) {
+        var getInputElement = function (scope, element, attrs) {
           var elem;
+          var field = scope.field;
+          var type = getType(field);
+          var deferred = $q.defer();
           switch (type.sub) {
             case 'textarea':
               elem = angular.element('<textarea>');
@@ -65,7 +68,26 @@
             }
           });
 
-          return elem;
+          if (type.sub === 'autocomplete') {
+            var list = angular.element('<datalist>');
+            var id = field.id + '_list';
+            elem = angular.element('<input>');
+            elem.attr('list', id);
+            list.attr('id', id);
+            field.querySearch('').then(function (matches) {
+              matches.forEach(function (item) {
+                var opt = angular.element('<option>');
+                opt.attr('value', item);
+                list.append(opt);
+              });
+              deferred.resolve(elem);
+            });
+            elem.append(list);
+          } else {
+            deferred.resolve(elem);
+          }
+
+          return deferred.promise;
         };
 
 
@@ -131,8 +153,9 @@
           }
         };
 
-        var getElement = function (attrs, element, field, controllers) {
+        var getElement = function (scope, element, attrs, controllers) {
           var deferred = $q.defer();
+          var field = scope.field;
           var type = getType(field);
           formulaCustomTemplateService.getCustomTemplate(controllers[0].data.templates, field)
           .then(
@@ -146,7 +169,9 @@
           // no custom template
           function () {
             if (type.main === 'input') {
-              deferred.resolve(getInputElement(attrs, element, field, type));
+              getInputElement(scope, element, attrs, type).then(function (elem) {
+                deferred.resolve(elem);
+              });
             } else {
               deferred.resolve(angular.element(element));
             }
@@ -182,7 +207,7 @@
             initScope(scope, controllers);
             setAttrs(field, attrs);
 
-            getElement(attrs, element, field, controllers).then(function (elem) {
+            getElement(scope, element, attrs, controllers).then(function (elem) {
               addPathClass(field, elem);
               addSchemaClass(field, elem);
 

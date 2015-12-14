@@ -1,103 +1,130 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Formula (demo)</title>
-		<meta charset="UTF-8" />
-		<link rel="stylesheet" href="../dist/formula.min.css" />
-		<style>
-			body {
-				margin: 0;
-				overflow-y: scroll;
-			}
 
-			.container
-			{
-				box-sizing: border-box;
-				height: 100%;
-				margin: 0 10%;
-				padding: 20px;
-				position: relative;
-			}
-		</style>
-	</head>
+<head>
+	<title>Formula (demo)</title>
+	<meta charset="UTF-8" />
+	<link rel="stylesheet" href="../dist/formula.min.css" />
+	<style>
+		body {
+			margin: 0;
+			overflow-y: scroll;
+		}
 
-	<body ng-app="demo" ng-controller="demoController">
-		<div class="container" formula="formulaData">
-		</div>
+		.container {
+			box-sizing: border-box;
+			height: 100%;
+			margin: 0 10%;
+			padding: 20px;
+			position: relative;
+		}
+	</style>
+</head>
 
-		<script src="js/angular.min.js"></script>
-		<script src="../node_modules/angular-resource/angular-resource.min.js"></script>
-		<script src="js/tv4.min.js"></script>
-		<script src="../dist/formula.js"></script>
+<body ng-app="demo" ng-controller="demoController">
+	<div class="container" formula="formulaData">
+	</div>
 
-		<script>
-			angular.module('demo', ['formula', 'ngResource'])
-				.controller('demoController', function($scope, $timeout, $resource) {
-					var updateModel = function () {
-						console.log('update!');
-						$scope.formulaData.model = {
-							_id: 'foobarID',
-							string: 'timeoutfoobar',
-							boolean: true,
-							array_object: [
-								{ string_default: 'foo', number: 1 },
-								{ string_default: 'bar', number: 2 }
-							],
-							array_string_enum: [ 'foo', 'qux' ],
-							array_string: [ 'foobar', 'bazquz' ],
-							ref_object: { name: 'test', email: 'foo', dn: 'no' },
-							nested_array: [
-								[1,2], [1,2]
-							],
-							array_hierarchy: [
-								{
-									sub_array_one: [
-										{
-											sub_sub_array_one: [
-												{
-													obj_1_1_1: 'foo',
-													obj_1_1_2: 4
-												}
-											]
-										}
-									]
-								}
-							]
-						};
-						console.log("timeout", $scope.formulaData.model.string);
+	<script src="js/angular.min.js"></script>
+	<script src="../node_modules/angular-resource/angular-resource.min.js"></script>
+	<script src="js/tv4.min.js"></script>
+	<script src="../dist/formula.js"></script>
+
+	<script>
+		"use strict";
+		/* globals angular */
+
+		angular.module('demo', ['formula', 'ngResource'])
+			.controller('demoController', function($scope, $timeout, $resource, formulaAutoCompleteService) {
+				var updateModel = function() {
+					console.log('update!');
+					$scope.formulaData.model = {
+						_id: 'foobarID',
+						string: 'timeoutfoobar',
+						boolean: true,
+						array_object: [{
+							string_default: 'foo',
+							number: 1
+						}, {
+							string_default: 'bar',
+							number: 2
+						}],
+						array_string_enum: ['foo', 'qux'],
+						array_string: ['foobar', 'bazquz'],
+						ref_object: {
+							name: 'test',
+							email: 'foo',
+							dn: 'no'
+						},
+						nested_array: [
+							[1, 2],
+							[1, 2]
+						],
+						array_hierarchy: [{
+							sub_array_one: [{
+								sub_sub_array_one: [{
+									obj_1_1_1: 'foo',
+									obj_1_1_2: 4
+								}]
+							}]
+						}]
 					};
+					console.log("timeout", $scope.formulaData.model.string);
+				};
 
-					var getResource = function () {
-						resource.get({}, function (data) {
-							console.log("resource", data.string);
-							$scope.formulaData.model = data;
+				var getResource = function() {
+					resource.get({}, function(data) {
+						console.log("resource", data.string);
+						$scope.formulaData.model = data;
+					});
+				};
+
+				var resource = $resource('json/data.json');
+
+				$scope.formulaData = {
+					schema: "json/demo-schema.json",
+					form: "json/demo-form.json",
+					template: null,
+					language: null,
+					model: {
+						string: 'initfoobar'
+					},
+					templates: [{
+						match(field) {
+								return field.id === "ref_object";
+							},
+							templateUrl: 'customObject.html',
+							//template: '<p>{{field.title}}</p>'
+					}]
+				};
+
+
+				var fn = function(q) {
+					return ["Dalene", "Allan", "Lecia", "Leta", "Matthew", "Marlen", "Collette", "Alfredo", "Francina", "Dorene", "Ali", "Anette", "Courtney", "Arlena", "Spring", "Suzanna", "Roseanne", "Evita", "Gaynell", "Ellena", "Lucinda", "Delisa", "Lamont",
+						"Eloy", "Luanna", "Cyndi", "Lynn", "Clare", "Stacey", "Tameka", "Cheryll", "Jong", "Hoyt", "Marhta", "Roselia", "Gala", "Chun", "Weston", "Zola", "Luana", "Arnette", "Delorse", "Libbie", "Nenita", "Lorina", "Carolyn", "Burma", "Russell",
+						"Beatris", "Macie"
+					];
+				};
+
+				var emailCallback = function(response) {
+					var emails = [];
+					response.forEach(function(entry) {
+						entry.people.forEach(function(person) {
+							emails.push(person.email);
 						});
-					};
+					});
+					return emails;
+				};
 
-					var resource = $resource('json/data.json');
+				formulaAutoCompleteService.defineSourceFunction("foobar", fn);
+				formulaAutoCompleteService.defineSourceFunction("emailCallback", emailCallback);
 
-					$scope.formulaData = {
-						schema: "json/demo-schema.json",
-						form: "json/demo-form.json",
-						template: null,
-						language: null,
-						model: { string : 'initfoobar' },
-						templates: [
-			        {
-			          match(field) {
-			            return field.id === "ref_object";
-			          },
-			          templateUrl: 'customObject.html',
-								//template: '<p>{{field.title}}</p>'
-			        }
-			      ]
-					};
+				getResource();
 
-					getResource();
+				$timeout(updateModel, 1000);
 
-					$timeout(updateModel, 1000);
+			});
+	</script>
+</body>
 
-				});
-		</script>
-	</body>
 </html>

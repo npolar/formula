@@ -18,8 +18,8 @@ angular.module('formula')
  * @returns field class constructor
  */
 
-.factory('formulaField', ['$filter', 'formulaLog', 'formulaFormat',
-  function($filter, log, format) {
+.factory('formulaField', ['$filter', 'formulaLog', 'formulaFormat', 'formulaAutoCompleteService',
+  function($filter, log, format, formulaAutoCompleteService) {
     /**
      * @class field
      *
@@ -57,6 +57,211 @@ angular.module('formula')
       }
     }
 
+    var translateDefaultValues = function (field) {
+      if (typeof field.default === 'string') {
+        var match = field.default.match(/^%(.*)%$/),
+          replace;
+        if (match) {
+          switch (match[1]) {
+            case 'date':
+              replace = $filter('date')(new Date(), 'yyyy-MM-dd', 'UTC');
+              break;
+
+            case 'datetime':
+              replace = $filter('date')(new Date(), 'yyyy-MM-ddThh:mm:ss', 'UTC') + 'Z';
+              break;
+
+            case 'time':
+              replace = $filter('date')(new Date(), 'hh:mm:ss', 'UTC');
+              break;
+
+            case 'year':
+              replace = $filter('date')(new Date(), 'yyyy', 'UTC');
+              break;
+
+            default:
+              log.warning(log.codes.FIELD_UNSUPPORTED_TOKEN, {
+                token: match[1],
+                field: field.path
+              });
+          }
+
+          if (replace) {
+            field.default = replace;
+          }
+        }
+      }
+    };
+
+    var setArrayFieldTypes = function (field, source) {
+      if (source.type instanceof Array) {
+        field.nullable = source.type.some(function (type) {
+          return type === 'null';
+        });
+        if (source.type.length === 1) {
+          source.type = source.type[0];
+        } else if (source.type.length === 2) {
+          if (source.type[0] === 'null') {
+            source.type = source.type[1];
+          } else if (source.type[1] === 'null') {
+            source.type = source.type[0];
+          }
+        } else {
+          source.types = source.type;
+          source.type = 'any';
+          // @TODO support any
+        }
+      }
+    };
+
+    var setFieldType = function (field, source) {
+      if (field.autocomplete) {
+        field.type = 'input:autocomplete';
+      } else if (source.type === 'select' || source.enum) {
+        field.type = 'input:select';
+        field.multiple = !!source.multiple;
+      } else {
+        if (field.format) {
+          var formatNoDash = field.format.replace('-', '');
+
+          if (format[formatNoDash]) {
+            switch (formatNoDash) {
+              case 'date':
+              case 'datetime':
+              case 'time':
+                field.type = 'input:' + formatNoDash;
+                break;
+              default:
+                field.type = 'input:text';
+            }
+
+            tv4.addFormat(field.format, format[formatNoDash]);
+          } else {
+            log.warning(log.codes.FIELD_UNSUPPORTED_FORMAT, {
+              format: field.format,
+              field: field.path
+            });
+            field.type = 'input:text';
+          }
+        } else {
+          switch (source.type) {
+            case 'input:any':
+              field.type = 'input:any';
+              break;
+            case 'array':
+            case 'array:field':
+            case 'array:fieldset':
+            case 'array:array':
+              field.values = [];
+              if (source.items) {
+                if (source.items.type === 'object') {
+                  field.type = 'array:fieldset';
+                  field.fieldAdd(source.items);
+                } else if (source.items.type === 'array') {
+                  field.type = 'array:array';
+                  field.fieldAdd(source.items);
+                } else if (source.items.enum) {
+                  field.enum = source.items.enum;
+                  field.multiple = true;
+                  field.type = 'input:select';
+                } else if (source.items.allOf) {
+                  // @TODO
+                  log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
+                    property: 'allOf',
+                    field: field.path
+                  });
+                } else if (source.items.anyOf) {
+                  // @TODO
+                  log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
+                    property: 'anyOf',
+                    field: field.path
+                  });
+                } else if (source.items.oneOf) {
+                  // @TODO
+                  log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
+                    property: 'oneOf',
+                    field: field.path
+                  });
+                } else {
+                  field.type = 'array:field';
+                  field.fieldAdd(source.items);
+                }
+                if (source.minItems >= 1) {
+                  field.required = true;
+                }
+              } else if (source.fields) {
+                field.type = source.type;
+                field.fields = source.fields;
+              } else {
+                log.warning(log.codes.FIELD_MISSING_PROPERTY, {
+                  property: 'items',
+                  field: field.path
+                });
+                field.type = null;
+              }
+              break;
+
+            case 'boolean':
+            case 'checkbox':
+            case 'input:checkbox':
+              field.type = 'input:checkbox';
+              field.value = false;
+              break;
+
+            case 'input:number':
+            case 'integer':
+            case 'number':
+              field.step = source.step || null;
+              field.type = 'input:number';
+              break;
+
+            case 'input:range':
+            case 'range':
+              field.step = source.step || null;
+              field.type = 'input:range';
+              break;
+
+            case 'object':
+              if (source.properties) {
+                field.type = 'object';
+                field.fieldAdd(source);
+              } else if (source.fields) {
+                field.type = 'object';
+                field.fields = source.fields;
+              } else {
+                log.warning(log.codes.FIELD_MISSING_PROPERTY, {
+                  property: 'properties',
+                  field: field.path
+                });
+                field.type = null;
+              }
+              break;
+
+            case 'input:textarea':
+            case 'textarea':
+              field.type = 'input:textarea';
+              break;
+
+            case 'input:text':
+            case 'string':
+            case 'text':
+              field.type = 'input:text';
+              break;
+            case undefined:
+              field.type = (field.type || 'input:text');
+              break;
+
+            default:
+              log.warning(log.codes.FIELD_UNSUPPORTED_TYPE, {
+                type: source.type,
+                field: field.path
+              });
+              field.type = null;
+          }
+        }
+      }
+    };
+
     Field.uids = [];
 
     Field.prototype = {
@@ -79,229 +284,9 @@ angular.module('formula')
           }
         }, this);
 
-        // Translate default value tokens
-        if (typeof this.default === 'string') {
-          var match = this.default.match(/^%(.*)%$/),
-            replace;
-          if (match) {
-            switch (match[1]) {
-              case 'date':
-                replace = $filter('date')(new Date(), 'yyyy-MM-dd', 'UTC');
-                break;
-
-              case 'datetime':
-                replace = $filter('date')(new Date(), 'yyyy-MM-ddThh:mm:ss', 'UTC') + 'Z';
-                break;
-
-              case 'time':
-                replace = $filter('date')(new Date(), 'hh:mm:ss', 'UTC');
-                break;
-
-              case 'year':
-                replace = $filter('date')(new Date(), 'yyyy', 'UTC');
-                break;
-
-              default:
-                log.warning(log.codes.FIELD_UNSUPPORTED_TOKEN, {
-                  token: match[1],
-                  field: this.path
-                });
-            }
-
-            if (replace) {
-              this.default = replace;
-            }
-          }
-        }
-
-        // @TODO what is this?
-        // if (this.fields && source.fields) {
-        //   var formFields = [];
-        //
-        //   // Update field properties based on form specification
-        //   source.fields.forEach(function(field) {
-        //     if (typeof field === 'object') {
-        //       var fieldMatch = this.fieldFromID(field.id);
-        //
-        //       if (fieldMatch) {
-        //         formFields.push(field.id);
-        //         fieldMatch.attrsSet(field);
-        //       }
-        //     } else if (typeof field === 'string') {
-        //       formFields.push(field);
-        //     }
-        //   }, this);
-        //
-        //   // Remove unused fields
-        //   for (var f in this.fields) {
-        //     if (formFields.indexOf(this.fields[f].id) === -1) {
-        //       this.fields.splice(f, 1);
-        //     }
-        //   }
-        // }
-
-        if (source.type instanceof Array) {
-          this.nullable = source.type.some(function (type) {
-            return type === 'null';
-          });
-          if (source.type.length === 1) {
-            source.type = source.type[0];
-          } else if (source.type.length === 2) {
-            if (source.type[0] === 'null') {
-              source.type = source.type[1];
-            } else if (source.type[1] === 'null') {
-              source.type = source.type[0];
-            }
-          } else {
-            source.types = source.type;
-            source.type = 'any';
-            // @TODO support any
-          }
-        }
-
-        if (source.type === 'select' || source.enum) {
-          this.type = 'input:select';
-          this.multiple = !!source.multiple;
-        } else {
-          if (this.format) {
-            var formatNoDash = this.format.replace('-', '');
-
-            if (format[formatNoDash]) {
-              switch (formatNoDash) {
-                case 'date':
-                case 'datetime':
-                case 'time':
-                  this.type = 'input:' + formatNoDash;
-                  break;
-                default:
-                  this.type = 'input:text';
-              }
-
-              tv4.addFormat(this.format, format[formatNoDash]);
-            } else {
-              log.warning(log.codes.FIELD_UNSUPPORTED_FORMAT, {
-                format: this.format,
-                field: this.path
-              });
-              this.type = 'input:text';
-            }
-          } else {
-            switch (source.type) {
-              case 'input:any':
-                this.type = 'input:any';
-                break;
-              case 'array':
-              case 'array:field':
-              case 'array:fieldset':
-              case 'array:array':
-                this.values = [];
-                if (source.items) {
-                  if (source.items.type === 'object') {
-                    this.type = 'array:fieldset';
-                    this.fieldAdd(source.items);
-                  } else if (source.items.type === 'array') {
-                    this.type = 'array:array';
-                    this.fieldAdd(source.items);
-                  } else if (source.items.enum) {
-                    this.enum = source.items.enum;
-                    this.multiple = true;
-                    this.type = 'input:select';
-                  } else if (source.items.allOf) {
-                    // @TODO
-                    log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
-                      property: 'allOf',
-                      field: this.path
-                    });
-                  } else if (source.items.anyOf) {
-                    // @TODO
-                    log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
-                      property: 'anyOf',
-                      field: this.path
-                    });
-                  } else if (source.items.oneOf) {
-                    // @TODO
-                    log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
-                      property: 'oneOf',
-                      field: this.path
-                    });
-                  } else {
-                    this.type = 'array:field';
-                    this.fieldAdd(source.items);
-                  }
-                  if (source.minItems >= 1) {
-                    this.required = true;
-                  }
-                } else if (source.fields) {
-                  this.type = source.type;
-                  this.fields = source.fields;
-                } else {
-                  log.warning(log.codes.FIELD_MISSING_PROPERTY, {
-                    property: 'items',
-                    field: this.path
-                  });
-                  this.type = null;
-                }
-                break;
-
-              case 'boolean':
-              case 'checkbox':
-              case 'input:checkbox':
-                this.type = 'input:checkbox';
-                this.value = false;
-                break;
-
-              case 'input:number':
-              case 'integer':
-              case 'number':
-                this.step = source.step || null;
-                this.type = 'input:number';
-                break;
-
-              case 'input:range':
-              case 'range':
-                this.step = source.step || null;
-                this.type = 'input:range';
-                break;
-
-              case 'object':
-                if (source.properties) {
-                  this.type = 'object';
-                  this.fieldAdd(source);
-                } else if (source.fields) {
-                  this.type = 'object';
-                  this.fields = source.fields;
-                } else {
-                  log.warning(log.codes.FIELD_MISSING_PROPERTY, {
-                    property: 'properties',
-                    field: this.path
-                  });
-                  this.type = null;
-                }
-                break;
-
-              case 'input:textarea':
-              case 'textarea':
-                this.type = 'input:textarea';
-                break;
-
-              case 'input:text':
-              case 'string':
-              case 'text':
-                this.type = 'input:text';
-                break;
-              case undefined:
-                this.type = (this.type || 'input:text');
-                break;
-
-              default:
-                log.warning(log.codes.FIELD_UNSUPPORTED_TYPE, {
-                  type: source.type,
-                  field: this.path
-                });
-                this.type = null;
-            }
-          }
-        }
+        translateDefaultValues(this);
+        setArrayFieldTypes(this, source);
+        setFieldType(this, source);
 
         // Set schema pattern if not set and pattern is defined
         if (this.pattern && this.schema && !this.schema.pattern) {
@@ -341,6 +326,11 @@ angular.module('formula')
         // Set intial value for select fields with no default
         if (this.type === 'input:select' && !this.multiple && (this.value === null)) {
           this.value = this.enum[0];
+        }
+
+        //Init autocomplete fields
+        if (this.typeOf('autocomplete')) {
+          formulaAutoCompleteService.initField(this);
         }
 
         return this;
