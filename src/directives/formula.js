@@ -23,7 +23,9 @@ angular.module('formula')
 				}
 
 				$scope.schema = new Schema();
-				model.data = $scope.data.model;
+				if ($scope.data.model) {
+					model.data = $scope.data.model;
+				}
 
 				formulaCustomTemplateService.setTemplates($scope.data.templates);
 
