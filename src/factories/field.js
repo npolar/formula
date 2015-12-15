@@ -18,8 +18,8 @@ angular.module('formula')
  * @returns field class constructor
  */
 
-.factory('formulaField', ['$filter', 'formulaLog', 'formulaFormat', 'formulaAutoCompleteService',
-  function($filter, log, format, formulaAutoCompleteService) {
+.factory('formulaField', ['$filter', 'formulaLog', 'formulaFormat', 'formulaAutoCompleteService', 'formulaCustomTemplateService',
+  function($filter, log, format, formulaAutoCompleteService, formulaCustomTemplateService) {
     /**
      * @class field
      *
@@ -293,10 +293,11 @@ angular.module('formula')
        * Useful when creating fields inheriting data from a fomr definition file.
        *
        * @param source Source object the data should be copied from
+       * @param templates Optional custom templates
        * @returns The updated field instance
        */
 
-      attrsSet: function(source) {
+      attrsSet: function(source, templates) {
         var attribs = 'autocomplete,condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,pattern,readonly,required,step,title,values'.split(',');
         angular.forEach(source, function(v, k) {
           if (attribs.indexOf(k) !== -1) {
@@ -308,6 +309,7 @@ angular.module('formula')
         applyFormDefinition(this, source);
         setArrayFieldTypes(this, source);
         setFieldType(this, source);
+        formulaCustomTemplateService.initField(this);
 
         // Set schema pattern if not set and pattern is defined
         if (this.pattern && this.schema && !this.schema.pattern) {
@@ -756,7 +758,16 @@ angular.module('formula')
             this.value = model[this.id];
             this.dirty = true;
           }
+          formulaCustomTemplateService.initField(this);
           this.validate(false);
+        }
+      },
+
+      nrArrayValues: function () {
+        if (this.values) {
+          return this.values.reduce(function (memo, value) {
+            return memo + (value.hidden ? 0 : 1);
+          }, 0);
         }
       }
     };

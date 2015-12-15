@@ -31,10 +31,10 @@
 			<div ng-if="field.typeOf('array')">
 				<div formula:field="field">
 					<fieldset ng-class="{ valid: field.valid, error: field.error }">
-						<legend>{{ field.title }} ({{ field.values.length || 0 }})</legend>
+						<legend>{{ field.title }} ({{ field.nrArrayValues() || 0 }})</legend>
 
 						<ul ng-if="field.typeOf('fieldset')">
-							<li ng-repeat="value in field.values">
+							<li ng-repeat="value in field.values" ng-if="!value.hidden">
 								<fieldset ng-class="{ valid: value.valid }">
 									<legend>
 										<span ng-if="!value.visible">{{ value.fields | formulaInlineValues }}</span>

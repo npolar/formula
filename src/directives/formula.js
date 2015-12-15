@@ -11,8 +11,9 @@
 
 angular.module('formula')
 	.directive('formula',
-	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n', '$http', '$compile', '$templateCache', '$templateRequest', '$q',
-	function(jsonLoader, model, Schema, Form, i18n, $http, $compile, $templateCache, $templateRequest, $q) {
+	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n',
+		'formulaCustomTemplateService', '$http', '$compile', '$templateCache', '$templateRequest', '$q',
+	function(jsonLoader, model, Schema, Form, i18n, formulaCustomTemplateService, $http, $compile, $templateCache, $templateRequest, $q) {
 		return {
 			restrict: 'A',
       scope: { data: '=formula' },
@@ -25,6 +26,8 @@ angular.module('formula')
 				if($scope.data.model) {
 					model.data = $scope.data.model;
 				}
+
+				formulaCustomTemplateService.setTemplates($scope.data.templates);
 
 				$scope.template = $scope.data.template || 'default';
 				$scope.language = { uri: $scope.data.language || null, code: null };

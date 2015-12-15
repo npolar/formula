@@ -11,11 +11,10 @@
    * Norsk Polarinstutt 2014, http://npolar.no/
    */
   angular.module('formula')
-    .directive('formulaField', ['$compile', '$q', 'formulaModel', 'formulaCustomTemplateService',
-    'formulaEvaluateConditionsService',
-      function($compile, $q, model, formulaCustomTemplateService, formulaEvaluateConditionsService) {
+    .directive('formulaField', ['$compile', '$q', 'formulaModel', 'formulaEvaluateConditionsService',
+      function($compile, $q, model, formulaEvaluateConditionsService) {
 
-        var getInputElement = function (scope, element, attrs) {
+        var getInputElement = function(scope, element, attrs) {
           var elem;
           var field = scope.field;
           var type = getType(field);
@@ -74,8 +73,8 @@
             elem = angular.element('<input>');
             elem.attr('list', id);
             list.attr('id', id);
-            field.querySearch('').then(function (matches) {
-              matches.forEach(function (item) {
+            field.querySearch('').then(function(matches) {
+              matches.forEach(function(item) {
                 var opt = angular.element('<option>');
                 opt.attr('value', item);
                 list.append(opt);
@@ -91,7 +90,7 @@
         };
 
 
-        var getType = function (field) {
+        var getType = function(field) {
           var type = field.type ? field.type.split(':') : null;
           type = type ? {
             main: type[0],
@@ -101,7 +100,7 @@
         };
 
 
-        var setAttrs = function (field, attrs) {
+        var setAttrs = function(field, attrs) {
           attrs.$set('id', field.uid);
           attrs.$set('ngModel', 'field.value');
           attrs.$set('formulaField'); // unset
@@ -115,7 +114,7 @@
           }
         };
 
-        var initScope = function (scope, controllers) {
+        var initScope = function(scope, controllers) {
           scope.form = controllers[0].form;
           scope.backupValue = null;
 
@@ -125,7 +124,7 @@
         };
 
         // Add class based on field parents and ID
-        var addPathClass = function (field, elem) {
+        var addPathClass = function(field, elem) {
           var path = 'formula-';
 
           angular.forEach(field.parents, function(parent) {
@@ -142,7 +141,7 @@
         };
 
         // Add css class of schema type
-        var addSchemaClass = function (field, elem) {
+        var addSchemaClass = function(field, elem) {
           var schemaType = field.schema.type;
           if (schemaType) {
             elem.addClass(
@@ -153,40 +152,32 @@
           }
         };
 
-        var getElement = function (scope, element, attrs, controllers) {
+        var getElement = function(scope, element, attrs, controllers) {
           var deferred = $q.defer();
           var field = scope.field;
           var type = getType(field);
-          formulaCustomTemplateService.getCustomTemplate(controllers[0].data.templates, field)
-          .then(
-            // custom template
-            function (template) {
-              var elem = angular.element(template);
-              elem.addClass('formulaCustomObject');
+          if (field.customTemplate) {
+            var elem = angular.element(field.customTemplate);
+            elem.addClass('formulaCustomObject');
+            deferred.resolve(elem);
+          } else if (type.main === 'input') {
+            getInputElement(scope, element, attrs, type).then(function(elem) {
               deferred.resolve(elem);
-          },
-
-          // no custom template
-          function () {
-            if (type.main === 'input') {
-              getInputElement(scope, element, attrs, type).then(function (elem) {
-                deferred.resolve(elem);
-              });
-            } else {
-              deferred.resolve(angular.element(element));
-            }
-          });
+            });
+          } else {
+            deferred.resolve(angular.element(element));
+          }
 
           return deferred.promise;
         };
 
-        var watchFields = function (scope, field) {
+        var watchFields = function(scope, field) {
           var type = getType(field);
           if (type.main === 'input') {
             scope.$watch('field.value', function(n, o) {
               if (n !== o && scope.form) {
                 field.dirty = true;
-                field.parents.forEach(function (parent) {
+                field.parents.forEach(function(parent) {
                   parent.dirty = true;
                 });
                 scope.form.validate();
@@ -207,7 +198,7 @@
             initScope(scope, controllers);
             setAttrs(field, attrs);
 
-            getElement(scope, element, attrs, controllers).then(function (elem) {
+            getElement(scope, element, attrs, controllers).then(function(elem) {
               addPathClass(field, elem);
               addSchemaClass(field, elem);
 
