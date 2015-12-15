@@ -45,10 +45,10 @@
 			<div ng-if="field.typeOf('array')">
 				<div formula:field="field">
 					<div ng-if="field.typeOf('fieldset')" class="panel" ng-class="{ 'panel-danger': field.error, 'panel-success': field.valid }">
-						<div class="panel-heading">{{ field.title }} ({{ field.values.length || 0 }})</div>
+						<div class="panel-heading">{{ field.title }} ({{ field.nrArrayValues() || 0 }})</div>
 
 						<ul class="list-group">
-							<li class="list-group-item" ng-repeat="value in field.values">
+							<li class="list-group-item" ng-repeat="value in field.values" ng-if="!value.hidden">
 								<fieldset>
 									<legend style="border: none; margin-bottom: 10px; text-align: right;">
 										<span ng-class="{ 'text-danger': !value.valid, 'text-success': value.valid }" class="pull-left" ng-if="!value.visible" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 80%; text-align: left;">{{ value.fields | formulaInlineValues }}</span>

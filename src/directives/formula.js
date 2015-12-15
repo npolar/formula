@@ -23,9 +23,7 @@ angular.module('formula')
 				}
 
 				$scope.schema = new Schema();
-				if($scope.data.model) {
-					model.data = $scope.data.model;
-				}
+				model.data = $scope.data.model;
 
 				formulaCustomTemplateService.setTemplates($scope.data.templates);
 
@@ -68,6 +66,7 @@ angular.module('formula')
 
 				var formLoaded = $q.all(asyncs).then(function(data) {
 					$scope.form = $scope.data.formula = new Form($scope.data.form);
+					$scope.form.onsave = $scope.data.onsave;
 					$scope.form.build(data[0], data[1]);
 					$scope.form.translate($scope.language.code);
 					return true;

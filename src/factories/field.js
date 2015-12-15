@@ -265,9 +265,9 @@ angular.module('formula')
     var applyFormDefinition = function(field, source) {
       if (field.fields && source.fields) {
         // Update field properties based on form specification
+        var fieldMatch;
         source.fields.forEach(function(fieldDefinition) {
           if (typeof fieldDefinition === 'object') {
-            var fieldMatch;
             if (field.typeOf('fieldset')) {
               fieldMatch = field.fields[0].fieldFromID(fieldDefinition.id);
             } else {
@@ -276,6 +276,13 @@ angular.module('formula')
 
             if (fieldMatch) {
               fieldMatch.attrsSet(fieldDefinition);
+            }
+          } else if (typeof fieldDefinition === 'string') {
+            if (fieldDefinition.charAt(0) === "!") {
+              fieldMatch = field.fieldFromID(fieldDefinition.slice(1));
+              if (fieldMatch) {
+                field.fields.splice(fieldMatch.index, 1);
+              }
             }
           }
         });
