@@ -420,76 +420,6 @@ angular.module('formula')
 
 })();
 
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2015, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter inlineValues
-	 *
-	 * Filter used to inline an array of values.
-	 */
-
-	.filter('formulaInlineValues', function() {
-		return function(input, params) {
-			var result = [];
-
-			angular.forEach(input, function(field) {
-				if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-
-					default:
-				}
-			});
-
-			return result.join(', ');
-		};
-	});
-
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter replace
-	 *
-	 * Filter used to replace placeholders in a string.
-	 */
-
-	.filter('formulaReplace', function() {
-		return function(input, params) {
-			var result = input, match = input.match(/\{[^\}]*\}/g);
-
-			angular.forEach(match, function(v, k) {
-				result = result.replace(v, params[v.substr(1, v.length - 2)]);
-			});
-
-			return result;
-		};
-	});
-
 'use strict';
 /* globals angular,tv4 */
 
@@ -2158,6 +2088,76 @@ angular.module('formula')
  * formula.js
  * Generic JSON Schema form builder
  *
+ * Norsk Polarinstutt 2015, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter inlineValues
+	 *
+	 * Filter used to inline an array of values.
+	 */
+
+	.filter('formulaInlineValues', function() {
+		return function(input, params) {
+			var result = [];
+
+			angular.forEach(input, function(field) {
+				if(field.value instanceof Array) {
+					result.push('Array[' + field.value.length + ']');
+				} else switch(typeof field.value) {
+					case 'string':
+					case 'number':
+					case 'boolean':
+						result.push(field.value);
+						break;
+
+					default:
+				}
+			});
+
+			return result.join(', ');
+		};
+	});
+
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter replace
+	 *
+	 * Filter used to replace placeholders in a string.
+	 */
+
+	.filter('formulaReplace', function() {
+		return function(input, params) {
+			var result = input, match = input.match(/\{[^\}]*\}/g);
+
+			angular.forEach(match, function(v, k) {
+				result = result.replace(v, params[v.substr(1, v.length - 2)]);
+			});
+
+			return result;
+		};
+	});
+
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
  * Norsk Polarinstutt 2014, http://npolar.no/
  */
 angular.module('formula')
@@ -2282,8 +2282,16 @@ angular.module('formula')
         var deferred = $q.defer();
         var template = getMatchingTemplate(templates, field);
         if (template) {
-          if (template.template) {
-            deferred.resolve(angular.element(template.template));
+          if (template.hidden) {
+            deferred.resolve('<div>');
+            // intentional != (allow empty string)
+            // jshint -W116
+          } else if (template.template != null) {
+            if (template.template === "") {
+              deferred.resolve('<div>');
+            } else {
+              deferred.resolve(template.template);
+            }
           } else if (template.templateUrl) {
             doTemplateRequest(template.templateUrl).then(function (template) {
               deferred.resolve(template);

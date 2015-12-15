@@ -37,8 +37,16 @@ angular.module('formula')
         var deferred = $q.defer();
         var template = getMatchingTemplate(templates, field);
         if (template) {
-          if (template.template) {
-            deferred.resolve(angular.element(template.template));
+          if (template.hidden) {
+            deferred.resolve('<div>');
+            // intentional != (allow empty string)
+            // jshint -W116
+          } else if (template.template != null) {
+            if (template.template === "") {
+              deferred.resolve('<div>');
+            } else {
+              deferred.resolve(template.template);
+            }
           } else if (template.templateUrl) {
             doTemplateRequest(template.templateUrl).then(function (template) {
               deferred.resolve(template);
