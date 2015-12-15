@@ -394,6 +394,7 @@ angular.module('formula')
             angular.forEach(schema.properties, function(val, key) {
               var newField = new Field(val, key, parents);
               newField.required = (schema.required && schema.required.indexOf(key) !== -1);
+              newField.index = this.fields.length;
 
               if (newField.type) {
                 this.fields.push(newField);
