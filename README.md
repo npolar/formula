@@ -29,7 +29,9 @@ templates: [{
       return field.id === "ref_object";
     },
     templateUrl: 'customObject.html',
-    //template: '<p>{{field.title}}</p>'
+    //template: '<p>{{field.title}}</p>',
+    //template: '',
+    //hidden: true
 }]
 ```
 
