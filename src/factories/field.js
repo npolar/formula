@@ -32,14 +32,16 @@ angular.module('formula')
      * @param parents An optional array of the field parents
      */
 
-    function Field(data, id, parents) {
-      if (typeof data === 'object') {
-        this.id = id || data.id || null;
-        this.index = null;
-        this.nullable = data.nullable || false;
+    function Field(schema, id, parents, fieldDefinition) {
+      if (typeof schema === 'object') {
         this.parents = parents || [];
+        this.id = id;
         this.path = null;
-        this.schema = data.schema || data;
+        this.schema = schema;
+        this.fieldDefinition = fieldDefinition || {};
+        copyFrom(this, schema);
+        copyFrom(this, fieldDefinition);
+        this.required = (this.schema.required && this.schema.required.indexOf(this.id) !== -1);
 
         var invalidCharacters = ['.', '/', '#'];
         angular.forEach(invalidCharacters, function(char) {
@@ -53,8 +55,10 @@ angular.module('formula')
 
         this.uidGen();
         this.pathGen();
-        this.attrsSet(data);
+        this.attrsSet();
       }
+      console.log('new Field()', this);
+      return this;
     }
 
     var translateDefaultValues = function(field) {
@@ -93,33 +97,39 @@ angular.module('formula')
       }
     };
 
-    var setArrayFieldTypes = function(field, source) {
-      if (source.type instanceof Array) {
-        field.nullable = source.type.some(function(type) {
+    var reduceFieldTypes = function(field) {
+      if (field.type instanceof Array) {
+        field.nullable = field.type.some(function(type) {
           return type === 'null';
         });
-        if (source.type.length === 1) {
-          source.type = source.type[0];
-        } else if (source.type.length === 2) {
-          if (source.type[0] === 'null') {
-            source.type = source.type[1];
-          } else if (source.type[1] === 'null') {
-            source.type = source.type[0];
+        if (field.type.length === 1) {
+          field.type = field.type[0];
+        } else if (field.type.length === 2) {
+          if (field.type[0] === 'null') {
+            field.type = field.type[1];
+          } else if (field.type[1] === 'null') {
+            field.type = field.type[0];
           }
         } else {
-          source.types = source.type;
-          source.type = 'any';
+          field.types = field.type;
+          field.type = 'any';
           // @TODO support any
         }
       }
     };
 
-    var setFieldType = function(field, source) {
+    /**
+     * Set fieldType and associated properties
+     *
+     * @param field
+     * @param source schema or fieldDefinition
+     */
+    var setFieldType = function(field) {
+      reduceFieldTypes(field);
       if (field.autocomplete) {
         field.type = 'input:autocomplete';
-      } else if (source.type === 'select' || source.enum) {
+      } else if (field.type === 'select' || field.enum) {
         field.type = 'input:select';
-        field.multiple = !!source.multiple;
       } else {
         if (field.format) {
           var formatNoDash = field.format.replace('-', '');
@@ -144,39 +154,38 @@ angular.module('formula')
             field.type = 'input:text';
           }
         } else {
-          switch (source.type) {
-            case 'input:any':
+          switch (field.type) {
+            case 'any':
               field.type = 'input:any';
               break;
             case 'array':
-            case 'array:field':
-            case 'array:fieldset':
-            case 'array:array':
               field.values = [];
-              if (source.items) {
-                if (source.items.type === 'object') {
-                  field.type = 'array:fieldset';
-                  field.fieldAdd(source.items);
-                } else if (source.items.type === 'array') {
+              if (field.schema.items) {
+                var items = field.schema.items;
+                if (field.fieldDefinition.fields) {
+                  copyFrom(items, field.fieldDefinition.fields[0]);
+                }
+                if (items.type === 'object') {
+                  field.type = 'array:object';
+                } else if (items.type === 'array') {
                   field.type = 'array:array';
-                  field.fieldAdd(source.items);
-                } else if (source.items.enum) {
-                  field.enum = source.items.enum;
+                } else if (items.enum) {
+                  field.enum = items.enum;
                   field.multiple = true;
                   field.type = 'input:select';
-                } else if (source.items.allOf) {
+                } else if (items.allOf) {
                   // @TODO
                   log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
                     property: 'allOf',
                     field: field.path
                   });
-                } else if (source.items.anyOf) {
+                } else if (items.anyOf) {
                   // @TODO
                   log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
                     property: 'anyOf',
                     field: field.path
                   });
-                } else if (source.items.oneOf) {
+                } else if (items.oneOf) {
                   // @TODO
                   log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
                     property: 'oneOf',
@@ -184,14 +193,10 @@ angular.module('formula')
                   });
                 } else {
                   field.type = 'array:field';
-                  field.fieldAdd(source.items);
                 }
-                if (source.minItems >= 1) {
+                if (field.schema.minItems >= 1) {
                   field.required = true;
                 }
-              } else if (source.fields) {
-                field.type = source.type;
-                field.fields = source.fields;
               } else {
                 log.warning(log.codes.FIELD_MISSING_PROPERTY, {
                   property: 'items',
@@ -203,32 +208,21 @@ angular.module('formula')
 
             case 'boolean':
             case 'checkbox':
-            case 'input:checkbox':
               field.type = 'input:checkbox';
-              field.value = false;
+              field.value = !!field.value;
               break;
 
-            case 'input:number':
             case 'integer':
             case 'number':
-              field.step = source.step || null;
               field.type = 'input:number';
               break;
 
-            case 'input:range':
             case 'range':
-              field.step = source.step || null;
               field.type = 'input:range';
               break;
 
             case 'object':
-              if (source.properties) {
-                field.type = 'object';
-                field.fieldAdd(source);
-              } else if (source.fields) {
-                field.type = 'object';
-                field.fields = source.fields;
-              } else {
+              if (!field.schema.properties) {
                 log.warning(log.codes.FIELD_MISSING_PROPERTY, {
                   property: 'properties',
                   field: field.path
@@ -237,23 +231,21 @@ angular.module('formula')
               }
               break;
 
-            case 'input:textarea':
             case 'textarea':
               field.type = 'input:textarea';
               break;
 
-            case 'input:text':
             case 'string':
             case 'text':
               field.type = 'input:text';
               break;
             case undefined:
-              field.type = (field.type || 'input:text');
+              field.type = 'input:text';
               break;
 
             default:
               log.warning(log.codes.FIELD_UNSUPPORTED_TYPE, {
-                type: source.type,
+                type: field.type,
                 field: field.path
               });
               field.type = null;
@@ -262,31 +254,21 @@ angular.module('formula')
       }
     };
 
-    var applyFormDefinition = function(field, source) {
-      if (field.fields && source.fields) {
-        // Update field properties based on form specification
-        if (field.typeOf('fieldset')) {
-          field.fields.forEach(function(subfield) {
-            return applyFormDefinition(subfield, source);
-          });
-        }
 
-        var fieldMatch;
-        source.fields.forEach(function(fieldDefinition) {
-          if (typeof fieldDefinition === 'object') {
-            fieldMatch = field.fieldFromID(fieldDefinition.id);
-            if (fieldMatch) {
-              fieldMatch.attrsSet(fieldDefinition);
-            }
-          } else if (typeof fieldDefinition === 'string' && fieldDefinition.charAt(0) === "!") {
-            field.fields.forEach(function (subfield, index) {
-              if (subfield.id === fieldDefinition.slice(1)) {
-                field.fields.splice(index, 1);
-              }
-            });
-          }
-        });
+    var copyFrom = function (field, data) {
+      if (typeof field !== 'object' && typeof data !== 'object') {
+        return;
       }
+      var attribs = 'autocomplete,condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,nullable,pattern,readonly,required,step,title,type,values'.split(',');
+      angular.forEach(data, function(v, k) {
+        if (attribs.indexOf(k) !== -1) {
+          field[k] = v;
+        }
+      });
+    };
+
+    var skipField = function (fieldDefinition) {
+      return (typeof fieldDefinition === 'string' && fieldDefinition.charAt(0) === "!");
     };
 
     Field.uids = [];
@@ -296,30 +278,23 @@ angular.module('formula')
       /**
        * @method attrsSet
        *
-       * Function used to copy attributes from a source object.
-       * Useful when creating fields inheriting data from a fomr definition file.
+       * Set attributes
        *
-       * @param source Source object the data should be copied from
-       * @param templates Optional custom templates
        * @returns The updated field instance
        */
 
-      attrsSet: function(source, templates) {
-        var attribs = 'autocomplete,condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,pattern,readonly,required,step,title,values'.split(',');
-        angular.forEach(source, function(v, k) {
-          if (attribs.indexOf(k) !== -1) {
-            this[k] = v;
-          }
-        }, this);
-
+      attrsSet: function() {
         translateDefaultValues(this);
-        applyFormDefinition(this, source);
-        setArrayFieldTypes(this, source);
-        setFieldType(this, source);
+        setFieldType(this);
+
+        if (this.typeOf('array') || this.typeOf('object')) {
+          this.fieldAdd();
+        }
+
         formulaCustomTemplateService.initField(this);
 
         // Set schema pattern if not set and pattern is defined
-        if (this.pattern && this.schema && !this.schema.pattern) {
+        if (this.pattern && !this.schema.pattern) {
           this.schema.pattern = this.pattern;
         }
 
@@ -338,23 +313,22 @@ angular.module('formula')
 
         this.visible = this.hidden ? false : true;
 
+        // undefined is null
         if (this.value === undefined) {
-          if ((this.value = source.value) === undefined) {
-            if ((this.value = this.default) === undefined) {
-              this.value = null;
-            }
+          if ((this.value = this.default) === undefined) {
+            this.value = null;
           }
         }
 
         // Ensure array typed default if required
-        if (this.default && source.type === 'array') {
+        if (this.default && this.typeOf('array')) {
           if (!(this.default instanceof Array)) {
             this.default = [this.default];
           }
         }
 
         // Set intial value for select fields with no default
-        if (this.type === 'input:select' && !this.multiple && (this.value === null)) {
+        if (this.typeOf('select') && !this.multiple && (this.value === null)) {
           this.value = this.enum[0];
         }
 
@@ -375,43 +349,49 @@ angular.module('formula')
        * @returns true if the field was successfully added, otherwise false
        */
 
-      fieldAdd: function(schema) {
-        if (typeof schema === 'object') {
-          if (!this.fields) {
-            this.fields = [];
-          }
+      fieldAdd: function() {
+        var newField;
+        var parents = this.parents.slice();
+        parents.push({
+          id: this.id,
+          index: this.index
+        });
 
-          var parents = [];
-          angular.forEach(this.parents, function(parent) {
-            parents.push(parent);
-          });
-          parents.push({
-            id: this.id,
-            index: this.index
-          });
-
-          if (schema.type === 'object' && !this.typeOf('array')) {
-            angular.forEach(schema.properties, function(val, key) {
-              var newField = new Field(val, key, parents);
-              newField.required = (schema.required && schema.required.indexOf(key) !== -1);
-              newField.index = this.fields.length;
-
-              if (newField.type) {
-                this.fields.push(newField);
-              }
-            }, this);
-          } else {
-            var id = schema.id || (this.id || /\/(.*?)$/.exec(this.path)[1]) + '_' + schema.type;
-            var newField = new Field(schema, id, parents);
-            newField.index = this.fields.length;
-            this.fields.push(newField);
-          }
-
-          return true;
+        if (!this.fields) {
+          this.fields = [];
         }
 
-        // TODO: Warning
-        return false;
+        if (this.typeOf('array')) {
+          var id = this.schema.items.id ||
+            (this.id || /\/(.*?)$/.exec(this.path)[1]) + '_' + (this.schema.items.type || 'any');
+          var fieldDefinition = this.fieldDefinition.fields ? this.fieldDefinition.fields[0] : null;
+          var schema = this.schema.items;
+          schema.required = this.schema.required;
+          newField = new Field(schema, id, parents, fieldDefinition);
+          newField.index = this.fields.length;
+          this.fields.push(newField);
+
+        } else if (this.typeOf('object')) {
+          Object.keys(this.schema.properties).forEach(function(key) {
+            var schema = this.schema.properties[key];
+            var fieldDefinition;
+            if (this.fieldDefinition.fields) {
+              this.fieldDefinition.fields.forEach(function (field) {
+                if (key === field.id || key === field) {
+                  fieldDefinition = field;
+                }
+              });
+            }
+
+            if (!skipField(fieldDefinition)) {
+              schema.required = this.schema.required;
+              var newField = new Field(schema, key, parents, fieldDefinition);
+              newField.index = this.fields.length;
+              this.fields.push(newField);
+            }
+
+          }, this);
+        }
       },
 
       /**
@@ -527,20 +507,21 @@ angular.module('formula')
       /**
        * @method pathGen
        *
-       * Function used to generate full JSON path for fields.
+       * Function used to generate full JSON path for fields
        */
       pathGen: function() {
         this.path = '#/';
 
+        // jshint -W116
         angular.forEach(this.parents, function(parent) {
-          if (parent.index !== null) {
+          if (parent.index != null) {
             this.path += parent.index + '/';
           }
 
           this.path += parent.id + '/';
         }, this);
 
-        if (this.index !== null) {
+        if (this.index != null) {
           this.path += this.index;
 
           if (this.id) {
@@ -677,7 +658,7 @@ angular.module('formula')
               break;
 
             case 'object':
-              this.value = {};
+              this.value = this.value || {};
               if (this.fields) {
                 angular.forEach(this.fields, function(field, index) {
                   if (field.dirty || force) {

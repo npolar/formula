@@ -24,7 +24,7 @@ angular.module('formula')
 
 				$scope.schema = new Schema();
 				if ($scope.data.model) {
-					model.data = $scope.data.model;
+					model.set($scope.data.model);
 				}
 
 				formulaCustomTemplateService.setTemplates($scope.data.templates);
@@ -61,23 +61,19 @@ angular.module('formula')
 					});
 				}
 
-				var asyncs = [$scope.schema.deref($scope.data.schema)];
+				var asyncs = [loadTemplate($scope.data.template), $scope.schema.deref($scope.data.schema)];
 				if ($scope.data.form) {
 					asyncs.push(jsonLoader($scope.data.form));
 				}
 
 				var formLoaded = $q.all(asyncs).then(function(data) {
-					$scope.form = $scope.data.formula = new Form($scope.data.form);
+					$scope.form = $scope.data.formula = new Form(data[1], data[2]);
 					$scope.form.onsave = $scope.data.onsave;
-					$scope.form.build(data[0], data[1]);
 					$scope.form.translate($scope.language.code);
-					return true;
-				});
-
-				loadTemplate($scope.data.template).then(function (templateElement) {
-					$compile(angular.element(templateElement))($scope, function (cloned, scope) {
+					$compile(angular.element(data[0]))($scope, function (cloned, scope) {
 						$element.prepend(cloned);
 					});
+					return true;
 				});
 
 				// Enable language hot-swapping

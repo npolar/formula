@@ -37,7 +37,6 @@
 		angular.module('demo', ['formula', 'ngResource'])
 			.controller('demoController', function($scope, $timeout, $resource, formulaAutoCompleteService) {
 				var updateModel = function() {
-					console.log('update!');
 					$scope.formulaData.model = {
 						_id: 'foobarID',
 						string: 'timeoutfoobar',
@@ -87,7 +86,8 @@
 					template: null,
 					language: null,
 					model: {
-						string: 'initfoobar'
+						string: 'initfoobar',
+						boolean: true
 					},
 					templates: [{
 						match(field) {
@@ -121,7 +121,7 @@
 
 				getResource();
 
-				$timeout(updateModel, 1000);
+				//$timeout(updateModel, 1000);
 
 			});
 	</script>

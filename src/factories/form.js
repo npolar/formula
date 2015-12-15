@@ -18,39 +18,75 @@ angular.module('formula')
  */
 .factory('formulaForm', ['formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
   function(jsonLoader, model, Field, i18n) {
-    function fieldsetFromSchema(form, schema) {
+    function fieldsetFromSchema(schema) {
       if (schema && schema.type === 'object') {
-        var fields = [];
+        var fieldsets = [{
+          fields: []
+        }];
 
-        angular.forEach(schema.properties, function(val, key) {
+        Object.keys(schema.properties).forEach(function(key) {
+          var val = schema.properties[key];
           var newField = new Field(val, key);
-          newField.required = newField.required || (schema.required && schema.required.indexOf(key) !== -1);
           newField.valueFromModel(model.data);
-
-          fields.push(newField);
+          fieldsets[0].fields.push(newField);
         });
 
-        return fields;
+        return fieldsets;
       }
 
       return null;
     }
+
+    var fieldsetFromDefinition = function (schema, formDefinition) {
+      if (schema && schema.type === 'object' && formDefinition.fieldsets) {
+        var fieldsets = [];
+
+        formDefinition.fieldsets.forEach(function(fs, i) {
+          var fieldset = {
+            title: fs.title,
+            active: (i ? false : true),
+            fields: []
+          };
+          fs.fields.forEach(function(f, j) {
+            var key;
+            if (typeof f === 'string') {
+              key = f;
+            } else {
+              key = f.id;
+            }
+            var parents = [{id: fs.title}];
+            var newField = new Field(schema.properties[key], key, parents, f);
+            newField.valueFromModel(model.data);
+            fieldset.fields.push(newField);
+          });
+          fieldsets.push(fieldset);
+        });
+        return fieldsets;
+      }
+      return null;
+    };
 
     /**
      * @class form
      *
      * HTML form handler class.
      *
-     * @param uri Optional URI to form definition object
+     * @param schema Mandatory JSON Schema object
+     * @param formDefinition Optional form definition object
      */
-    function Form(uri) {
+    function Form(schema, formDefinition) {
       this.errors = null;
-      this.fieldsets = null;
       this.i18n = i18n(null);
-      this.schema = null;
+      this.schema = schema;
       this.title = null;
-      this.uri = uri || null;
       this.valid = false;
+
+      if (formDefinition) {
+        this.title = formDefinition.title;
+        this.fieldsets = fieldsetFromDefinition(schema, formDefinition);
+      } else {
+        this.fieldsets = fieldsetFromSchema(schema);
+      }
 
       this.onsave = function(model) {
         window.open("data:application/json," + JSON.stringify(model));
@@ -85,59 +121,6 @@ angular.module('formula')
             }
           }
         });
-      },
-
-      /**
-       * @method build
-       *
-       * Function used to build a HTML form based on a JSON Schema.
-       *
-       * @param schema Mandatory JSON Schema object
-       * @param form Optional form definition object
-       */
-      build: function(schema, form) {
-        if (typeof schema === 'object') {
-          var baseForm = fieldsetFromSchema(this, schema);
-          baseForm.fieldExtended = function(formField) {
-            for (var i = 0; i < this.length; ++i) {
-              var obj = (typeof formField === 'object');
-              if (this[i].id === (obj ? formField.id : formField)) {
-                if (obj) {
-                  var ret = new Field(this[i]);
-                  return ret.attrsSet(formField);
-                }
-                return new Field(this[i]);
-              }
-            }
-            return null;
-          };
-
-          if (form && form.fieldsets) {
-            this.title = form.title;
-            this.fieldsets = [];
-
-            angular.forEach(form.fieldsets, function(fs, i) {
-              this.fieldsets.push({
-                title: fs.title,
-                active: (i ? false : true),
-                fields: []
-              });
-              angular.forEach(fs.fields, function(f, j) {
-                var field = baseForm.fieldExtended(f);
-                if (field) {
-                  this.fieldsets[i].fields.push(field);
-                }
-              }, this);
-            }, this);
-          } else {
-            this.fieldsets = [{
-              fields: baseForm,
-              active: true
-            }];
-          }
-
-          this.schema = schema;
-        }
       },
 
       /**

@@ -15,7 +15,8 @@
 				"string_datetime",
 				"string_date",
 				"string_enum_default",
-				"string_color"
+				"string_color",
+				"boolean"
 			]
 		},
 		{

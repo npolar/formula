@@ -19,7 +19,7 @@
 			</div>
 
 			<div ng-if="field.typeOf('object')">
-				<fieldset formula:field="field">
+				<fieldset>
 					<legend ng-if="field.title">{{ field.title }}</legend>
 
 					<div ng-repeat="field in field.fields" ng-show="field.visible">
@@ -29,7 +29,7 @@
 			</div>
 
 			<div ng-if="field.typeOf('array')">
-				<div formula:field="field">
+				<div>
 					<fieldset ng-class="{ valid: field.valid, error: field.error }">
 						<legend>{{ field.title }} ({{ field.nrArrayValues() || 0 }})</legend>
 
@@ -53,7 +53,7 @@
 
 						<ul ng-if="field.typeOf('field')">
 							<li ng-repeat="value in field.values" ng-class="{ valid: value.valid, error: value.error }">
-								<input formula:field="value" />
+								<formula:field-instance field="value" ng-show="value.visible"/>
 								<a href="" class="remove" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
 								<span ng-if="value.error">{{ value.error }}</span>
 							</li>
