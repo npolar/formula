@@ -57,7 +57,7 @@ angular.module('formula')
       }
     }
 
-    var translateDefaultValues = function (field) {
+    var translateDefaultValues = function(field) {
       if (typeof field.default === 'string') {
         var match = field.default.match(/^%(.*)%$/),
           replace;
@@ -93,9 +93,9 @@ angular.module('formula')
       }
     };
 
-    var setArrayFieldTypes = function (field, source) {
+    var setArrayFieldTypes = function(field, source) {
       if (source.type instanceof Array) {
-        field.nullable = source.type.some(function (type) {
+        field.nullable = source.type.some(function(type) {
           return type === 'null';
         });
         if (source.type.length === 1) {
@@ -114,7 +114,7 @@ angular.module('formula')
       }
     };
 
-    var setFieldType = function (field, source) {
+    var setFieldType = function(field, source) {
       if (field.autocomplete) {
         field.type = 'input:autocomplete';
       } else if (source.type === 'select' || source.enum) {
@@ -262,6 +262,26 @@ angular.module('formula')
       }
     };
 
+    var applyFormDefinition = function(field, source) {
+      if (field.fields && source.fields) {
+        // Update field properties based on form specification
+        source.fields.forEach(function(fieldDefinition) {
+          if (typeof fieldDefinition === 'object') {
+            var fieldMatch;
+            if (field.typeOf('fieldset')) {
+              fieldMatch = field.fields[0].fieldFromID(fieldDefinition.id);
+            } else {
+              fieldMatch = field.fieldFromID(fieldDefinition.id);
+            }
+
+            if (fieldMatch) {
+              fieldMatch.attrsSet(fieldDefinition);
+            }
+          }
+        });
+      }
+    };
+
     Field.uids = [];
 
     Field.prototype = {
@@ -285,6 +305,7 @@ angular.module('formula')
         }, this);
 
         translateDefaultValues(this);
+        applyFormDefinition(this, source);
         setArrayFieldTypes(this, source);
         setFieldType(this, source);
 
@@ -414,7 +435,8 @@ angular.module('formula')
        */
       itemAdd: function() {
         if (this.typeOf('array') && this.fields) {
-          var parents = [], index;
+          var parents = [],
+            index;
           this.parents.forEach(function(parent) {
             parents.push(parent);
           });
@@ -568,7 +590,7 @@ angular.module('formula')
 
         return uid;
       },
-      isEmpty: function () {
+      isEmpty: function() {
         // intetional ==
         // jshint -W116
         return (this.value == null || this.value.length === 0);
@@ -688,7 +710,7 @@ angular.module('formula')
             }
           }
 
-          this.error = !this.valid ? tv4.error.message: null;
+          this.error = !this.valid ? tv4.error.message : null;
           this.dirty = false;
           return this.valid;
         }

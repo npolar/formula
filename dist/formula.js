@@ -420,6 +420,76 @@ angular.module('formula')
 
 })();
 
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2015, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter inlineValues
+	 *
+	 * Filter used to inline an array of values.
+	 */
+
+	.filter('formulaInlineValues', function() {
+		return function(input, params) {
+			var result = [];
+
+			angular.forEach(input, function(field) {
+				if(field.value instanceof Array) {
+					result.push('Array[' + field.value.length + ']');
+				} else switch(typeof field.value) {
+					case 'string':
+					case 'number':
+					case 'boolean':
+						result.push(field.value);
+						break;
+
+					default:
+				}
+			});
+
+			return result.join(', ');
+		};
+	});
+
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter replace
+	 *
+	 * Filter used to replace placeholders in a string.
+	 */
+
+	.filter('formulaReplace', function() {
+		return function(input, params) {
+			var result = input, match = input.match(/\{[^\}]*\}/g);
+
+			angular.forEach(match, function(v, k) {
+				result = result.replace(v, params[v.substr(1, v.length - 2)]);
+			});
+
+			return result;
+		};
+	});
+
 'use strict';
 /* globals angular,tv4 */
 
@@ -479,7 +549,7 @@ angular.module('formula')
       }
     }
 
-    var translateDefaultValues = function (field) {
+    var translateDefaultValues = function(field) {
       if (typeof field.default === 'string') {
         var match = field.default.match(/^%(.*)%$/),
           replace;
@@ -515,9 +585,9 @@ angular.module('formula')
       }
     };
 
-    var setArrayFieldTypes = function (field, source) {
+    var setArrayFieldTypes = function(field, source) {
       if (source.type instanceof Array) {
-        field.nullable = source.type.some(function (type) {
+        field.nullable = source.type.some(function(type) {
           return type === 'null';
         });
         if (source.type.length === 1) {
@@ -536,7 +606,7 @@ angular.module('formula')
       }
     };
 
-    var setFieldType = function (field, source) {
+    var setFieldType = function(field, source) {
       if (field.autocomplete) {
         field.type = 'input:autocomplete';
       } else if (source.type === 'select' || source.enum) {
@@ -684,6 +754,26 @@ angular.module('formula')
       }
     };
 
+    var applyFormDefinition = function(field, source) {
+      if (field.fields && source.fields) {
+        // Update field properties based on form specification
+        source.fields.forEach(function(fieldDefinition) {
+          if (typeof fieldDefinition === 'object') {
+            var fieldMatch;
+            if (field.typeOf('fieldset')) {
+              fieldMatch = field.fields[0].fieldFromID(fieldDefinition.id);
+            } else {
+              fieldMatch = field.fieldFromID(fieldDefinition.id);
+            }
+
+            if (fieldMatch) {
+              fieldMatch.attrsSet(fieldDefinition);
+            }
+          }
+        });
+      }
+    };
+
     Field.uids = [];
 
     Field.prototype = {
@@ -707,6 +797,7 @@ angular.module('formula')
         }, this);
 
         translateDefaultValues(this);
+        applyFormDefinition(this, source);
         setArrayFieldTypes(this, source);
         setFieldType(this, source);
 
@@ -836,7 +927,8 @@ angular.module('formula')
        */
       itemAdd: function() {
         if (this.typeOf('array') && this.fields) {
-          var parents = [], index;
+          var parents = [],
+            index;
           this.parents.forEach(function(parent) {
             parents.push(parent);
           });
@@ -990,7 +1082,7 @@ angular.module('formula')
 
         return uid;
       },
-      isEmpty: function () {
+      isEmpty: function() {
         // intetional ==
         // jshint -W116
         return (this.value == null || this.value.length === 0);
@@ -1110,7 +1202,7 @@ angular.module('formula')
             }
           }
 
-          this.error = !this.valid ? tv4.error.message: null;
+          this.error = !this.valid ? tv4.error.message : null;
           this.dirty = false;
           return this.valid;
         }
@@ -2058,76 +2150,6 @@ angular.module('formula')
 
 		return Schema;
 	}]);
-
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2015, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter inlineValues
-	 *
-	 * Filter used to inline an array of values.
-	 */
-
-	.filter('formulaInlineValues', function() {
-		return function(input, params) {
-			var result = [];
-
-			angular.forEach(input, function(field) {
-				if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-
-					default:
-				}
-			});
-
-			return result.join(', ');
-		};
-	});
-
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter replace
-	 *
-	 * Filter used to replace placeholders in a string.
-	 */
-
-	.filter('formulaReplace', function() {
-		return function(input, params) {
-			var result = input, match = input.match(/\{[^\}]*\}/g);
-
-			angular.forEach(match, function(v, k) {
-				result = result.replace(v, params[v.substr(1, v.length - 2)]);
-			});
-
-			return result;
-		};
-	});
 
 "use strict";
 /* globals angular */

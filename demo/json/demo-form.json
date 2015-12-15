@@ -33,7 +33,19 @@
 		{
 			"title": "arrays and objects",
 			"fields": [
-				"array_object",
+				{
+					"id": "array_object",
+					"fields": [
+						{
+							"id": "string_default",
+							"title": "Fancy title"
+						},
+						{
+							"id": "number",
+							"hidden": true
+						}
+					]
+				},
 				"array_string_enum",
 				"array_string",
 				"ref_object",
