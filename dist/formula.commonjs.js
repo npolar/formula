@@ -682,25 +682,25 @@ angular.module('formula')
     var applyFormDefinition = function(field, source) {
       if (field.fields && source.fields) {
         // Update field properties based on form specification
+        if (field.typeOf('fieldset')) {
+          field.fields.forEach(function(subfield) {
+            return applyFormDefinition(subfield, source);
+          });
+        }
+
         var fieldMatch;
         source.fields.forEach(function(fieldDefinition) {
           if (typeof fieldDefinition === 'object') {
-            if (field.typeOf('fieldset')) {
-              fieldMatch = field.fields[0].fieldFromID(fieldDefinition.id);
-            } else {
-              fieldMatch = field.fieldFromID(fieldDefinition.id);
-            }
-
+            fieldMatch = field.fieldFromID(fieldDefinition.id);
             if (fieldMatch) {
               fieldMatch.attrsSet(fieldDefinition);
             }
-          } else if (typeof fieldDefinition === 'string') {
-            if (fieldDefinition.charAt(0) === "!") {
-              fieldMatch = field.fieldFromID(fieldDefinition.slice(1));
-              if (fieldMatch) {
-                field.fields.splice(fieldMatch.index, 1);
+          } else if (typeof fieldDefinition === 'string' && fieldDefinition.charAt(0) === "!") {
+            field.fields.forEach(function (subfield, index) {
+              if (subfield.id === fieldDefinition.slice(1)) {
+                field.fields.splice(index, 1);
               }
-            }
+            });
           }
         });
       }
@@ -1187,9 +1187,9 @@ angular.module('formula')
         }
       },
 
-      nrArrayValues: function () {
+      nrArrayValues: function() {
         if (this.values) {
-          return this.values.reduce(function (memo, value) {
+          return this.values.reduce(function(memo, value) {
             return memo + (value.hidden ? 0 : 1);
           }, 0);
         }
