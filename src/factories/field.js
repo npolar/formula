@@ -38,6 +38,7 @@ angular.module('formula')
         this.id = id;
         this.path = null;
         this.schema = schema;
+        this.value = null;
         this.fieldDefinition = fieldDefinition || {};
         copyFrom(this, schema);
         copyFrom(this, fieldDefinition);
@@ -166,7 +167,7 @@ angular.module('formula')
                   copyFrom(items, field.fieldDefinition.fields[0]);
                 }
                 if (items.type === 'object') {
-                  field.type = 'array:object';
+                  field.type = 'array:fieldset';
                 } else if (items.type === 'array') {
                   field.type = 'array:array';
                 } else if (items.enum) {
@@ -366,7 +367,6 @@ angular.module('formula')
             (this.id || /\/(.*?)$/.exec(this.path)[1]) + '_' + (this.schema.items.type || 'any');
           var fieldDefinition = this.fieldDefinition.fields ? this.fieldDefinition.fields[0] : null;
           var schema = this.schema.items;
-          schema.required = this.schema.required;
           newField = new Field(schema, id, parents, fieldDefinition);
           newField.index = this.fields.length;
           this.fields.push(newField);
@@ -384,7 +384,7 @@ angular.module('formula')
             }
 
             if (!skipField(fieldDefinition)) {
-              schema.required = this.schema.required;
+              schema.required = schema.required || this.schema.required;
               var newField = new Field(schema, key, parents, fieldDefinition);
               newField.index = this.fields.length;
               this.fields.push(newField);
@@ -425,11 +425,8 @@ angular.module('formula')
        */
       itemAdd: function() {
         if (this.typeOf('array') && this.fields) {
-          var parents = [],
+          var parents = this.parents.slice(),
             index;
-          this.parents.forEach(function(parent) {
-            parents.push(parent);
-          });
           parents.push({
             id: this.id,
             index: this.index

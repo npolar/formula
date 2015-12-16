@@ -26,6 +26,7 @@ angular.module('formula')
 
         Object.keys(schema.properties).forEach(function(key) {
           var val = schema.properties[key];
+          val.required = schema.required;
           var newField = new Field(val, key);
           newField.valueFromModel(model.data);
           fieldsets[0].fields.push(newField);
@@ -54,8 +55,9 @@ angular.module('formula')
             } else {
               key = f.id;
             }
-            var parents = [{id: fs.title}];
-            var newField = new Field(schema.properties[key], key, parents, f);
+            var fieldSchema = schema.properties[key];
+            fieldSchema.required = fieldSchema.required || schema.required;
+            var newField = new Field(fieldSchema, key, null, f);
             newField.valueFromModel(model.data);
             fieldset.fields.push(newField);
           });
