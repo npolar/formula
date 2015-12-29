@@ -115,7 +115,7 @@
         };
 
         var initScope = function(scope, controllers) {
-          scope.form = controllers[0].form;
+          scope.form = controllers[0].data.formula;
           scope.backupValue = null;
 
           if (controllers[1]) {
@@ -174,15 +174,19 @@
         var watchFields = function(scope, field) {
           var type = getType(field);
           if (type.main === 'input') {
+            console.log('Watching field', field.id, scope);
             scope.$watch('field.value', function(n, o) {
-              if (n !== o && scope.form) {
+              if (n !== o) {
+                console.log('Value change validation:', field.id);
                 field.dirty = true;
-                field.parents.forEach(function(parent) {
+                field.parents.reverse().forEach(function(parent) {
                   parent.dirty = true;
+                  parent.itemChange(field);
+                  console.log('dirty parent:', parent.id);
                 });
                 scope.form.validate();
               }
-            });
+            }, true);
           }
         };
 
@@ -205,11 +209,11 @@
               $compile(elem)(scope, function(cloned, scope) {
                 element.replaceWith(cloned);
               });
+
+              formulaEvaluateConditionsService.evaluateConditions(scope, field);
+              watchFields(scope, field);
             });
 
-            watchFields(scope, field);
-
-            formulaEvaluateConditionsService.evaluateConditions(scope, field);
           },
           terminal: true
         };

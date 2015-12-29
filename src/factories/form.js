@@ -16,8 +16,8 @@ angular.module('formula')
  *
  * @returns form class constructor
  */
-.factory('formulaForm', ['formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
-  function(jsonLoader, model, Field, i18n) {
+.factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
+  function($rootScope, jsonLoader, model, Field, i18n) {
     function fieldsetFromSchema(schema) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
@@ -38,7 +38,7 @@ angular.module('formula')
       return null;
     }
 
-    var fieldsetFromDefinition = function (schema, formDefinition) {
+    var fieldsetFromDefinition = function(schema, formDefinition) {
       if (schema && schema.type === 'object' && formDefinition.fieldsets) {
         var fieldsets = [];
 
@@ -93,17 +93,25 @@ angular.module('formula')
       this.onsave = function(model) {
         window.open("data:application/json," + JSON.stringify(model));
       };
+
+      var self = this;
+      $rootScope.$on('revalidate', function() {
+        self.validate();
+      });
+
+      this.validate(true, true);
     }
 
     Form.prototype = {
 
-			updateValues: function () {
-				this.fieldsets.forEach(function (fieldset) {
-					fieldset.fields.forEach(function (field) {
-						field.valueFromModel(model.data);
-					});
-				});
-			},
+      updateValues: function() {
+        this.fieldsets.forEach(function(fieldset) {
+          fieldset.fields.forEach(function(field) {
+            field.valueFromModel(model.data);
+          });
+        });
+        this.validate(false, true);
+      },
 
       /**
        * @method activate
@@ -244,41 +252,51 @@ angular.module('formula')
        *
        * @returns true if the entire form is valid, otherwise false
        */
-      validate: function(force) {
-        var errors = [];
+      validate: function(force, silent) {
+        var errors = this.errors || [];
+        var fieldValidate = function(field) {
+          if (field.typeOf('array')) {
+            field.values.forEach(function(value) {
+              fieldValidate(value);
+            });
+          } else if (field.typeOf('object')) {
+            field.fields.forEach(function(subfield) {
+              fieldValidate(subfield);
+            });
+          }
 
-				var fieldValidate = function (field) {
-					if (field.typeOf('array')) {
-						field.values.forEach(function(value) {
-							fieldValidate(value);
-						});
-					} else if (field.typeOf('object')) {
-						field.fields.forEach(function(subfield) {
-							fieldValidate(subfield);
-						});
-					} else {
-						if (field.dirty || force) {
-              if (field.validate(force)) {
-                model.data[field.id] = field.value;
-              } else {
-                errors.push(field.path + ' (' + field.error + ')');
-                delete model.data[field.id];
+          if (field.dirty || force) {
+            var errorMessage = field.path + ' (' + (field.error || 'silent') + ')',
+              index;
+
+            if (field.validate(force, silent)) {
+              model.data[field.id] = field.value;
+              if ((index = errors.indexOf(errorMessage)) !== -1) {
+                errors.splice(index, 1);
               }
+            } else {
+              errors.push(errorMessage);
+
+              // Only unique
+              errors = errors.filter(function(value, index, self) {
+                return self.indexOf(value) === index;
+              });
+              delete model.data[field.id];
             }
-					}
-				};
+          }
+        };
 
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
             fieldValidate(field);
           });
         });
-				this.errors = errors;
+        this.errors = errors;
 
         if ((this.valid = !(this.errors.length))) {
           this.errors = null;
         }
-
+        console.log('Form validation: ', this.errors);
         return this.valid;
       }
     };

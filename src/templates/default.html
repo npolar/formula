@@ -15,7 +15,7 @@
 			<div ng-if="field.typeOf('input')" title="{{ field.description }}" ng-class="{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }">
 				<label for="{{ field.uid }}">{{ field.title }}</label>
 				<input formula:field="field" />
-				<span>{{ field.error || field.description }}</span>
+				<span>{{ field.error.message || field.description }}</span>
 			</div>
 
 			<div ng-if="field.typeOf('object')">
@@ -30,7 +30,7 @@
 
 			<div ng-if="field.typeOf('array')">
 				<div>
-					<fieldset ng-class="{ valid: field.valid, error: field.error }">
+					<fieldset ng-class="{ valid: field.valid, error: field.errors }">
 						<legend>{{ field.title }} ({{ field.nrArrayValues() || 0 }})</legend>
 
 						<ul ng-if="field.typeOf('fieldset')">
@@ -46,7 +46,9 @@
 								</fieldset>
 							</li>
 							<li>
-								<span>{{ field.error || field.description }}</span>
+								<span ng-if="field.errors" title="{{ field.errors.join('\n') }}">{{ form.i18n.invalid | formulaReplace : { count: field.errors.length } }}</span>
+								<span ng-if="!field.errors">{{ field.description  }}</span>
+
 								<button class="add" ng-click="field.itemAdd()" type="button" title="{{ form.i18n.add[1] }}"><strong>+</strong> {{ form.i18n.add[0] }}</button>
 							</li>
 						</ul>
@@ -58,7 +60,9 @@
 								<span ng-if="value.error">{{ value.error }}</span>
 							</li>
 							<li>
-								<span>{{ field.error || field.description }}</span>
+								<span ng-if="field.errors" title="{{ field.errors.join('\n') }}">{{ form.i18n.invalid | formulaReplace : { count: field.errors.length } }}</span>
+								<span ng-if="!field.errors">{{ field.description  }}</span>
+
 								<button class="add" ng-click="field.itemAdd()" type="button" title="{{ form.i18n.add[1] }}"><strong>+</strong> {{ form.i18n.add[0] }}</button>
 							</li>
 						</ul>

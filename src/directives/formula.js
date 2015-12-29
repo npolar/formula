@@ -103,7 +103,7 @@ angular.module('formula')
 							}
 						});
 					}
-				}, true);
+				});
 
 				this.data = $scope.data; // Others need this
 			}]
