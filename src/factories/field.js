@@ -1,5 +1,5 @@
 'use strict';
-/* globals angular,tv4 */
+/* globals angular */
 
 /**
  * formula.js
@@ -18,8 +18,9 @@ angular.module('formula')
  * @returns field class constructor
  */
 
-.factory('formulaField', ['$filter', '$rootScope', 'formulaLog', 'formulaFormat', 'formulaAutoCompleteService', 'formulaCustomTemplateService',
-  function($filter, $rootScope, log, format, formulaAutoCompleteService, formulaCustomTemplateService) {
+.factory('formulaField', ['$filter', '$rootScope', 'formulaLog', 'formulaFormat',
+        'formulaFieldAttributesService', 'formulaFieldValidateService', 'formulaFieldValueFromModelService',
+  function($filter, $rootScope, log, format, formulaFieldAttributesService, formulaFieldValidateService) {
     /**
      * @class field
      *
@@ -34,29 +35,13 @@ angular.module('formula')
 
     function Field(schema, id, parents, fieldDefinition) {
       if (typeof schema === 'object') {
-        this.parents = parents || [];
-        this.id = id;
-        this.path = null;
-        this.schema = schema;
-        // this.value = null;
-        this.fieldDefinition = fieldDefinition || {};
-        copyFrom(this, schema);
-        copyFrom(this, fieldDefinition);
-        this.required = (this.schema.required && this.schema.required.indexOf(this.id) !== -1);
 
-        var invalidCharacters = ['.', '/', '#'];
-        angular.forEach(invalidCharacters, function(char) {
-          if (this.id && this.id.indexOf(char) >= 0) {
-            log.warning(log.codes.FIELD_INVALID_ID, {
-              character: char,
-              field: this.path
-            });
-          }
-        }, this);
-
-        this.uidGen();
-        this.pathGen();
-        this.attrsSet();
+        formulaFieldAttributesService.attrsSet(this, {
+          schema: schema,
+          id: id,
+          parents: parents,
+          fieldDefinition: fieldDefinition
+        });
       }
       // console.log('new Field()', this);
       return this;
@@ -69,211 +54,9 @@ angular.module('formula')
       });
     };
 
-    var translateDefaultValues = function(field) {
-      if (typeof field.default === 'string') {
-        var match = field.default.match(/^%(.*)%$/),
-          replace;
-        if (match) {
-          switch (match[1]) {
-            case 'date':
-              replace = $filter('date')(new Date(), 'yyyy-MM-dd', 'UTC');
-              break;
-
-            case 'datetime':
-              replace = $filter('date')(new Date(), 'yyyy-MM-ddThh:mm:ss', 'UTC') + 'Z';
-              break;
-
-            case 'time':
-              replace = $filter('date')(new Date(), 'hh:mm:ss', 'UTC');
-              break;
-
-            case 'year':
-              replace = $filter('date')(new Date(), 'yyyy', 'UTC');
-              break;
-
-            default:
-              log.warning(log.codes.FIELD_UNSUPPORTED_TOKEN, {
-                token: match[1],
-                field: field.path
-              });
-          }
-
-          if (replace) {
-            field.default = replace;
-          }
-        }
-      }
-    };
-
-    var reduceFieldTypes = function(field) {
-      if (field.type instanceof Array) {
-        field.nullable = field.type.some(function(type) {
-          return type === 'null';
-        });
-        if (field.type.length === 1) {
-          field.type = field.type[0];
-        } else if (field.type.length === 2) {
-          if (field.type[0] === 'null') {
-            field.type = field.type[1];
-          } else if (field.type[1] === 'null') {
-            field.type = field.type[0];
-          }
-        } else {
-          field.types = field.type;
-          field.type = 'any';
-          // @TODO support any
-        }
-      }
-    };
-
-    /**
-     * Set fieldType and associated properties
-     *
-     * @param field
-     * @param source schema or fieldDefinition
-     */
-    var setFieldType = function(field) {
-      reduceFieldTypes(field);
-      if (field.autocomplete) {
-        field.type = 'input:autocomplete';
-      } else if (field.type === 'select' || field.enum) {
-        field.type = 'input:select';
-      } else {
-        if (field.format) {
-          var formatNoDash = field.format.replace('-', '');
-
-          if (format[formatNoDash]) {
-            switch (formatNoDash) {
-              case 'date':
-              case 'datetime':
-              case 'time':
-                field.type = 'input:' + formatNoDash;
-                break;
-              default:
-                field.type = 'input:text';
-            }
-
-            tv4.addFormat(field.format, format[formatNoDash]);
-          } else {
-            log.warning(log.codes.FIELD_UNSUPPORTED_FORMAT, {
-              format: field.format,
-              field: field.path
-            });
-            field.type = 'input:text';
-          }
-        } else {
-          switch (field.type) {
-            case 'any':
-              field.type = 'input:any';
-              break;
-            case 'array':
-              field.values = [];
-              if (field.schema.items) {
-                var items = field.schema.items;
-                if (field.fieldDefinition.fields) {
-                  copyFrom(items, field.fieldDefinition.fields[0]);
-                }
-                if (items.type === 'object') {
-                  field.type = 'array:fieldset';
-                } else if (items.type === 'array') {
-                  field.type = 'array:array';
-                } else if (items.enum) {
-                  field.enum = items.enum;
-                  field.multiple = true;
-                  field.type = 'input:select';
-                } else if (items.allOf) {
-                  // @TODO
-                  log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
-                    property: 'allOf',
-                    field: field.path
-                  });
-                } else if (items.anyOf) {
-                  // @TODO
-                  log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
-                    property: 'anyOf',
-                    field: field.path
-                  });
-                } else if (items.oneOf) {
-                  // @TODO
-                  log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
-                    property: 'oneOf',
-                    field: field.path
-                  });
-                } else {
-                  field.type = 'array:field';
-                }
-                if (field.schema.minItems >= 1) {
-                  field.required = true;
-                }
-              } else {
-                log.warning(log.codes.FIELD_MISSING_PROPERTY, {
-                  property: 'items',
-                  field: field.path
-                });
-                field.type = null;
-              }
-              break;
-
-            case 'boolean':
-            case 'checkbox':
-              field.type = 'input:checkbox';
-              field.value = !!field.value;
-              break;
-
-            case 'integer':
-            case 'number':
-              field.type = 'input:number';
-              break;
-
-            case 'range':
-              field.type = 'input:range';
-              break;
-
-            case 'object':
-              if (!field.schema.properties) {
-                log.warning(log.codes.FIELD_MISSING_PROPERTY, {
-                  property: 'properties',
-                  field: field.path
-                });
-                field.type = null;
-              }
-              break;
-
-            case 'textarea':
-              field.type = 'input:textarea';
-              break;
-
-            case 'string':
-            case 'text':
-              field.type = 'input:text';
-              break;
-            case undefined:
-              field.type = 'input:text';
-              break;
-
-            default:
-              log.warning(log.codes.FIELD_UNSUPPORTED_TYPE, {
-                type: field.type,
-                field: field.path
-              });
-              field.type = null;
-          }
-        }
-      }
-    };
 
 
-    var copyFrom = function(field, data) {
-      if (typeof field !== 'object' && typeof data !== 'object') {
-        return;
-      }
-      var attribs = 'autocomplete,condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,nullable,pattern,readonly,required,step,title,type,values'.split(',');
-      angular.forEach(data, function(v, k) {
-        if (attribs.indexOf(k) !== -1) {
-          field[k] = v;
-        }
-      });
-    };
+
 
     var skipField = function(fieldDefinition) {
       return (typeof fieldDefinition === 'string' && fieldDefinition.charAt(0) === "!");
@@ -282,71 +65,6 @@ angular.module('formula')
     Field.uids = [];
 
     Field.prototype = {
-
-      /**
-       * @method attrsSet
-       *
-       * Set attributes
-       *
-       * @returns The updated field instance
-       */
-
-      attrsSet: function() {
-        translateDefaultValues(this);
-        setFieldType(this);
-
-        if (this.typeOf('array') || this.typeOf('object')) {
-          this.fieldAdd();
-        }
-
-        formulaCustomTemplateService.initField(this);
-
-        // Set schema pattern if not set and pattern is defined
-        if (this.pattern && !this.schema.pattern) {
-          this.schema.pattern = this.pattern;
-        }
-
-        // Add one element to arrays which requires at least one element
-        if (this.typeOf('array') && this.schema.minItems) {
-          this.itemAdd();
-        }
-
-        // Automatically hide fields by default if ID starts with underscore
-        if ((this.id && this.id[0] === '_') && this.hidden !== false) {
-          log.debug(log.codes.FIELD_HIDDEN_DEFAULT, {
-            field: this.path
-          });
-          this.hidden = true;
-        }
-
-        this.visible = this.hidden ? false : true;
-
-        // // undefined is null
-        // if (this.value === undefined) {
-        //   if ((this.value = this.default) === undefined) {
-        //     this.value = null;
-        //   }
-        // }
-
-        // Ensure array typed default if required
-        if (this.default && this.typeOf('array')) {
-          if (!(this.default instanceof Array)) {
-            this.default = [this.default];
-          }
-        }
-
-        // Set intial value for select fields with no default
-        if (this.typeOf('select') && !this.multiple && (this.value === null)) {
-          this.value = this.enum[0];
-        }
-
-        //Init autocomplete fields
-        if (this.typeOf('autocomplete')) {
-          formulaAutoCompleteService.initField(this);
-        }
-
-        return this;
-      },
 
       /**
        * @method fieldAdd
@@ -625,134 +343,10 @@ angular.module('formula')
        * @returns true if the field is valid, otherwise false
        */
       validate: function(force, silent) {
-        if (this.schema) {
-          var tempValue, match, result;
-          this.valid = true;
-
-          switch (this.type) {
-            case 'array:fieldset':
-            case 'array:field':
-              if (this.values) {
-                angular.forEach(this.values, function(field) {
-                  if (field.dirty || force) {
-                    field.validate(force, silent);
-                  }
-                }, this);
-              }
-              break;
-
-            // case 'input:any':
-            //   if (this.value) {
-            //     if (!isNaN(this.value)) {
-            //       tempValue = Number(this.value);
-            //     } else if ((match = this.value.match(/^\[(.*)\]$/))) {
-            //       tempValue = [match[1]];
-            //     } else {
-            //       switch (this.value.toLowerCase()) {
-            //         case 'true':
-            //           tempValue = true;
-            //           break;
-            //         case 'false':
-            //           tempValue = false;
-            //           break;
-            //         case 'null':
-            //           tempValue = null;
-            //           break;
-            //       }
-            //     }
-            //   }
-            //   break;
-
-              // case 'input:checkbox':
-              //   this.value = !!this.value;
-              //   break;
-
-            // case 'input:integer':
-            // case 'input:number':
-            // case 'input:range':
-            //   tempValue = (this.value === null ? NaN : Number(this.value));
-            //   break;
-            //
-            // case 'input:select':
-            //   if (this.multiple && !this.value) {
-            //     this.value = [];
-            //   } else {
-            //     switch (this.schema.type) {
-            //       case 'integer':
-            //       case 'number':
-            //         this.value = Number(this.value);
-            //         break;
-            //     }
-            //   }
-            //   break;
-
-            case 'object':
-              if (this.fields) {
-                angular.forEach(this.fields, function(field, index) {
-                  if (field.dirty || force) {
-                    field.validate(force, silent);
-                  }
-                }, this);
-              }
-              break;
-          }
-
-          if ((this.dirty || force) && (this.required || this.value !== undefined)) {
-            result = tv4.validateMultiple(tempValue || this.value, this.schema);
-            console.log('validate value:', this.value);
-            this.valid = result.valid;
-          }
-
-          if (!this.valid && this.nullable) {
-            switch (typeof this.value) {
-              case 'string':
-                if (!this.value || !this.value.length) {
-                  this.value = null;
-                }
-                break;
-
-              case 'number':
-                if (isNaN(this.value)) {
-                  this.value = null;
-                }
-                break;
-
-              case 'object':
-                if (!Object.keys(this.value).length) {
-                  this.value = null;
-                }
-                break;
-            }
-
-            // Nullable array case..
-            if (this.values && !this.values.length) {
-              this.value = null;
-            }
-
-            // TODO: Add support for null-types in tv4
-            if (this.isEmpty()) {
-              this.valid = true;
-            }
-          }
-
-          if (!silent && !this.valid) {
-            if (this.typeOf('array') || this.typeOf('object')) {
-              this.errors = result.errors;
-            } else {
-              this.error = result.errors[0];
-            }
-          } else {
-            this.error = null;
-            this.errors = null;
-          }
-          console.log('Validate', this, ', force: ', force, ', silent: ', silent, 'result: ', result);
-          if (this.dirty) {
-          }
-          this.dirty = false;
-          return this.valid;
-        }
-
-        return false;
+        return formulaFieldValidateService.validate(this, {
+          force: force,
+          silent: silent
+        });
       },
 
       /**
@@ -764,38 +358,7 @@ angular.module('formula')
        */
 
       valueFromModel: function(model) {
-        if (model[this.id] !== undefined) {
-
-          if (this.type === "object") {
-            this.fields.forEach(function(field, index) {
-              if (model[this.id][field.id]) {
-                field.valueFromModel(model[this.id]);
-              }
-            }, this);
-          } else if (this.typeOf("array")) {
-            this.values = [];
-
-
-            model[this.id].forEach(function(item, index) {
-              this.itemAdd();
-              if (this.typeOf('fieldset')) {
-                var valueModel = {};
-                valueModel[this.values[index].id] = item;
-                this.values[index].valueFromModel(valueModel);
-              } else if (this.typeOf('field')) {
-                this.values[index].value = item;
-              } else {
-                // @TODO Support array:array
-                // jshint -W035
-              }
-            }, this);
-          } else {
-            this.value = model[this.id];
-            this.dirty = true;
-          }
-          dirtyParents(this);
-          //formulaCustomTemplateService.initField(this);
-        }
+        formulaFieldValueFromModelService.valueFromModel(this, model);
       },
 
       nrArrayValues: function() {
