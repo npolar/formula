@@ -256,7 +256,7 @@ angular.module('formula')
             console.log('Watching field', field.id, scope);
             scope.$watch('field.value', function(n, o) {
               if (n !== o) {
-                console.log('Value change validation:', field.id);
+                console.log('Value change validation:', field);
                 field.dirty = true;
                 field.parents.reverse().forEach(function(parent) {
                   parent.dirty = true;
@@ -436,8 +436,10 @@ angular.module('formula')
  */
 
 .factory('formulaField', ['$filter', '$rootScope', 'formulaLog', 'formulaFormat',
-        'formulaFieldAttributesService', 'formulaFieldValidateService', 'formulaFieldValueFromModelService',
-  function($filter, $rootScope, log, format, formulaFieldAttributesService, formulaFieldValidateService) {
+        'formulaFieldAttributesService', 'formulaFieldValidateService',
+        'formulaFieldValueFromModelService',
+  function($filter, $rootScope, log, format, formulaFieldAttributesService,
+    formulaFieldValidateService, formulaFieldValueFromModelService) {
     /**
      * @class field
      *
@@ -464,17 +466,6 @@ angular.module('formula')
       return this;
     }
 
-    var dirtyParents = function (field) {
-      field.parents.reverse().forEach(function(parent) {
-        parent.dirty = true;
-        parent.itemChange(field);
-      });
-    };
-
-
-
-
-
     var skipField = function(fieldDefinition) {
       return (typeof fieldDefinition === 'string' && fieldDefinition.charAt(0) === "!");
     };
@@ -482,6 +473,12 @@ angular.module('formula')
     Field.uids = [];
 
     Field.prototype = {
+      dirtyParents: function () {
+        this.parents.reverse().forEach(function(parent) {
+          parent.dirty = true;
+          parent.itemChange(this);
+        });
+      },
 
       /**
        * @method fieldAdd
@@ -568,7 +565,8 @@ angular.module('formula')
             index;
           parents.push(this);
 
-          index = this.values.push(angular.copy(this.fields[0])) - 1;
+          var proto = this.fields[0];
+          index = this.values.push(new Field(proto.schema, proto.id, proto.parents, proto.fieldDefinition)) - 1;
           var field = this.values[index];
           field.index = index;
           field.parents = parents;
@@ -578,7 +576,7 @@ angular.module('formula')
           this.value = this.value || [];
           this.value.push(field.value);
           this.dirty = true;
-          dirtyParents(this);
+          this.dirtyParents();
           $rootScope.$emit('revalidate');
           return field;
         }
@@ -622,7 +620,7 @@ angular.module('formula')
           }, this);
 
           this.dirty = true;
-          dirtyParents(this);
+          this.dirtyParents();
           $rootScope.$emit('revalidate');
         }
       },
@@ -2579,7 +2577,7 @@ angular.module('formula')
             field.value = model[field.id];
             field.dirty = true;
           }
-          //dirtyParents(field);
+          field.dirtyParents();
           //formulaCustomTemplateService.initField(field);
         }
       };

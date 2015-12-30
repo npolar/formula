@@ -177,7 +177,7 @@
             console.log('Watching field', field.id, scope);
             scope.$watch('field.value', function(n, o) {
               if (n !== o) {
-                console.log('Value change validation:', field.id);
+                console.log('Value change validation:', field);
                 field.dirty = true;
                 field.parents.reverse().forEach(function(parent) {
                   parent.dirty = true;
