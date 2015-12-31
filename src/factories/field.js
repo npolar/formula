@@ -149,15 +149,16 @@ angular.module('formula')
           parents.push(this);
 
           var proto = this.fields[0];
-          index = this.values.push(new Field(proto.schema, proto.id, proto.parents, proto.fieldDefinition)) - 1;
+          console.log('proto:', proto);
+          index = this.values.push(new Field(proto.schema, proto.id, parents, proto.fieldDefinition)) - 1;
           var field = this.values[index];
           field.index = index;
-          field.parents = parents;
           field.uidGen();
           field.pathGen();
 
-          this.value = this.value || [];
-          this.value.push(field.value);
+          if (field.value !== undefined) {
+            this.value.push(field.value);
+          }
           this.dirty = true;
           this.dirtyParents();
           $rootScope.$emit('revalidate');

@@ -57,7 +57,6 @@
 							<li ng-repeat="value in field.values" ng-class="{ valid: value.valid, error: value.error }">
 								<formula:field-instance field="value" ng-show="value.visible"/>
 								<a href="" class="remove" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
-								<span ng-if="value.error">{{ value.error }}</span>
 							</li>
 							<li>
 								<span ng-if="field.errors" title="{{ field.errors.join('\n') }}">{{ form.i18n.invalid | formulaReplace : { count: field.errors.length } }}</span>
