@@ -6,5 +6,6 @@
   <div ng-repeat="field in field.fields">
     <label for="{{field.id}}">{{field.title}}</label>
     <input id="{{field.id}}" type="text" ng-model="field.value">
+    <div> {{ field.error ? field.error.message : field.description }}</div>
   </div>
 </div>

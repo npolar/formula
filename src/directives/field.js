@@ -156,6 +156,7 @@
           var deferred = $q.defer();
           var field = scope.field;
           var type = getType(field);
+
           if (field.customTemplate) {
             var elem = angular.element(field.customTemplate);
             elem.addClass('formulaCustomObject');
@@ -178,6 +179,9 @@
             scope.$watch('field.value', function(n, o) {
               if (n !== o) {
                 console.log('Value change validation:', field);
+                if (n === null) {
+                  field.value = undefined;
+                }
                 field.dirty = true;
                 field.parents.reverse().forEach(function(parent) {
                   parent.dirty = true;
@@ -207,13 +211,12 @@
               addSchemaClass(field, elem);
 
               $compile(elem)(scope, function(cloned, scope) {
+                console.log('compile', field);
                 element.replaceWith(cloned);
+                formulaEvaluateConditionsService.evaluateConditions(scope, field);
+                watchFields(scope, field);
               });
-
-              formulaEvaluateConditionsService.evaluateConditions(scope, field);
-              watchFields(scope, field);
             });
-
           },
           terminal: true
         };

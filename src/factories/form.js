@@ -29,7 +29,9 @@ angular.module('formula')
           val.required = schema.required;
           var newField = new Field(val, key);
           newField.valueFromModel(model.data);
-          fieldsets[0].fields.push(newField);
+          if (newField.type) {
+            fieldsets[0].fields.push(newField);
+          }
         });
 
         return fieldsets;
@@ -59,7 +61,9 @@ angular.module('formula')
             fieldSchema.required = fieldSchema.required || schema.required;
             var newField = new Field(fieldSchema, key, null, f);
             newField.valueFromModel(model.data);
-            fieldset.fields.push(newField);
+            if (newField.type) {
+              fieldset.fields.push(newField);
+            }
           });
           fieldsets.push(fieldset);
         });

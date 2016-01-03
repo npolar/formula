@@ -32,7 +32,37 @@ angular.module('formula')
 				$scope.template = $scope.data.template || 'default';
 				$scope.language = { uri: $scope.data.language || null, code: null };
 
-				function loadTemplate (templateId) {
+				var watchField = function (field) {
+					if (field.typeOf('object')) {
+						field.fields.forEach(function (field) {
+							watchField(field);
+						});
+					} else if (field.typeOf('array')) {
+						field.values.forEach(function (value) {
+							watchField(value);
+						});
+					} else if (field.typeOf('input')) {
+						console.log('Watching field', field.id);
+						$scope.$watch(function (scope) { return field.value; },
+						function(n, o) {
+							if (n !== o) {
+								console.log('Value change validation:', field);
+								if (n === null) {
+									field.value = undefined;
+								}
+								field.dirty = true;
+								field.parents.reverse().forEach(function(parent) {
+									parent.dirty = true;
+									parent.itemChange(field);
+									console.log('dirty parent:', parent.id);
+								});
+								$scope.form.validate();
+							}
+						}, true);
+					}
+				};
+
+				var loadTemplate = function (templateId) {
 					return $q(function(resolve, reject) {
 						var prefix = 'formula/';
 						var defaultTemplate = 'default.html';
@@ -59,7 +89,7 @@ angular.module('formula')
 							resolve(templateElement);
 						}
 					});
-				}
+				};
 
 				var asyncs = [loadTemplate($scope.data.template), $scope.schema.deref($scope.data.schema)];
 				if ($scope.data.form) {
@@ -68,10 +98,15 @@ angular.module('formula')
 
 				var formLoaded = $q.all(asyncs).then(function(data) {
 					$scope.form = $scope.data.formula = new Form(data[1], data[2]);
-					$scope.form.onsave = $scope.data.onsave;
+					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
 					$scope.form.translate($scope.language.code);
 					$compile(angular.element(data[0]))($scope, function (cloned, scope) {
 						$element.prepend(cloned);
+					});
+					$scope.form.fieldsets.forEach(function (fieldset) {
+						fieldset.fields.forEach(function (field) {
+							watchField(field);
+						});
 					});
 					return true;
 				});

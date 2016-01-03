@@ -88,7 +88,9 @@ angular.module('formula')
           var schema = this.schema.items;
           newField = new Field(schema, id, parents, fieldDefinition);
           newField.index = this.fields.length;
-          this.fields.push(newField);
+          if (newField.type) {
+            this.fields.push(newField);
+          }
 
         } else if (this.typeOf('object')) {
           Object.keys(this.schema.properties).forEach(function(key) {
@@ -106,7 +108,9 @@ angular.module('formula')
               schema.required = schema.required || this.schema.required;
               var newField = new Field(schema, key, parents, fieldDefinition);
               newField.index = this.fields.length;
-              this.fields.push(newField);
+              if (newField.type) {
+                this.fields.push(newField);
+              }
             }
 
           }, this);
