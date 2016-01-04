@@ -57,7 +57,11 @@ angular.module('formula')
         } else if (isObject(source)) {
           // source is object
           getSource(source.source, q).then(function (response) {
-            deferred.resolve(sources[source.callback].call({}, response));
+            if (isFn(source.callback)) {
+              deferred.resolve(sources[source.callback].call({}, response));
+            } else {
+              deferred.resolve(response);
+            }
           }, function (response) {
             deferred.reject(new Error(ERR + source));
           });
