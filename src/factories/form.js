@@ -57,7 +57,7 @@ angular.module('formula')
             } else {
               key = f.id;
             }
-            var fieldSchema = schema.properties[key];
+            var fieldSchema = schema.properties[key] || { id: key };
             fieldSchema.required = fieldSchema.required || schema.required;
             var newField = new Field(fieldSchema, key, null, f);
             newField.valueFromModel(model.data);
@@ -278,7 +278,7 @@ angular.module('formula')
               if ((index = errors.indexOf(errorMessage)) !== -1) {
                 errors.splice(index, 1);
               }
-            } else {
+            } else if (field.typeOf('input')) { // Only show input errors
               errors.push(errorMessage);
 
               // Only unique

@@ -8,10 +8,10 @@
  * Norsk Polarinstutt 2014, http://npolar.no/
  */
 angular.module('formula')
-  .service('formulaFieldAttributesService', ['formulaLog',
+  .service('formulaFieldAttributesService', ['$rootScope', 'formulaLog',
           'formulaAutoCompleteService', 'formulaCustomTemplateService',
           'formulaFieldTranslateDefaultsService', 'formulaFieldTypeService',
-    function(log, formulaAutoCompleteService,
+    function($rootScope, log, formulaAutoCompleteService,
       formulaCustomTemplateService, formulaFieldTranslateDefaultsService,
       formulaFieldTypeService) {
 
@@ -25,6 +25,24 @@ angular.module('formula')
             this[k] = v;
           }
         }, field);
+      };
+
+      var watchField = function(field) {
+        if (field.typeOf('input')) {
+          $rootScope.$watch(function () {
+            return field.value;
+          }, function(n, o) {
+            if (n !== o) {
+              field.dirty = true;
+              field.parents.reverse().forEach(function(parent) {
+                parent.dirty = true;
+                parent.itemChange(field);
+              });
+              console.log('validate value change in field');
+              $rootScope.$emit('revalidate');
+            }
+          }, true);
+        }
       };
 
       /**
@@ -121,6 +139,8 @@ angular.module('formula')
         if (field.typeOf('autocomplete')) {
           formulaAutoCompleteService.initField(field);
         }
+
+        watchField(field);
 
         return field;
       };

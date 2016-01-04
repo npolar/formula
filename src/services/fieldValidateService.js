@@ -15,7 +15,7 @@ angular.module('formula')
           var silent = options.silent, force = options.force;
           if (field.schema) {
             var tempValue, result;
-            field.valid = true;
+            //field.valid = true;
 
             switch (field.type) {
               case 'array:fieldset':
@@ -81,7 +81,7 @@ angular.module('formula')
               }
             }
 
-            if (!silent && !field.valid) {
+            if (!silent && field.valid === false) {
               if (field.typeOf('array') || field.typeOf('object')) {
                 field.errors = result.errors;
               } else {
@@ -94,7 +94,7 @@ angular.module('formula')
             field.dirty = false;
             console.log('validate', field);
 
-            return field.valid;
+            return field.valid !== false;
           }
           return false;
         };

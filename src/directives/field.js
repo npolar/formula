@@ -172,22 +172,6 @@
           return deferred.promise;
         };
 
-        var watchFields = function(scope, field) {
-          var type = getType(field);
-          if (type.main === 'input') {
-            scope.$watch('field.value', function(n, o) {
-              if (n !== o) {
-                field.dirty = true;
-                field.parents.reverse().forEach(function(parent) {
-                  parent.dirty = true;
-                  parent.itemChange(field);
-                });
-                scope.form.validate();
-              }
-            }, true);
-          }
-        };
-
         return {
           restrict: 'A',
           require: ['^formula', '?^formulaFieldInstance'],
@@ -207,7 +191,6 @@
               $compile(elem)(scope, function(cloned, scope) {
                 element.replaceWith(cloned);
                 formulaEvaluateConditionsService.evaluateConditions(scope, field);
-                watchFields(scope, field);
               });
             });
           },

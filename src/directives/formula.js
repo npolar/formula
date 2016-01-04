@@ -32,30 +32,6 @@ angular.module('formula')
 				$scope.template = $scope.data.template || 'default';
 				$scope.language = { uri: $scope.data.language || null, code: null };
 
-				var watchField = function (field) {
-					if (field.typeOf('object')) {
-						field.fields.forEach(function (field) {
-							watchField(field);
-						});
-					} else if (field.typeOf('array')) {
-						field.values.forEach(function (value) {
-							watchField(value);
-						});
-					} else if (field.typeOf('input')) {
-						$scope.$watch(function (scope) { return field.value; },
-						function(n, o) {
-							if (n !== o) {
-								field.dirty = true;
-								field.parents.reverse().forEach(function(parent) {
-									parent.dirty = true;
-									parent.itemChange(field);
-								});
-								$scope.form.validate();
-							}
-						}, true);
-					}
-				};
-
 				var loadTemplate = function (templateId) {
 					return $q(function(resolve, reject) {
 						var prefix = 'formula/';
@@ -96,11 +72,6 @@ angular.module('formula')
 					$scope.form.translate($scope.language.code);
 					$compile(angular.element(data[0]))($scope, function (cloned, scope) {
 						$element.prepend(cloned);
-					});
-					$scope.form.fieldsets.forEach(function (fieldset) {
-						fieldset.fields.forEach(function (field) {
-							watchField(field);
-						});
 					});
 					return true;
 				});
