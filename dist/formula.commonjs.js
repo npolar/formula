@@ -254,18 +254,12 @@ angular.module('formula')
         var watchFields = function(scope, field) {
           var type = getType(field);
           if (type.main === 'input') {
-            console.log('Watching field', field.id, scope);
             scope.$watch('field.value', function(n, o) {
               if (n !== o) {
-                console.log('Value change validation:', field);
-                if (n === null) {
-                  field.value = undefined;
-                }
                 field.dirty = true;
                 field.parents.reverse().forEach(function(parent) {
                   parent.dirty = true;
                   parent.itemChange(field);
-                  console.log('dirty parent:', parent.id);
                 });
                 scope.form.validate();
               }
@@ -290,7 +284,6 @@ angular.module('formula')
               addSchemaClass(field, elem);
 
               $compile(elem)(scope, function(cloned, scope) {
-                console.log('compile', field);
                 element.replaceWith(cloned);
                 formulaEvaluateConditionsService.evaluateConditions(scope, field);
                 watchFields(scope, field);
@@ -348,19 +341,13 @@ angular.module('formula')
 							watchField(value);
 						});
 					} else if (field.typeOf('input')) {
-						console.log('Watching field', field.id);
 						$scope.$watch(function (scope) { return field.value; },
 						function(n, o) {
 							if (n !== o) {
-								console.log('Value change validation:', field);
-								if (n === null) {
-									field.value = undefined;
-								}
 								field.dirty = true;
 								field.parents.reverse().forEach(function(parent) {
 									parent.dirty = true;
 									parent.itemChange(field);
-									console.log('dirty parent:', parent.id);
 								});
 								$scope.form.validate();
 							}
@@ -500,7 +487,6 @@ angular.module('formula')
           fieldDefinition: fieldDefinition
         });
       }
-      // console.log('new Field()', this);
       return this;
     }
 
@@ -608,7 +594,6 @@ angular.module('formula')
           parents.push(this);
 
           var proto = this.fields[0];
-          console.log('proto:', proto);
           index = this.values.push(new Field(proto.schema, proto.id, parents, proto.fieldDefinition)) - 1;
           var field = this.values[index];
           field.index = index;
@@ -1134,7 +1119,6 @@ angular.module('formula')
         if ((this.valid = !(this.errors.length))) {
           this.errors = null;
         }
-        console.log('Form validation: ', this.errors);
         return this.valid;
       }
     };
@@ -2120,7 +2104,6 @@ angular.module('formula')
         field.id = field.title = id;
         field.path = null;
         field.schema = schema;
-        // field.value = null;
         field.fieldDefinition = fieldDefinition || {};
         copyFrom(field, schema);
         copyFrom(field, fieldDefinition);
@@ -2141,7 +2124,6 @@ angular.module('formula')
 
         formulaFieldTranslateDefaultsService.translateDefaultValues(field);
         formulaFieldTypeService.setFieldType(field);
-        console.log('Set field type for: ', field);
         if (field.typeOf('array')) {
           this.value = [];
         }
@@ -2179,13 +2161,6 @@ angular.module('formula')
         }
 
         field.visible = field.hidden ? false : true;
-
-        // // undefined is null
-        // if (field.value === undefined) {
-        //   if ((field.value = field.default) === undefined) {
-        //     field.value = null;
-        //   }
-        // }
 
         // Ensure array typed default if required
         if (field.default && field.typeOf('array')) {
@@ -2460,7 +2435,7 @@ angular.module('formula')
         var validate = function (field, options) {
           var silent = options.silent, force = options.force;
           if (field.schema) {
-            var tempValue, match, result;
+            var tempValue, result;
             field.valid = true;
 
             switch (field.type) {
@@ -2475,51 +2450,6 @@ angular.module('formula')
                 }
                 break;
 
-              // case 'input:any':
-              //   if (field.value) {
-              //     if (!isNaN(field.value)) {
-              //       tempValue = Number(field.value);
-              //     } else if ((match = field.value.match(/^\[(.*)\]$/))) {
-              //       tempValue = [match[1]];
-              //     } else {
-              //       switch (field.value.toLowerCase()) {
-              //         case 'true':
-              //           tempValue = true;
-              //           break;
-              //         case 'false':
-              //           tempValue = false;
-              //           break;
-              //         case 'null':
-              //           tempValue = null;
-              //           break;
-              //       }
-              //     }
-              //   }
-              //   break;
-
-                // case 'input:checkbox':
-                //   field.value = !!field.value;
-                //   break;
-
-              // case 'input:integer':
-              // case 'input:number':
-              // case 'input:range':
-              //   tempValue = (field.value === null ? NaN : Number(field.value));
-              //   break;
-              //
-              // case 'input:select':
-              //   if (field.multiple && !field.value) {
-              //     field.value = [];
-              //   } else {
-              //     switch (field.schema.type) {
-              //       case 'integer':
-              //       case 'number':
-              //         field.value = Number(field.value);
-              //         break;
-              //     }
-              //   }
-              //   break;
-
               case 'object':
                 if (field.fields) {
                   angular.forEach(field.fields, function(field, index) {
@@ -2529,11 +2459,14 @@ angular.module('formula')
                   }, field);
                 }
                 break;
+              default:
+                if (field.value === null || field.value === "") {
+                  field.value = undefined;
+                }
             }
 
             if ((field.dirty || force) && (field.required || field.value !== undefined)) {
               result = tv4.validateMultiple(tempValue || field.value, field.schema);
-              console.log('validate value:', field.value);
               field.valid = result.valid;
             }
 
@@ -2579,13 +2512,11 @@ angular.module('formula')
               field.error = null;
               field.errors = null;
             }
-            console.log('Validate', field, ', force: ', force, ', silent: ', silent, 'result: ', result);
-            if (field.dirty) {
-            }
             field.dirty = false;
+            console.log('validate', field);
+
             return field.valid;
           }
-
           return false;
         };
 
@@ -2638,7 +2569,6 @@ angular.module('formula')
             field.dirty = true;
           }
           field.dirtyParents();
-          //formulaCustomTemplateService.initField(field);
         }
       };
 

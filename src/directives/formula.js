@@ -42,19 +42,13 @@ angular.module('formula')
 							watchField(value);
 						});
 					} else if (field.typeOf('input')) {
-						console.log('Watching field', field.id);
 						$scope.$watch(function (scope) { return field.value; },
 						function(n, o) {
 							if (n !== o) {
-								console.log('Value change validation:', field);
-								if (n === null) {
-									field.value = undefined;
-								}
 								field.dirty = true;
 								field.parents.reverse().forEach(function(parent) {
 									parent.dirty = true;
 									parent.itemChange(field);
-									console.log('dirty parent:', parent.id);
 								});
 								$scope.form.validate();
 							}

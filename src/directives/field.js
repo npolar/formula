@@ -175,18 +175,12 @@
         var watchFields = function(scope, field) {
           var type = getType(field);
           if (type.main === 'input') {
-            console.log('Watching field', field.id, scope);
             scope.$watch('field.value', function(n, o) {
               if (n !== o) {
-                console.log('Value change validation:', field);
-                if (n === null) {
-                  field.value = undefined;
-                }
                 field.dirty = true;
                 field.parents.reverse().forEach(function(parent) {
                   parent.dirty = true;
                   parent.itemChange(field);
-                  console.log('dirty parent:', parent.id);
                 });
                 scope.form.validate();
               }
@@ -211,7 +205,6 @@
               addSchemaClass(field, elem);
 
               $compile(elem)(scope, function(cloned, scope) {
-                console.log('compile', field);
                 element.replaceWith(cloned);
                 formulaEvaluateConditionsService.evaluateConditions(scope, field);
                 watchFields(scope, field);

@@ -300,7 +300,6 @@ angular.module('formula')
         if ((this.valid = !(this.errors.length))) {
           this.errors = null;
         }
-        console.log('Form validation: ', this.errors);
         return this.valid;
       }
     };

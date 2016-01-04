@@ -45,7 +45,6 @@ angular.module('formula')
           fieldDefinition: fieldDefinition
         });
       }
-      // console.log('new Field()', this);
       return this;
     }
 
@@ -153,7 +152,6 @@ angular.module('formula')
           parents.push(this);
 
           var proto = this.fields[0];
-          console.log('proto:', proto);
           index = this.values.push(new Field(proto.schema, proto.id, parents, proto.fieldDefinition)) - 1;
           var field = this.values[index];
           field.index = index;
