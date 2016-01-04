@@ -33,12 +33,12 @@ angular.module('formula')
         sources[key] = cb;
       };
 
-      var getSource = function(source, q) {
+      var getSource = function(field, source, q) {
         var deferred = $q.defer();
 
         if (isFn(source)) {
           // source is a registred function
-          deferred.resolve(sources[source].call({}));
+          deferred.resolve(sources[source].call(field));
         } else if (URI_REGEX.test(source)) {
           // source is uri
           var config = q ? {
@@ -56,9 +56,9 @@ angular.module('formula')
           deferred.resolve(source);
         } else if (isObject(source)) {
           // source is object
-          getSource(source.source, q).then(function (response) {
+          getSource(field, source.source, q).then(function (response) {
             if (isFn(source.callback)) {
-              deferred.resolve(sources[source.callback].call({}, response));
+              deferred.resolve(sources[source.callback].call(field, response));
             } else {
               deferred.resolve(response);
             }
@@ -74,14 +74,14 @@ angular.module('formula')
 
       var initField = function (field) {
         field.source = [];
-        getSource(field.autocomplete).then(function (source) {
+        getSource(field, field.autocomplete).then(function (source) {
           field.source = source;
         }, function (e) {
           console.warn(e);
           field.source = [];
         });
         field.querySearch = function (q) {
-          return getSource(field.autocomplete, q);
+          return getSource(field, field.autocomplete, q);
         };
       };
 

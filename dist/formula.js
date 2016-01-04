@@ -397,6 +397,76 @@ angular.module('formula')
 
 })();
 
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2015, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter inlineValues
+	 *
+	 * Filter used to inline an array of values.
+	 */
+
+	.filter('formulaInlineValues', function() {
+		return function(input, params) {
+			var result = [];
+
+			angular.forEach(input, function(field) {
+				if(field.value instanceof Array) {
+					result.push('Array[' + field.value.length + ']');
+				} else switch(typeof field.value) {
+					case 'string':
+					case 'number':
+					case 'boolean':
+						result.push(field.value);
+						break;
+
+					default:
+				}
+			});
+
+			return result.join(', ');
+		};
+	});
+
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter replace
+	 *
+	 * Filter used to replace placeholders in a string.
+	 */
+
+	.filter('formulaReplace', function() {
+		return function(input, params) {
+			var result = input, match = input.match(/\{[^\}]*\}/g);
+
+			angular.forEach(match, function(v, k) {
+				result = result.replace(v, params[v.substr(1, v.length - 2)]);
+			});
+
+			return result;
+		};
+	});
+
 'use strict';
 /* globals angular */
 
@@ -1682,76 +1752,6 @@ angular.module('formula')
  * formula.js
  * Generic JSON Schema form builder
  *
- * Norsk Polarinstutt 2015, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter inlineValues
-	 *
-	 * Filter used to inline an array of values.
-	 */
-
-	.filter('formulaInlineValues', function() {
-		return function(input, params) {
-			var result = [];
-
-			angular.forEach(input, function(field) {
-				if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-
-					default:
-				}
-			});
-
-			return result.join(', ');
-		};
-	});
-
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter replace
-	 *
-	 * Filter used to replace placeholders in a string.
-	 */
-
-	.filter('formulaReplace', function() {
-		return function(input, params) {
-			var result = input, match = input.match(/\{[^\}]*\}/g);
-
-			angular.forEach(match, function(v, k) {
-				result = result.replace(v, params[v.substr(1, v.length - 2)]);
-			});
-
-			return result;
-		};
-	});
-
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
  * Norsk Polarinstutt 2014, http://npolar.no/
  */
 angular.module('formula')
@@ -1780,12 +1780,12 @@ angular.module('formula')
         sources[key] = cb;
       };
 
-      var getSource = function(source, q) {
+      var getSource = function(field, source, q) {
         var deferred = $q.defer();
 
         if (isFn(source)) {
           // source is a registred function
-          deferred.resolve(sources[source].call({}));
+          deferred.resolve(sources[source].call(field));
         } else if (URI_REGEX.test(source)) {
           // source is uri
           var config = q ? {
@@ -1803,9 +1803,9 @@ angular.module('formula')
           deferred.resolve(source);
         } else if (isObject(source)) {
           // source is object
-          getSource(source.source, q).then(function (response) {
+          getSource(field, source.source, q).then(function (response) {
             if (isFn(source.callback)) {
-              deferred.resolve(sources[source.callback].call({}, response));
+              deferred.resolve(sources[source.callback].call(field, response));
             } else {
               deferred.resolve(response);
             }
@@ -1821,14 +1821,14 @@ angular.module('formula')
 
       var initField = function (field) {
         field.source = [];
-        getSource(field.autocomplete).then(function (source) {
+        getSource(field, field.autocomplete).then(function (source) {
           field.source = source;
         }, function (e) {
           console.warn(e);
           field.source = [];
         });
         field.querySearch = function (q) {
-          return getSource(field.autocomplete, q);
+          return getSource(field, field.autocomplete, q);
         };
       };
 
