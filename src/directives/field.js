@@ -32,7 +32,7 @@
                   elem.append(child);
                 });
               } else {
-                elem.attr('ng-options', 'value.id as value.label for value in field.values');
+                elem.attr('ng-options', 'value.id as value.title for value in field.values');
               }
 
               if (field.multiple) {
@@ -143,6 +143,9 @@
         // Add css class of schema type
         var addSchemaClass = function(field, elem) {
           var schemaType = field.schema.type;
+          if (schemaType instanceof Array) {
+            schemaType = schemaType[0] || schemaType[1];
+          }
           if (schemaType) {
             elem.addClass(
               "formula" +

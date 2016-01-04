@@ -88,6 +88,14 @@ angular.module('formula')
           field.value = {};
         }
 
+        if (field.typeOf('select')) {
+          field.values = [];
+          field.enum.forEach(function (val) {
+            field.values.push({id: val,
+            title: val});
+          });
+        }
+
         if (field.typeOf('array') && field.schema.items && field.fieldDefinition.fields) {
           copyFrom(field.items, field.fieldDefinition.fields[0]);
         }
@@ -141,6 +149,10 @@ angular.module('formula')
         }
 
         watchField(field);
+
+        if (field.id === "links") {
+          console.log('links:', field);
+        }
 
         return field;
       };

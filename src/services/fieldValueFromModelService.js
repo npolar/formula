@@ -8,8 +8,8 @@
  * Norsk Polarinstutt 2014, http://npolar.no/
  */
 angular.module('formula')
-  .service('formulaFieldValueFromModelService', [
-    function() {
+  .service('formulaFieldValueFromModelService', ['formulaCustomTemplateService',
+    function(formulaCustomTemplateService) {
       var valueFromModel = function (field, model) {
 
         if (model[field.id] !== undefined) {
@@ -42,6 +42,7 @@ angular.module('formula')
             field.dirty = true;
           }
           field.dirtyParents();
+          formulaCustomTemplateService.initField(field);
         }
       };
 

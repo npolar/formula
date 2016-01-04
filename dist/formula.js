@@ -111,7 +111,7 @@ angular.module('formula')
                   elem.append(child);
                 });
               } else {
-                elem.attr('ng-options', 'value.id as value.label for value in field.values');
+                elem.attr('ng-options', 'value.id as value.title for value in field.values');
               }
 
               if (field.multiple) {
@@ -222,6 +222,9 @@ angular.module('formula')
         // Add css class of schema type
         var addSchemaClass = function(field, elem) {
           var schemaType = field.schema.type;
+          if (schemaType instanceof Array) {
+            schemaType = schemaType[0] || schemaType[1];
+          }
           if (schemaType) {
             elem.addClass(
               "formula" +
@@ -479,7 +482,8 @@ angular.module('formula')
         if (this.typeOf('array')) {
           var id = this.schema.items.id ||
             (this.id || /\/(.*?)$/.exec(this.path)[1]) + '_' + (this.schema.items.type || 'any');
-          var fieldDefinition = this.fieldDefinition.fields ? this.fieldDefinition.fields[0] : null;
+          var fieldDefinition = { id: id };
+          fieldDefinition.fields = this.fieldDefinition.fields || null;
           var schema = this.schema.items;
           newField = new Field(schema, id, parents, fieldDefinition);
           newField.index = this.fields.length;
@@ -2108,6 +2112,14 @@ angular.module('formula')
           field.value = {};
         }
 
+        if (field.typeOf('select')) {
+          field.values = [];
+          field.enum.forEach(function (val) {
+            field.values.push({id: val,
+            title: val});
+          });
+        }
+
         if (field.typeOf('array') && field.schema.items && field.fieldDefinition.fields) {
           copyFrom(field.items, field.fieldDefinition.fields[0]);
         }
@@ -2161,6 +2173,10 @@ angular.module('formula')
         }
 
         watchField(field);
+
+        if (field.id === "links") {
+          console.log('links:', field);
+        }
 
         return field;
       };
@@ -2512,8 +2528,8 @@ angular.module('formula')
  * Norsk Polarinstutt 2014, http://npolar.no/
  */
 angular.module('formula')
-  .service('formulaFieldValueFromModelService', [
-    function() {
+  .service('formulaFieldValueFromModelService', ['formulaCustomTemplateService',
+    function(formulaCustomTemplateService) {
       var valueFromModel = function (field, model) {
 
         if (model[field.id] !== undefined) {
@@ -2546,6 +2562,7 @@ angular.module('formula')
             field.dirty = true;
           }
           field.dirtyParents();
+          formulaCustomTemplateService.initField(field);
         }
       };
 

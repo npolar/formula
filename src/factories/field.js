@@ -83,7 +83,8 @@ angular.module('formula')
         if (this.typeOf('array')) {
           var id = this.schema.items.id ||
             (this.id || /\/(.*?)$/.exec(this.path)[1]) + '_' + (this.schema.items.type || 'any');
-          var fieldDefinition = this.fieldDefinition.fields ? this.fieldDefinition.fields[0] : null;
+          var fieldDefinition = { id: id };
+          fieldDefinition.fields = this.fieldDefinition.fields || null;
           var schema = this.schema.items;
           newField = new Field(schema, id, parents, fieldDefinition);
           newField.index = this.fields.length;
