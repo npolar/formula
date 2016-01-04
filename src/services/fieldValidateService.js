@@ -92,7 +92,6 @@ angular.module('formula')
               field.errors = null;
             }
             field.dirty = false;
-            console.log('validate', field);
 
             return field.valid !== false;
           }

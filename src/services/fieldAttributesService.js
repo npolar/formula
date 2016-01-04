@@ -38,7 +38,6 @@ angular.module('formula')
                 parent.dirty = true;
                 parent.itemChange(field);
               });
-              console.log('validate value change in field');
               $rootScope.$emit('revalidate');
             }
           }, true);
@@ -80,12 +79,13 @@ angular.module('formula')
 
         formulaFieldTranslateDefaultsService.translateDefaultValues(field);
         formulaFieldTypeService.setFieldType(field);
+
         if (field.typeOf('array')) {
-          this.value = [];
+          field.value = [];
         }
 
         if (field.typeOf('object')) {
-          this.value = {};
+          field.value = {};
         }
 
         if (field.typeOf('array') && field.schema.items && field.fieldDefinition.fields) {
