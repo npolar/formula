@@ -221,10 +221,7 @@ angular.module('formula')
 
         // Add css class of schema type
         var addSchemaClass = function(field, elem) {
-          var schemaType = field.schema.type;
-          if (schemaType instanceof Array) {
-            schemaType = schemaType[0] || schemaType[1];
-          }
+          var schemaType = field.mainType;
           if (schemaType) {
             elem.addClass(
               "formula" +
@@ -396,76 +393,6 @@ angular.module('formula')
 	}]);
 
 })();
-
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2015, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter inlineValues
-	 *
-	 * Filter used to inline an array of values.
-	 */
-
-	.filter('formulaInlineValues', function() {
-		return function(input, params) {
-			var result = [];
-
-			angular.forEach(input, function(field) {
-				if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-
-					default:
-				}
-			});
-
-			return result.join(', ');
-		};
-	});
-
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter replace
-	 *
-	 * Filter used to replace placeholders in a string.
-	 */
-
-	.filter('formulaReplace', function() {
-		return function(input, params) {
-			var result = input, match = input.match(/\{[^\}]*\}/g);
-
-			angular.forEach(match, function(v, k) {
-				result = result.replace(v, params[v.substr(1, v.length - 2)]);
-			});
-
-			return result;
-		};
-	});
 
 'use strict';
 /* globals angular */
@@ -1752,6 +1679,76 @@ angular.module('formula')
  * formula.js
  * Generic JSON Schema form builder
  *
+ * Norsk Polarinstutt 2015, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter inlineValues
+	 *
+	 * Filter used to inline an array of values.
+	 */
+
+	.filter('formulaInlineValues', function() {
+		return function(input, params) {
+			var result = [];
+
+			angular.forEach(input, function(field) {
+				if(field.value instanceof Array) {
+					result.push('Array[' + field.value.length + ']');
+				} else switch(typeof field.value) {
+					case 'string':
+					case 'number':
+					case 'boolean':
+						result.push(field.value);
+						break;
+
+					default:
+				}
+			});
+
+			return result.join(', ');
+		};
+	});
+
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter replace
+	 *
+	 * Filter used to replace placeholders in a string.
+	 */
+
+	.filter('formulaReplace', function() {
+		return function(input, params) {
+			var result = input, match = input.match(/\{[^\}]*\}/g);
+
+			angular.forEach(match, function(v, k) {
+				result = result.replace(v, params[v.substr(1, v.length - 2)]);
+			});
+
+			return result;
+		};
+	});
+
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
  * Norsk Polarinstutt 2014, http://npolar.no/
  */
 angular.module('formula')
@@ -2270,6 +2267,7 @@ angular.module('formula')
             // @TODO support any
           }
         }
+        field.mainType = field.type;
       };
 
 

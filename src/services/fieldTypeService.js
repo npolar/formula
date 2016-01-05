@@ -30,6 +30,7 @@ angular.module('formula')
             // @TODO support any
           }
         }
+        field.mainType = field.type;
       };
 
 

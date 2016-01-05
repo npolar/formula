@@ -49,7 +49,7 @@
 			"maximum": 10
 		},
 		"number_default": {
-			"type": "number",
+			"type": ["number", "null"],
 			"description": "number input with default property set",
 			"default": 123
 		},

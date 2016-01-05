@@ -142,10 +142,7 @@
 
         // Add css class of schema type
         var addSchemaClass = function(field, elem) {
-          var schemaType = field.schema.type;
-          if (schemaType instanceof Array) {
-            schemaType = schemaType[0] || schemaType[1];
-          }
+          var schemaType = field.mainType;
           if (schemaType) {
             elem.addClass(
               "formula" +
