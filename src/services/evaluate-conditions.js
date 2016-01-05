@@ -12,6 +12,7 @@ angular.module('formula')
   .service('formulaEvaluateConditionsService', ['$rootScope', 'formulaModel',
     function($rootScope, model) {
       var evaluateConditions = function(field) {
+
         // Evaluate condition
         if (field.condition) {
           var pass = true,
@@ -19,7 +20,6 @@ angular.module('formula')
 
           // jshint -W116
           angular.forEach(condition, function(cond) {
-            var local = model.data;
             if (pass) {
               // Relative path
               if (cond[0] !== '#') {
@@ -29,9 +29,11 @@ angular.module('formula')
               cond = cond.substr(2);
               cond = cond.replace(/\/(\d+)/g, '[$1]');
               cond = cond.replace(/\//g, '.');
+              cond = cond.replace('=', '==').replace('===', '==');
 
-              var evaluate = $rootScope.$eval(cond, local);
-              if (!local || evaluate === undefined || evaluate === false) {
+              var evaluate = $rootScope.$eval(cond, model.data);
+              console.log('evaluateConditions', field.path, cond, model.data, evaluate);
+              if (!model.data || evaluate === undefined || evaluate === false) {
                 pass = false;
               }
             }

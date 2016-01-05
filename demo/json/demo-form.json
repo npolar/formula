@@ -40,7 +40,8 @@
 					"fields": [
 						{
 							"id": "string_default",
-							"title": "Fancy title"
+							"title": "Fancy title",
+							"condition": "number==1"
 						},
 						{
 							"id": "number",
