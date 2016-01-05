@@ -57,7 +57,6 @@ angular.module('formula')
         parents = options.parents, fieldDefinition = options.fieldDefinition;
         field.parents = parents || [];
         field.id = field.title = id;
-        field.path = null;
         field.schema = schema;
         field.fieldDefinition = fieldDefinition || {};
         copyFrom(field, schema);
@@ -75,7 +74,6 @@ angular.module('formula')
         }, field);
 
         field.uidGen();
-        field.pathGen();
 
         formulaFieldTranslateDefaultsService.translateDefaultValues(field);
         formulaFieldTypeService.setFieldType(field);
@@ -92,7 +90,7 @@ angular.module('formula')
           field.values = [];
           field.enum.forEach(function (val) {
             field.values.push({id: val,
-            title: val});
+            label: val});
           });
         }
 
@@ -149,10 +147,6 @@ angular.module('formula')
         }
 
         watchField(field);
-
-        if (field.id === "links") {
-          console.log('links:', field);
-        }
 
         return field;
       };

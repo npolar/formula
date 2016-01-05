@@ -1,10 +1,11 @@
+<!DOCTYPE html>
 <form class="formula" ng-if="form.fieldsets">
   <header ng-if="form.title">
     {{ form.title }}
   </header>
 
   <nav ng-if="form.fieldsets.length > 1">
-    <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in form.fieldsets">{{ fieldset.title }}</a>
+    <a href="" ng-class="{ active: fieldset.active, valid: fieldset.valid}" ng-click="form.activate(fieldset)" ng-repeat="fieldset in form.fieldsets">{{ fieldset.title }}</a>
   </nav>
 
   <fieldset ng-if="fieldset.active" ng-repeat="fieldset in form.fieldsets">
@@ -23,7 +24,7 @@
           <legend ng-if="field.title">{{ field.title }}</legend>
 
           <div ng-repeat="field in field.fields" ng-show="field.visible">
-            <formula:field-instance field="field"/>
+            <formula:field-instance field="field"></formula:field-instance>
           </div>
         </fieldset>
       </div>
@@ -43,7 +44,9 @@
                     <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
                   </legend>
 
-                  <formula:field-instance field="value" ng-show="value.visible"/>
+                  <div ng-repeat="field in value.fields" ng-show="field.visible">
+                    <formula:field-instance field="field"></formula:field-instance>
+                  </div>
                 </fieldset>
               </li>
               <li>
@@ -58,7 +61,7 @@
 
             <ul ng-if="field.typeOf('field')">
               <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values">
-                <formula:field-instance field="value" ng-show="value.visible"/>
+                <input formula:field="value" />
                 <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
               </li>
               <li>

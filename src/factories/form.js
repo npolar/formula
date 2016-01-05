@@ -16,8 +16,8 @@ angular.module('formula')
  *
  * @returns form class constructor
  */
-.factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
-  function($rootScope, jsonLoader, model, Field, i18n) {
+.factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n', 'formulaEvaluateConditionsService',
+  function($rootScope, jsonLoader, model, Field, i18n, formulaEvaluateConditionsService) {
     function fieldsetFromSchema(schema) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
@@ -270,16 +270,15 @@ angular.module('formula')
           }
 
           if (field.dirty || force) {
-            var errorMessage = field.path + ' (' + (field.error || 'silent') + ')',
-              index;
+            var index;
 
             if (field.validate(force, silent)) {
               model.data[field.id] = field.value;
-              if ((index = errors.indexOf(errorMessage)) !== -1) {
+              if ((index = errors.indexOf(field.path)) !== -1) {
                 errors.splice(index, 1);
               }
             } else if (field.typeOf('input')) { // Only show input errors
-              errors.push(errorMessage);
+              errors.push(field.path);
 
               // Only unique
               errors = errors.filter(function(value, index, self) {
@@ -288,6 +287,8 @@ angular.module('formula')
               delete model.data[field.id];
             }
           }
+
+          formulaEvaluateConditionsService.evaluateConditions(field);
         };
 
         this.fieldsets.forEach(function(fieldset) {

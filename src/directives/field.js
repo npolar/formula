@@ -11,8 +11,8 @@
    * Norsk Polarinstutt 2014, http://npolar.no/
    */
   angular.module('formula')
-    .directive('formulaField', ['$compile', '$q', 'formulaModel', 'formulaEvaluateConditionsService',
-      function($compile, $q, model, formulaEvaluateConditionsService) {
+    .directive('formulaField', ['$compile', '$q', 'formulaModel',
+      function($compile, $q, model) {
 
         var getInputElement = function(scope, element, attrs) {
           var elem;
@@ -32,7 +32,7 @@
                   elem.append(child);
                 });
               } else {
-                elem.attr('ng-options', 'value.id as value.title for value in field.values');
+                elem.attr('ng-options', 'value.id as value.label for value in field.values');
               }
 
               if (field.multiple) {
@@ -116,7 +116,6 @@
 
         var initScope = function(scope, controllers) {
           scope.form = controllers[0].data.formula;
-          scope.backupValue = null;
 
           if (controllers[1]) {
             scope.field = controllers[1].field;
@@ -190,7 +189,6 @@
 
               $compile(elem)(scope, function(cloned, scope) {
                 element.replaceWith(cloned);
-                formulaEvaluateConditionsService.evaluateConditions(scope, field);
               });
             });
           },

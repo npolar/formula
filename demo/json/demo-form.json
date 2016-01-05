@@ -10,7 +10,8 @@
 				"string_minlength_maxlength",
 				{
 					"id": "string_textarea",
-					"type": "textarea"
+					"type": "textarea",
+					"condition": "string"
 				},
 				"string_datetime",
 				"string_date",
@@ -43,7 +44,7 @@
 						},
 						{
 							"id": "number",
-							"hidden": true
+							"hidden": false
 						}
 					]
 				},

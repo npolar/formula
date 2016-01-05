@@ -107,7 +107,6 @@ angular.module('formula')
             if (!skipField(fieldDefinition)) {
               schema.required = schema.required || this.schema.required;
               var newField = new Field(schema, key, parents, fieldDefinition);
-              newField.index = this.fields.length;
               if (newField.type) {
                 this.fields.push(newField);
               }
@@ -156,8 +155,6 @@ angular.module('formula')
           index = this.values.push(new Field(proto.schema, proto.id, parents, proto.fieldDefinition)) - 1;
           var field = this.values[index];
           field.index = index;
-          field.uidGen();
-          field.pathGen();
 
           if (field.value !== undefined) {
             this.value.push(field.value);
@@ -203,7 +200,6 @@ angular.module('formula')
 
           this.values.forEach(function(fs, i) {
             fs.index = i;
-            fs.pathGen();
           }, this);
 
           this.dirty = true;
@@ -258,27 +254,26 @@ angular.module('formula')
        *
        * Function used to generate full JSON path for fields
        */
-      pathGen: function() {
-        this.path = '#/';
+      get path() {
+        var path = '#';
 
         // jshint -W116
-        angular.forEach(this.parents, function(parent) {
-          if (parent.index != null) {
-            this.path += parent.index + '/';
+        var genFieldPath = function (field) {
+          var path = '/';
+          if (field.index != null) {
+            path += field.index;
+          } else {
+            path += field.id;
           }
+          return path;
+        };
 
-          this.path += parent.id + '/';
-        }, this);
+        this.parents.forEach(function(parent) {
+          path += genFieldPath(parent);
+        });
 
-        if (this.index != null) {
-          this.path += this.index;
-
-          if (this.id) {
-            this.path += '/' + this.id;
-          }
-        } else if (this.id) {
-          this.path += this.id;
-        }
+        path += genFieldPath(this);
+        return path;
       },
 
       /**
