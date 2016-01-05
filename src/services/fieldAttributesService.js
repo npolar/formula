@@ -34,10 +34,10 @@ angular.module('formula')
           }, function(n, o) {
             if (n !== o) {
               field.dirty = true;
-              field.parents.reverse().forEach(function(parent) {
-                parent.dirty = true;
-                parent.itemChange(field);
-              });
+              for (var i = field.parents.length-1; i>=0; i--) {
+                field.parents[i].dirty = true;
+                field.parents[i].itemChange(field);
+              }
               $rootScope.$emit('revalidate');
             }
           }, true);

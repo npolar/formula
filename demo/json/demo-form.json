@@ -11,7 +11,7 @@
 				{
 					"id": "string_textarea",
 					"type": "textarea",
-					"condition": "string"
+					"condition": ["string=='foo'", "#/array_object/1/string_default=='baz'"]
 				},
 				"string_datetime",
 				"string_date",

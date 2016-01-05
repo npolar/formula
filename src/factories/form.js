@@ -273,18 +273,15 @@ angular.module('formula')
             var index;
 
             if (field.validate(force, silent)) {
-              model.data[field.id] = field.value;
               if ((index = errors.indexOf(field.path)) !== -1) {
                 errors.splice(index, 1);
               }
             } else if (field.typeOf('input')) { // Only show input errors
               errors.push(field.path);
-
               // Only unique
               errors = errors.filter(function(value, index, self) {
                 return self.indexOf(value) === index;
               });
-              delete model.data[field.id];
             }
           }
 
@@ -294,6 +291,12 @@ angular.module('formula')
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
             fieldValidate(field);
+
+            if (field.valid) {
+              model.data[field.id] = field.value;
+            } else {
+              delete model.data[field.id];
+            }
           });
         });
         this.errors = errors;

@@ -6,7 +6,8 @@
  * Generic JSON Schema form builder
  *
  * Norsk Polarinstutt 2014, http://npolar.no/
- */
+ *
+*/
 angular.module('formula')
   .service('formulaEvaluateConditionsService', ['$rootScope', 'formulaModel',
     function($rootScope, model) {
@@ -16,55 +17,18 @@ angular.module('formula')
           var pass = true,
             condition = (field.condition instanceof Array ? field.condition : [field.condition]);
 
+          // jshint -W116
           angular.forEach(condition, function(cond) {
-            var local = model.data,
-              parents = field.parents,
-              pathSplitted;
-              console.log('ec', local, parents);
+            var local = model.data;
             if (pass) {
+              // Relative path
+              if (cond[0] !== '#') {
+                cond = field.path.substr(0, field.path.lastIndexOf('/')+1) + cond;
+              }
               // Absolute JSON path
-              if (cond[0] === '#') {
-                parents = [];
-
-                // Slash-delimited resolution
-                if (cond[1] === '/') {
-                  pathSplitted = cond.substr(1).split('/');
-                }
-
-                // Dot-delimited resolution
-                else {
-                  pathSplitted = cond.substr(1).split('.');
-                  if (!pathSplitted[0].length) {
-                    parents.splice(0, 1);
-                  }
-                }
-
-                angular.forEach(pathSplitted, function(split, index) {
-                  if (isNaN(split)) {
-                    parents.push({
-                      id: split,
-                      index: null
-                    });
-                  } else if (index > 0) {
-                    parents[index - 1].index = Number(split);
-                  }
-                });
-
-                cond = parents[parents.length - 1].id;
-                parents.splice(parents.length - 1, 1);
-              }
-
-              angular.forEach(parents, function(parent) {
-                if (local) {
-                  local = (parent.index !== null ? local[parent.index][parent.id] : local[parent.id]);
-                }
-              });
-
-              if (local && field.index !== null) {
-                local = local[field.index];
-              }
-
-              console.log('evaluateConditions', field.id, cond, local);
+              cond = cond.substr(2);
+              cond = cond.replace(/\/(\d+)/g, '[$1]');
+              cond = cond.replace(/\//g, '.');
 
               var evaluate = $rootScope.$eval(cond, local);
               if (!local || evaluate === undefined || evaluate === false) {
