@@ -81,7 +81,7 @@ angular.module('formula')
               }
             }
 
-            if (!silent && field.valid === false) {
+            if (!silent && result && field.valid === false) {
               if (field.typeOf('array') || field.typeOf('object')) {
                 field.errors = result.errors;
               } else {
