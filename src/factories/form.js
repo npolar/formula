@@ -181,6 +181,7 @@ angular.module('formula')
        * @param code ISO 639-3 code to language used for translation
        */
       translate: function(code) {
+
         function fieldTranslate(field, parent) {
           var fieldTranslation = (parent && parent.fields ? (parent.fields[field.id] || null) : null);
 

@@ -22,15 +22,19 @@ angular.module('formula')
 					throw "No formula options provided!";
 				}
 
-				$scope.schema = new Schema();
-				if ($scope.data.model) {
-					model.set($scope.data.model);
-				}
+				var setLanguage = function (uri) {
+					var code = i18n.code(uri);
+					$scope.language = { uri: uri, code: code };
+					if(!code) {
+						i18n.add(uri).then(function (code) {
+							$scope.language.code = code;
 
-				formulaCustomTemplateService.setTemplates($scope.data.templates);
-
-				$scope.template = $scope.data.template || 'default';
-				$scope.language = { uri: $scope.data.language || null, code: null };
+							if ($scope.form) {
+								$scope.form.translate(code);
+							}
+						});
+					}
+				};
 
 				var loadTemplate = function (templateId) {
 					return $q(function(resolve, reject) {
@@ -61,6 +65,16 @@ angular.module('formula')
 					});
 				};
 
+				$scope.schema = new Schema();
+				if ($scope.data.model) {
+					model.set($scope.data.model);
+				}
+
+				formulaCustomTemplateService.setTemplates($scope.data.templates);
+
+				$scope.template = $scope.data.template || 'default';
+				setLanguage($scope.data.language);
+
 				var asyncs = [loadTemplate($scope.data.template), $scope.schema.deref($scope.data.schema)];
 				if ($scope.data.form) {
 					asyncs.push(jsonLoader($scope.data.form));
@@ -79,17 +93,8 @@ angular.module('formula')
 				// Enable language hot-swapping
 				$scope.$watch('data.language', function(newUri, oldUri) {
 					if (newUri && newUri !== oldUri) {
-						var code = i18n.code(newUri);
 						formLoaded.then(function () {
-							if(!code) {
-								i18n.add(newUri).then(function(code) {
-									$scope.language.code = code;
-									$scope.form.translate(code);
-								});
-							} else {
-								$scope.language.code = code;
-								$scope.form.translate(code);
-							}
+							setLanguage(newUri);
 						});
 					}
 				});
