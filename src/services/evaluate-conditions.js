@@ -7,11 +7,30 @@
  *
  * Norsk Polarinstutt 2014, http://npolar.no/
  *
-*/
+ */
 angular.module('formula')
-  .service('formulaEvaluateConditionsService', ['$rootScope', 'formulaModel',
-    function($rootScope, model) {
-      var evaluateConditions = function(field) {
+  .service('formulaEvaluateConditionsService', ['$rootScope',
+    function($rootScope) {
+      var values = {};
+      var evaluateConditions = function (form) {
+        form.fieldsets.forEach(function (fieldset) {
+          fieldset.fields.forEach(function (field) {
+            values[field.id] = field.value;
+            evaluateField(field);
+          });
+        });
+      };
+
+      var evaluateField = function (field) {
+        if (field.typeOf('array')) {
+          field.values.forEach(function (value) {
+            evaluateField(value);
+          });
+        } else if (field.typeOf('object')) {
+          field.fields.forEach(function (subfield) {
+            evaluateField(subfield);
+          });
+        }
 
         // Evaluate condition
         if (field.condition) {
@@ -19,21 +38,22 @@ angular.module('formula')
             condition = (field.condition instanceof Array ? field.condition : [field.condition]);
 
           // jshint -W116
-          angular.forEach(condition, function(cond) {
+          condition.forEach(function(cond) {
             if (pass) {
               // Relative path
               if (cond[0] !== '#') {
-                cond = field.path.substr(0, field.path.lastIndexOf('/')+1) + cond;
+                cond = field.path.substr(0, field.path.lastIndexOf('/') + 1) + cond;
               }
               // Absolute JSON path
               cond = cond.substr(2);
               cond = cond.replace(/\/(\d+)/g, '[$1]');
               cond = cond.replace(/\//g, '.');
+              // Disable setters
               cond = cond.replace('=', '==').replace('===', '==');
 
-              var evaluate = $rootScope.$eval(cond, model.data);
-              console.log('evaluateConditions', field.path, cond, model.data, evaluate);
-              if (!model.data || evaluate === undefined || evaluate === false) {
+              var evaluate = $rootScope.$eval(cond, values);
+              console.log('evaluateConditions', field.path, cond, values, evaluate);
+              if (!values || evaluate === undefined || evaluate === false) {
                 pass = false;
               }
             }

@@ -285,7 +285,7 @@ angular.module('formula')
             }
           }
 
-          formulaEvaluateConditionsService.evaluateConditions(field);
+
         };
 
         this.fieldsets.forEach(function(fieldset) {
@@ -299,6 +299,7 @@ angular.module('formula')
             }
           });
         });
+        formulaEvaluateConditionsService.evaluateConditions(this);
         this.errors = errors;
 
         if ((this.valid = !(this.errors.length))) {
