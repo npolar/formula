@@ -29,8 +29,10 @@ angular.module('formula')
             field.type = 'any';
             // @TODO support any
           }
+          field.mainType = field.type;
+        } else {
+          field.mainType = field.schema.type;
         }
-        field.mainType = field.type;
       };
 
 
