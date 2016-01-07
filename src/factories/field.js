@@ -97,12 +97,18 @@ angular.module('formula')
             var fieldDefinition;
             if (this.fieldDefinition.fields) {
               this.fieldDefinition.fields.forEach(function(field) {
-                if (key === field.id || key === field) {
+                var id;
+                if (typeof field === 'string') {
+                  id = field.replace('!','');
+                } else {
+                  id = field.id;
+                }
+                if (key === id) {
                   fieldDefinition = field;
                 }
               });
             }
-
+            console.log('add field', fieldDefinition);
             if (!skipField(fieldDefinition)) {
               schema.required = schema.required || this.schema.required;
               var newField = new Field(schema, key, parents, fieldDefinition);
