@@ -510,7 +510,6 @@ angular.module('formula')
                 }
               });
             }
-            console.log('add field', fieldDefinition);
             if (!skipField(fieldDefinition)) {
               schema.required = schema.required || this.schema.required;
               var newField = new Field(schema, key, parents, fieldDefinition);
