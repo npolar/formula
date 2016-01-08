@@ -26,7 +26,6 @@
 	</div>
 
 	<script src="../node_modules/angular/angular.js"></script>
-	<script src="../node_modules/angular-resource/angular-resource.min.js"></script>
 	<script src="js/tv4.min.js"></script>
 	<script src="../dist/formula.js"></script>
 
@@ -34,8 +33,8 @@
 		"use strict";
 		/* globals angular */
 
-		angular.module('demo', ['formula', 'ngResource'])
-			.controller('demoController', function($scope, $timeout, $resource, formulaAutoCompleteService) {
+		angular.module('demo', ['formula'])
+			.controller('demoController', function($scope, $timeout, $q, formulaAutoCompleteService) {
 				var updateModel = function() {
 					$scope.formulaData.model = {
 						_id: 'foobarID',
@@ -74,23 +73,21 @@
 				};
 
 				var getResource = function() {
-					resource.get({}, function(data) {
-						console.log("resource", data.string);
-						$scope.formulaData.model = data;
+					var deferred = $q.defer();
+					deferred.resolve({
+						string: 'initfoobar',
+						boolean: true
 					});
+					return deferred.promise;
 				};
 
-				var resource = $resource('json/data.json');
 
 				$scope.formulaData = {
 					schema: "json/demo-schema.json",
 					form: "json/demo-form.json",
 					template: null,
 					language: null,
-					model: {
-						string: 'initfoobar',
-						boolean: true
-					},
+					model: getResource(),
 					templates: [{
 						match(field) {
 								return field.id === "ref_object";
@@ -120,8 +117,6 @@
 
 				formulaAutoCompleteService.defineSourceFunction("foobar", fn);
 				formulaAutoCompleteService.defineSourceFunction("emailCallback", emailCallback);
-
-				getResource();
 
 				$timeout(updateModel, 1000);
 

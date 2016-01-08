@@ -65,10 +65,19 @@ angular.module('formula')
 					});
 				};
 
+				var loadModel = function () {
+					if ($scope.data.model) {
+						Promise.resolve($scope.data.model).then(function (data) {
+							model.set(data);
+							if ($scope.form) {
+								$scope.form.updateValues();
+							}
+						});
+					}
+				};
+
 				$scope.schema = new Schema();
-				if ($scope.data.model) {
-					model.set($scope.data.model);
-				}
+				loadModel();
 
 				formulaCustomTemplateService.setTemplates($scope.data.templates);
 
@@ -80,7 +89,7 @@ angular.module('formula')
 					asyncs.push(jsonLoader($scope.data.form));
 				}
 
-				var formLoaded = $q.all(asyncs).then(function(data) {
+				$q.all(asyncs).then(function(data) {
 					$scope.form = $scope.data.formula = new Form(data[1], data[2]);
 					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
 					$scope.form.translate($scope.language.code);
@@ -93,20 +102,14 @@ angular.module('formula')
 				// Enable language hot-swapping
 				$scope.$watch('data.language', function(newUri, oldUri) {
 					if (newUri && newUri !== oldUri) {
-						formLoaded.then(function () {
-							setLanguage(newUri);
-						});
+						setLanguage(newUri);
 					}
 				});
 
 				// Enable data hot-swapping
 				$scope.$watch('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
-						formLoaded.then(function () {
-							if(model.set(newData)) {
-								$scope.form.updateValues();
-							}
-						});
+						loadModel();
 					}
 				});
 
