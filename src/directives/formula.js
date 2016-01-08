@@ -113,6 +113,13 @@ angular.module('formula')
 					}
 				});
 
+				// Enable template hot-swapping
+				$scope.$watch('data.templates', function(newData, oldData) {
+					if (newData && newData !== oldData) {
+						formulaCustomTemplateService.setTemplates(newData);
+					}
+				});
+
 				this.data = $scope.data; // Others need this
 			}]
 		};

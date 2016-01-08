@@ -15,6 +15,7 @@ angular.module('formula')
       const ERR = "Invalid autocomplete source ";
 
       var sources = {};
+      var selects = {};
 
       var isFn = function(key) {
         return sources[key] && sources[key].constructor === Function;
@@ -29,44 +30,50 @@ angular.module('formula')
         return source && (URI_REGEX.test(source) || (isObject(source) && isURI(source.source)));
       };
 
-      var defineSourceFunction = function(key, cb) {
-        sources[key] = cb;
+      var bindSourceCallback = function(fieldPath, cb) {
+        sources[fieldPath] = cb;
+      };
+
+      var bindSelectCallback = function(fieldPath, cb) {
+        selects[fieldPath] = cb;
+      };
+
+      var filterSource = function (source, q) {
+        if (!q || typeof source[0] !== "string") {
+          return source;
+        }
+        source = source.filter(function (item) {
+          return item.toLowerCase().indexOf(q.toLowerCase()) === 0;
+        });
+        return source;
       };
 
       var getSource = function(field, source, q) {
         var deferred = $q.defer();
 
-        if (isFn(source)) {
-          // source is a registred function
-          deferred.resolve(sources[source].call(field));
-        } else if (URI_REGEX.test(source)) {
+        if (URI_REGEX.test(source)) {
           // source is uri
-          var config = q ? {
+          var config = {
             params: {
-              q: q
+              q: q || ''
             }
-          } : {};
+          };
           $http.get(source, config).then(function (response) {
-            deferred.resolve(response.data);
-          }, function (response) {
-            deferred.reject(new Error(ERR + source));
-          });
-        } else if (source.constructor === Array) {
-          // source is array
-          deferred.resolve(source);
-        } else if (isObject(source)) {
-          // source is object
-          getSource(field, source.source, q).then(function (response) {
-            if (isFn(source.callback)) {
-              deferred.resolve(sources[source.callback].call(field, response));
-            } else {
-              deferred.resolve(response);
-            }
+            deferred.resolve(getSource(field, response.data, q));
           }, function (response) {
             deferred.reject(new Error(ERR + source));
           });
         } else {
-          deferred.resolve(source.filter(function (item) { return item.indexOf(q) !== -1; }));
+          if (source.constructor !== Array) {
+            source = [];
+          }
+
+          // source is a registred function
+          if (isFn(field.path)) {
+            deferred.resolve(filterSource(sources[field.path].call(field, source), q));
+          } else {
+            deferred.resolve(filterSource(source, q));
+          }
         }
 
         return deferred.promise;
@@ -74,19 +81,19 @@ angular.module('formula')
 
       var initField = function (field) {
         field.source = [];
-        getSource(field, field.autocomplete).then(function (source) {
-          field.source = source;
-        }, function (e) {
-          console.warn(e);
-          field.source = [];
-        });
+        field.onSelect = function (item) {
+          if (selects[field.path]) {
+            selects[field.path].call(field, item);
+          }
+        };
         field.querySearch = function (q) {
           return getSource(field, field.autocomplete, q);
         };
       };
 
       return {
-        defineSourceFunction: defineSourceFunction,
+        bindSourceCallback: bindSourceCallback,
+        bindSelectCallback: bindSelectCallback,
         getSource: getSource,
         isURI: isURI,
         initField: initField

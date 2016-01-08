@@ -70,18 +70,11 @@
 	      },
 	      {
 	        "id": "autocomplete_url",
-	        "autocomplete": "//api.npolar.no/"
+	        "autocomplete": "http://api.npolar.no/publication/?fields=people.email&format=json&variant=array&limit=5"
 	      },
 	      {
 	        "id": "autocomplete_fn",
-	        "autocomplete": "foobar"
-	      },
-	      {
-	        "id": "autocomplete_obj",
-	        "autocomplete": {
-	          "source": "http://api.npolar.no/publication/?q=&fields=people.email&format=json&variant=array&limit=5",
-	          "callback": "emailCallback"
-	        }
+	        "autocomplete": true
 	      }
 	    ]
 	    }

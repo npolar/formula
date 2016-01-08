@@ -115,8 +115,8 @@
 					return emails;
 				};
 
-				formulaAutoCompleteService.defineSourceFunction("foobar", fn);
-				formulaAutoCompleteService.defineSourceFunction("emailCallback", emailCallback);
+				formulaAutoCompleteService.bindSourceCallback("#/autocomplete_fn", fn);
+				formulaAutoCompleteService.bindSourceCallback("#/autocomplete_url", emailCallback);
 
 				$timeout(updateModel, 1000);
 

@@ -81,6 +81,7 @@
               });
               deferred.resolve(elem);
             });
+            list.on('change', field.onSelect);
             elem.append(list);
           } else {
             deferred.resolve(elem);
