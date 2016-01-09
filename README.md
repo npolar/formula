@@ -15,7 +15,7 @@ For useage examples, check out the [Formula demo](http://npolar.github.io/formul
 Bootstrapping is done using the **formula** directive, which takes one *object* as a parameter, currently supporting the following properties:
 
 * **schema** - URL to a JSON Schema used for form-building and validation *(mandatory)*
-* **form** - URL to a JSON Schema used to customise the form layout
+* **form** - URL to a JSON Schema used to customize the form layout
 * **language** - URL to a JSON translation file used for form translations
 * **model** - Object used to store form data
 * **template** - String representing the form template layout name used for form-building
@@ -89,19 +89,12 @@ Autocomplete is available for string fields and is configured in the form defini
     },
     {
       "id": "autocomplete_fn",
-      "autocomplete": "foobar" <- function returns array
-    },
-    {
-      "id": "autocomplete_obj",
-      "autocomplete": {
-        "source": "http://api.npolar.no/publication/?q=&fields=people.email&format=json&variant=array&limit=5",
-        "callback": "emailCallback" <- callback returns array
-      }
+      "autocomplete": true <- function returns array
     }
 
 Callback functions are defined via ```formulaAutoCompleteService``` like so:
 
-    formulaAutoCompleteService.defineSourceFunction("emailCallback", function (response) {
+    formulaAutoCompleteService.bindSourceCallback(field.path, function (response) {
       // return a array here
     });
 
