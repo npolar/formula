@@ -67,7 +67,7 @@ angular.module('formula')
 
 				var loadModel = function (val) {
 					if (val) {
-						Promise.resolve(angular.copy(val)).then(function (data) {
+						Promise.resolve(val).then(function (data) {
 							model.set(data);
 							if ($scope.form) {
 								$scope.form.updateValues();
@@ -109,6 +109,8 @@ angular.module('formula')
 				// Enable data hot-swapping
 				$scope.$watch('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
+						console.log("watch", JSON.stringify($scope.data.model));
+
 						loadModel(newData);
 					}
 				}, true);
