@@ -23,15 +23,19 @@ angular.module('formula')
             field.values = [];
 
             model[field.id].forEach(function(item, index) {
-
+              var newField;
               if (field.typeOf('fieldset')) {
-                field.itemAdd();
-                var valueModel = {};
-                valueModel[field.values[index].id] = item;
-                valueFromModel(field.values[index], valueModel);
+                newField = field.itemAdd();
+                if (newField) {
+                  var valueModel = {};
+                  valueModel[field.values[index].id] = item;
+                  valueFromModel(field.values[index], valueModel);
+                }
               } else if (field.typeOf('field')) {
-                field.itemAdd();
-                field.values[index].value = item;
+                newField = field.itemAdd();
+                if (newField) {
+                  field.values[index].value = item;
+                }
               } else {
                 // @TODO Support array:array
                 // jshint -W035

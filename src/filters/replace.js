@@ -16,7 +16,7 @@ angular.module('formula')
 	 * Filter used to replace placeholders in a string.
 	 */
 
-	.filter('formulaReplace', function() {
+	.filter('formulaReplace', [function() {
 		return function(input, params) {
 			var result = input, match = input.match(/\{[^\}]*\}/g);
 
@@ -26,4 +26,4 @@ angular.module('formula')
 
 			return result;
 		};
-	});
+	}]);

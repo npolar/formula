@@ -105,14 +105,14 @@ angular.module('formula')
 				});
 
 				// Enable data hot-swapping
-				$scope.$watch('data.model', function(newData, oldData) {
+				$scope.$watchCollection('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
 						loadModel(newData);
 					}
-				}, true);
+				});
 
 				// Enable template hot-swapping
-				$scope.$watch('data.templates', function(newData, oldData) {
+				$scope.$watchCollection('data.templates', function(newData, oldData) {
 					if (newData && newData !== oldData) {
 						formulaCustomTemplateService.setTemplates(newData);
 					}

@@ -156,8 +156,11 @@ angular.module('formula')
           parents.push(this);
 
           var proto = this.fields[0];
-          index = this.values.push(new Field(proto.schema, proto.id, parents, proto.fieldDefinition)) - 1;
-          var field = this.values[index];
+          var field = new Field(proto.schema, proto.id, parents, proto.fieldDefinition);
+          if (!field.type) {
+            return null;
+          }
+          index = this.values.push(field) - 1;
           field.index = index;
 
           if (field.value !== undefined) {
@@ -289,20 +292,19 @@ angular.module('formula')
        * @returns true if field type matches with specified type, otherwise false
        */
       typeOf: function(type) {
-        if (this.type && typeof type === 'string') {
-          var types = this.type.split(':'),
-            match = false;
-
-          angular.forEach(type.split(' '), function(type) {
-            if (!match && type === this.type || type === types[0] || type === types[1]) {
-              match = true;
-            }
-          }, this);
-
-          return match;
+        if (!(this.type && typeof this.type === 'string')) {
+          return false;
         }
+        var types = this.type.split(':'),
+          match = false;
 
-        return false;
+        type.split(' ').forEach(function(type) {
+          if (!match && type === this.type || type === types[0] || type === types[1]) {
+            match = true;
+          }
+        }, this);
+
+        return match;
       },
 
       /**

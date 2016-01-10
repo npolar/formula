@@ -16,7 +16,7 @@ angular.module('formula')
 	 * Filter used to inline an array of values.
 	 */
 
-	.filter('formulaInlineValues', function() {
+	.filter('formulaInlineValues', [function() {
 		return function(input, params) {
 			var result = [];
 
@@ -36,4 +36,4 @@ angular.module('formula')
 
 			return result.join(', ');
 		};
-	});
+	}]);

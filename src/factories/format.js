@@ -19,7 +19,7 @@ angular.module('formula')
 	 */
 
 	.factory('formulaFormat',
-	function() {
+	[function() {
 		return {
 			color: // CSS 2.1 color
 			function(data, schema) {
@@ -91,4 +91,4 @@ angular.module('formula')
 				return 'RFC 3986 URI';
 			}
 		};
-	});
+	}]);

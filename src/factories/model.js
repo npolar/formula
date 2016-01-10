@@ -19,7 +19,7 @@ angular.module('formula')
  */
 
 .service('formulaModel',
-  function() {
+  [function() {
     var model = {
       data: {},
       set: function(data) {
@@ -33,4 +33,4 @@ angular.module('formula')
     };
 
     return model;
-  });
+  }]);

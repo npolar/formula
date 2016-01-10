@@ -12,7 +12,7 @@
 
 angular.module('formula')
 	.directive('formulaFieldDefinition',
-	function() {
+	[function() {
 		return {
 			restrict: 'A',
 			require: '^formula',
@@ -25,7 +25,7 @@ angular.module('formula')
 				};
 			}
 		};
-	});
+	}]);
 
 
 })();
