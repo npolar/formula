@@ -109,9 +109,10 @@ angular.module('formula')
     Form.prototype = {
 
       updateValues: function() {
+        var copy = angular.copy(model.data);
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
-            field.valueFromModel(model.data);
+            field.valueFromModel(copy);
           });
         });
         this.validate(false, true);

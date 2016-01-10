@@ -11,7 +11,6 @@ angular.module('formula')
   .service('formulaFieldValueFromModelService', ['formulaCustomTemplateService',
     function(formulaCustomTemplateService) {
       var valueFromModel = function (field, model) {
-
         if (model[field.id] !== undefined) {
 
           if (field.type === "object") {

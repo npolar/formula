@@ -65,9 +65,9 @@ angular.module('formula')
 					});
 				};
 
-				var loadModel = function () {
-					if ($scope.data.model) {
-						Promise.resolve($scope.data.model).then(function (data) {
+				var loadModel = function (val) {
+					if (val) {
+						Promise.resolve(angular.copy(val)).then(function (data) {
 							model.set(data);
 							if ($scope.form) {
 								$scope.form.updateValues();
@@ -77,7 +77,7 @@ angular.module('formula')
 				};
 
 				$scope.schema = new Schema();
-				loadModel();
+				loadModel($scope.data.model);
 
 				formulaCustomTemplateService.setTemplates($scope.data.templates);
 
@@ -109,9 +109,9 @@ angular.module('formula')
 				// Enable data hot-swapping
 				$scope.$watch('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
-						loadModel();
+						loadModel(newData);
 					}
-				});
+				}, true);
 
 				// Enable template hot-swapping
 				$scope.$watch('data.templates', function(newData, oldData) {
