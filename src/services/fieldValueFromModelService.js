@@ -15,32 +15,31 @@ angular.module('formula')
 
           if (field.type === "object") {
             field.fields.forEach(function(fc, index) {
-              if (model[field.id][fc.id]) {
-                fc.valueFromModel(model[field.id]);
+              if (model[field.id][fc.id] !== undefined) {
+                valueFromModel(fc, model[field.id]);
               }
             });
           } else if (field.typeOf("array")) {
             field.values = [];
 
-
             model[field.id].forEach(function(item, index) {
-              field.itemAdd();
+
               if (field.typeOf('fieldset')) {
+                field.itemAdd();
                 var valueModel = {};
                 valueModel[field.values[index].id] = item;
-                field.values[index].valueFromModel(valueModel);
+                valueFromModel(field.values[index], valueModel);
               } else if (field.typeOf('field')) {
+                field.itemAdd();
                 field.values[index].value = item;
               } else {
                 // @TODO Support array:array
                 // jshint -W035
               }
             }, field);
-          } else {
-            field.value = model[field.id];
-            field.dirty = true;
           }
-          field.dirtyParents();
+          field.value = model[field.id];
+          field.dirty = true;
           formulaCustomTemplateService.initField(field);
         }
       };

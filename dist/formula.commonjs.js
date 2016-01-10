@@ -90,8 +90,8 @@ angular.module('formula')
    * Norsk Polarinstutt 2014, http://npolar.no/
    */
   angular.module('formula')
-    .directive('formulaField', ['$compile', '$q', 'formulaModel',
-      function($compile, $q, model) {
+    .directive('formulaField', ['$compile', '$q',
+      function($compile, $q) {
 
         var getInputElement = function(scope, element, attrs) {
           var elem;
@@ -346,20 +346,17 @@ angular.module('formula')
 					});
 				};
 
-				var loadModel = function (val) {
-					if (val) {
-						console.log('loadModel', JSON.stringify(val));
-						Promise.resolve(val).then(function (data) {
-							model.set(data);
-							if ($scope.form) {
-								$scope.form.updateValues();
-							}
-						});
+				var loadModel = function (data) {
+					if (data) {
+						model.set(angular.copy(data));
+						if ($scope.form) {
+							$scope.form.updateValues();
+						}
 					}
 				};
 
 				$scope.schema = new Schema();
-				loadModel($scope.data.model);
+				Promise.resolve($scope.data.model).then(loadModel);
 
 				formulaCustomTemplateService.setTemplates($scope.data.templates);
 
@@ -391,8 +388,6 @@ angular.module('formula')
 				// Enable data hot-swapping
 				$scope.$watch('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
-						console.log("watch", JSON.stringify($scope.data.model));
-
 						loadModel(newData);
 					}
 				}, true);
@@ -469,10 +464,10 @@ angular.module('formula')
 
     Field.prototype = {
       dirtyParents: function () {
-        this.parents.reverse().forEach(function(parent) {
-          parent.dirty = true;
-          parent.itemChange(this);
-        });
+        for (var i = this.parents.length-1; i>=0; i--) {
+          this.parents[i].dirty = true;
+          this.parents[i].itemChange(this);
+        }
       },
 
       /**
@@ -2438,33 +2433,9 @@ angular.module('formula')
           var silent = options.silent, force = options.force;
           if (field.schema) {
             var tempValue, result;
-            //field.valid = true;
 
-            switch (field.type) {
-              case 'array:fieldset':
-              case 'array:field':
-                if (field.values) {
-                  angular.forEach(field.values, function(field) {
-                    if (field.dirty || force) {
-                      field.validate(force, silent);
-                    }
-                  }, field);
-                }
-                break;
-
-              case 'object':
-                if (field.fields) {
-                  angular.forEach(field.fields, function(field, index) {
-                    if (field.dirty || force) {
-                      field.validate(force, silent);
-                    }
-                  }, field);
-                }
-                break;
-              default:
-                if (field.value === null || field.value === "") {
-                  field.value = undefined;
-                }
+            if (field.value === null || field.value === "") {
+              field.value = undefined;
             }
 
             if ((field.dirty || force) && (field.required || field.value !== undefined)) {
@@ -2543,32 +2514,31 @@ angular.module('formula')
 
           if (field.type === "object") {
             field.fields.forEach(function(fc, index) {
-              if (model[field.id][fc.id]) {
-                fc.valueFromModel(model[field.id]);
+              if (model[field.id][fc.id] !== undefined) {
+                valueFromModel(fc, model[field.id]);
               }
             });
           } else if (field.typeOf("array")) {
             field.values = [];
 
-
             model[field.id].forEach(function(item, index) {
-              field.itemAdd();
+
               if (field.typeOf('fieldset')) {
+                field.itemAdd();
                 var valueModel = {};
                 valueModel[field.values[index].id] = item;
-                field.values[index].valueFromModel(valueModel);
+                valueFromModel(field.values[index], valueModel);
               } else if (field.typeOf('field')) {
+                field.itemAdd();
                 field.values[index].value = item;
               } else {
                 // @TODO Support array:array
                 // jshint -W035
               }
             }, field);
-          } else {
-            field.value = model[field.id];
-            field.dirty = true;
           }
-          field.dirtyParents();
+          field.value = model[field.id];
+          field.dirty = true;
           formulaCustomTemplateService.initField(field);
         }
       };

@@ -56,10 +56,10 @@ angular.module('formula')
 
     Field.prototype = {
       dirtyParents: function () {
-        this.parents.reverse().forEach(function(parent) {
-          parent.dirty = true;
-          parent.itemChange(this);
-        });
+        for (var i = this.parents.length-1; i>=0; i--) {
+          this.parents[i].dirty = true;
+          this.parents[i].itemChange(this);
+        }
       },
 
       /**

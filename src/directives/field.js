@@ -11,8 +11,8 @@
    * Norsk Polarinstutt 2014, http://npolar.no/
    */
   angular.module('formula')
-    .directive('formulaField', ['$compile', '$q', 'formulaModel',
-      function($compile, $q, model) {
+    .directive('formulaField', ['$compile', '$q',
+      function($compile, $q) {
 
         var getInputElement = function(scope, element, attrs) {
           var elem;

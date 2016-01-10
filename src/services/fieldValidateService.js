@@ -15,33 +15,9 @@ angular.module('formula')
           var silent = options.silent, force = options.force;
           if (field.schema) {
             var tempValue, result;
-            //field.valid = true;
 
-            switch (field.type) {
-              case 'array:fieldset':
-              case 'array:field':
-                if (field.values) {
-                  angular.forEach(field.values, function(field) {
-                    if (field.dirty || force) {
-                      field.validate(force, silent);
-                    }
-                  }, field);
-                }
-                break;
-
-              case 'object':
-                if (field.fields) {
-                  angular.forEach(field.fields, function(field, index) {
-                    if (field.dirty || force) {
-                      field.validate(force, silent);
-                    }
-                  }, field);
-                }
-                break;
-              default:
-                if (field.value === null || field.value === "") {
-                  field.value = undefined;
-                }
+            if (field.value === null || field.value === "") {
+              field.value = undefined;
             }
 
             if ((field.dirty || force) && (field.required || field.value !== undefined)) {
