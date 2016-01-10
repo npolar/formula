@@ -21,7 +21,8 @@ angular.module('formula')
     function fieldsetFromSchema(schema) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
-          fields: []
+          fields: [],
+          id: 'the-fieldset'
         }];
 
         Object.keys(schema.properties).forEach(function(key) {
@@ -48,7 +49,8 @@ angular.module('formula')
           var fieldset = {
             title: fs.title,
             active: (i ? false : true),
-            fields: []
+            fields: [],
+            id: fs.title + i
           };
           fs.fields.forEach(function(f, j) {
             var key;

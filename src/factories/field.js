@@ -52,6 +52,10 @@ angular.module('formula')
       return (typeof fieldDefinition === 'string' && fieldDefinition.charAt(0) === "!");
     };
 
+    var countHidden = function(memo, value) {
+      return memo + (value.hidden ? 0 : 1);
+    };
+
     Field.uids = [];
 
     Field.prototype = {
@@ -366,10 +370,9 @@ angular.module('formula')
 
       nrArrayValues: function() {
         if (this.values) {
-          return this.values.reduce(function(memo, value) {
-            return memo + (value.hidden ? 0 : 1);
-          }, 0);
+          return this.values.reduce(countHidden, 0);
         }
+        return 0;
       }
     };
 

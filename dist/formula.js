@@ -460,6 +460,10 @@ angular.module('formula')
       return (typeof fieldDefinition === 'string' && fieldDefinition.charAt(0) === "!");
     };
 
+    var countHidden = function(memo, value) {
+      return memo + (value.hidden ? 0 : 1);
+    };
+
     Field.uids = [];
 
     Field.prototype = {
@@ -774,10 +778,9 @@ angular.module('formula')
 
       nrArrayValues: function() {
         if (this.values) {
-          return this.values.reduce(function(memo, value) {
-            return memo + (value.hidden ? 0 : 1);
-          }, 0);
+          return this.values.reduce(countHidden, 0);
         }
+        return 0;
       }
     };
 
@@ -808,7 +811,8 @@ angular.module('formula')
     function fieldsetFromSchema(schema) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
-          fields: []
+          fields: [],
+          id: 'the-fieldset'
         }];
 
         Object.keys(schema.properties).forEach(function(key) {
@@ -835,7 +839,8 @@ angular.module('formula')
           var fieldset = {
             title: fs.title,
             active: (i ? false : true),
-            fields: []
+            fields: [],
+            id: fs.title + i
           };
           fs.fields.forEach(function(f, j) {
             var key;
