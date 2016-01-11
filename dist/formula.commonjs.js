@@ -347,8 +347,10 @@ angular.module('formula')
 				};
 
 				var loadModel = function (data) {
-					if (data && $scope.form) {
-						$scope.form.updateValues(data);
+					if (data) {
+						formLoaded.then(function () {
+							$scope.form.updateValues(data);
+						});
 					}
 				};
 
@@ -385,9 +387,7 @@ angular.module('formula')
 				// Enable data hot-swapping
 				$scope.$watchCollection('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
-						formLoaded.then(function () {
-							loadModel(newData);
-						});
+						loadModel(newData);
 					}
 				});
 
