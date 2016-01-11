@@ -16,8 +16,9 @@ angular.module('formula')
  *
  * @returns form class constructor
  */
-.factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n', 'formulaEvaluateConditionsService',
-  function($rootScope, jsonLoader, model, Field, i18n, formulaEvaluateConditionsService) {
+.factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
+  'formulaEvaluateConditionsService', 'formulaCustomTemplateService',
+  function($rootScope, jsonLoader, model, Field, i18n, formulaEvaluateConditionsService, formulaCustomTemplateService) {
     function fieldsetFromSchema(schema) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
@@ -104,20 +105,35 @@ angular.module('formula')
       $rootScope.$on('revalidate', function() {
         self.validate();
       });
-
       this.validate(true, true);
     }
 
     Form.prototype = {
 
-      updateValues: function() {
-        var copy = angular.copy(model.data);
+      updateValues: function(data) {
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
-            field.valueFromModel(copy);
+            field.valueFromModel(data);
           });
         });
         this.validate(false, true);
+      },
+
+      updateCustomTemplates: function () {
+        this.fieldsets.forEach(function(fieldset) {
+          fieldset.fields.forEach(function(field) {
+            if (field.typeOf('array')) {
+              field.values.forEach(function(value) {
+                formulaCustomTemplateService.initField(value);
+              });
+            } else if (field.typeOf('object')) {
+              field.fields.forEach(function(subfield) {
+                formulaCustomTemplateService.initField(subfield);
+              });
+            }
+            formulaCustomTemplateService.initField(field);
+          });
+        });
       },
 
       /**

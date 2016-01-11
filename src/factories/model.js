@@ -21,15 +21,7 @@ angular.module('formula')
 .service('formulaModel',
   [function() {
     var model = {
-      data: {},
-      set: function(data) {
-        if (data) {
-          this.data = data;
-          return true;
-        }
-
-        return false;
-      }
+      data: {}
     };
 
     return model;

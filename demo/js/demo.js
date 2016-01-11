@@ -87,7 +87,7 @@ angular.module('demo', ['formula'])
       formulaAutoCompleteService.bindSourceCallback("#/autocomplete_fn", fn);
       formulaAutoCompleteService.bindSourceCallback("#/autocomplete_url", emailCallback);
 
-      $timeout(updateModel);
+      $timeout(updateModel, 1);
 
     }
   ]);

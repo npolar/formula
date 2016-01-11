@@ -9,7 +9,7 @@
   </nav>
 
   <fieldset ng-if="fieldset.active" ng-repeat="fieldset in ::form.fieldsets">
-    <legend ng-if="::fieldset.title">{{ ::fieldset.title }}</legend>
+    <legend ng-if="::fieldset.title">{{ fieldset.title }}</legend>
 
     <div formula:field-definition ng-repeat="field in ::fieldset.fields" ng-show="field.visible">
 
