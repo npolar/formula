@@ -75,7 +75,9 @@ angular.module('formula')
 				};
 
 				$scope.schema = new Schema();
-				Promise.resolve($scope.data.model).then(loadModel);
+				Promise.resolve($scope.data.model).then(loadModel, function () {
+					$scope.data.ready = true;
+				});
 
 				formulaCustomTemplateService.setTemplates($scope.data.templates);
 
@@ -129,7 +131,7 @@ angular.module('formula')
 						}
 					});
 					$scope.data.formula = undefined;
-					model.data = undefined;
+					model.data = {};
 					$rootScope.$on('revalidate', function () {});
 				});
 
