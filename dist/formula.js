@@ -577,6 +577,10 @@ angular.module('formula')
           index = this.values.push(field) - 1;
           field.index = index;
 
+          if (proto.customTemplate && !field.customTemplate) {
+            field.customTemplate = proto.customTemplate;
+          }
+
           if (field.value !== undefined) {
             this.value.push(field.value);
           }
