@@ -21,6 +21,7 @@ angular.module('formula')
 				if(!$scope.data) {
 					throw "No formula options provided!";
 				}
+				model.data = {};
 
 				var setLanguage = function (uri) {
 					var code = i18n.code(uri);
