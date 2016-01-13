@@ -16,6 +16,7 @@ angular.module('formula')
 		return {
 			restrict: 'A',
 			require: '^formula',
+			scope: false,
 			compile: function(element, attrs) {
 				attrs.$set('formulaFieldDefinition'); // unset
 				var html = element.html();

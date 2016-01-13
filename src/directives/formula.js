@@ -69,6 +69,7 @@ angular.module('formula')
 					if (data) {
 						formLoaded.then(function () {
 							$scope.form.updateValues(data);
+							$scope.data.ready = true;
 						});
 					}
 				};

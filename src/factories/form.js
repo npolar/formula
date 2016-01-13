@@ -138,7 +138,9 @@ angular.module('formula')
       },
 
       updateCustomTemplates: function () {
-        this.fields.forEach(formulaCustomTemplateService.initField);
+        this.fields.forEach(function (field) {
+          formulaCustomTemplateService.initField(field);
+        });
       },
 
       /**
