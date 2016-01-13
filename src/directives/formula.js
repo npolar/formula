@@ -75,7 +75,9 @@ angular.module('formula')
 				};
 
 				$scope.schema = new Schema();
-				Promise.resolve($scope.data.model).then(loadModel, function () {
+				Promise.resolve($scope.data.model).then(function(response) {
+					loadModel(response.data || response);
+				}, function () {
 					$scope.data.ready = true;
 				});
 

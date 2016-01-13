@@ -21,7 +21,6 @@ angular.module('formula')
             });
           } else if (field.typeOf("array")) {
             field.values = [];
-
             model[field.id].forEach(function(item, index) {
               var newField;
               if (field.typeOf('fieldset')) {
