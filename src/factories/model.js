@@ -24,5 +24,6 @@ angular.module('formula')
       data: {}
     };
 
+
     return model;
   }]);

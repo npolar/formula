@@ -25,6 +25,9 @@ angular.module('formula')
 		var jsonLoader;
 
 		return (jsonLoader = function(uri, jsonp, rerun) {
+			if (typeof uri !== "string") {
+				return uri;
+			}
 			var deferred = $q.defer();
 
 			(jsonp ? $http.jsonp(uri + '?callback=JSON_CALLBACK') : $http.get(uri))

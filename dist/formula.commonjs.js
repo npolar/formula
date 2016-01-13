@@ -349,35 +349,29 @@ angular.module('formula')
 
 				var loadModel = function (data) {
 					if (data) {
-						formLoaded.then(function () {
-							$scope.form.updateValues(data);
-							$scope.data.ready = true;
-						});
+						$scope.form.updateValues(data);
 					}
+					$scope.data.ready = true;
 				};
 
 				$scope.schema = new Schema();
-				Promise.resolve($scope.data.model).then(function(response) {
-					loadModel(response.data || response);
-				}, function () {
-					$scope.data.ready = true;
-				});
 
 				formulaCustomTemplateService.setTemplates($scope.data.templates);
 
 				$scope.template = $scope.data.template || 'default';
 				setLanguage($scope.data.language);
 
-				var asyncs = [loadTemplate($scope.data.template), $scope.schema.deref($scope.data.schema)];
+				var asyncs = [loadTemplate($scope.data.template),
+					$scope.schema.deref($scope.data.schema), Promise.resolve($scope.data.model)];
 				if ($scope.data.form) {
 					asyncs.push(jsonLoader($scope.data.form));
 				}
 
-				var formLoaded = $q.all(asyncs).then(function(data) {
-					$scope.form = $scope.data.formula = new Form(data[1], data[2]);
+				var formLoaded = $q.all(asyncs).then(function(responses) {
+					$scope.form = $scope.data.formula = new Form(responses[1], responses[2], responses[3]);
 					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
 					$scope.form.translate($scope.language.code);
-					$compile(angular.element(data[0]))($scope, function (cloned, scope) {
+					$compile(angular.element(responses[0]))($scope, function (cloned, scope) {
 						$element.prepend(cloned);
 					});
 					return true;
@@ -414,7 +408,6 @@ angular.module('formula')
 							field.destroyWatcher();
 						}
 					});
-					$scope.data.formula = undefined;
 					model.data = {};
 					$rootScope.$on('revalidate', function () {});
 				});
@@ -425,76 +418,6 @@ angular.module('formula')
 	}]);
 
 })();
-
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2015, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter inlineValues
-	 *
-	 * Filter used to inline an array of values.
-	 */
-
-	.filter('formulaInlineValues', [function() {
-		return function(input, params) {
-			var result = [];
-
-			angular.forEach(input, function(field) {
-				if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-
-					default:
-				}
-			});
-
-			return result.join(', ');
-		};
-	}]);
-
-"use strict";
-/* globals angular */
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter replace
-	 *
-	 * Filter used to replace placeholders in a string.
-	 */
-
-	.filter('formulaReplace', [function() {
-		return function(input, params) {
-			var result = input, match = input.match(/\{[^\}]*\}/g);
-
-			angular.forEach(match, function(v, k) {
-				result = result.replace(v, params[v.substr(1, v.length - 2)]);
-			});
-
-			return result;
-		};
-	}]);
 
 'use strict';
 /* globals angular */
@@ -903,7 +826,7 @@ angular.module('formula')
 .factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
   'formulaEvaluateConditionsService', 'formulaCustomTemplateService',
   function($rootScope, jsonLoader, model, Field, i18n, formulaEvaluateConditionsService, formulaCustomTemplateService) {
-    function fieldsetFromSchema(schema) {
+    function fieldsetFromSchema(schema, data) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
           fields: [],
@@ -914,7 +837,7 @@ angular.module('formula')
           var val = schema.properties[key];
           val.required = schema.required;
           var newField = new Field(val, key);
-          newField.valueFromModel(model.data);
+          newField.valueFromModel(data);
           if (newField.type) {
             fieldsets[0].fields.push(newField);
           }
@@ -926,7 +849,7 @@ angular.module('formula')
       return null;
     }
 
-    var fieldsetFromDefinition = function(schema, formDefinition) {
+    var fieldsetFromDefinition = function(schema, formDefinition, data) {
       if (schema && schema.type === 'object' && formDefinition.fieldsets) {
         var fieldsets = [];
 
@@ -947,7 +870,7 @@ angular.module('formula')
             var fieldSchema = schema.properties[key] || { id: key };
             fieldSchema.required = fieldSchema.required || schema.required;
             var newField = new Field(fieldSchema, key, null, f);
-            newField.valueFromModel(model.data);
+            newField.valueFromModel(data);
             if (newField.type) {
               fieldset.fields.push(newField);
             }
@@ -965,20 +888,22 @@ angular.module('formula')
      * HTML form handler class.
      *
      * @param schema Mandatory JSON Schema object
+     * @param data
      * @param formDefinition Optional form definition object
      */
-    function Form(schema, formDefinition) {
+    function Form(schema, data, formDefinition) {
       this.errors = null;
       this.i18n = i18n(null);
       this.schema = schema;
       this.title = null;
       this.valid = false;
+      data = data || {};
 
       if (formDefinition) {
         this.title = formDefinition.title;
-        this.fieldsets = fieldsetFromDefinition(schema, formDefinition);
+        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, data);
       } else {
-        this.fieldsets = fieldsetFromSchema(schema);
+        this.fieldsets = fieldsetFromSchema(schema, data);
       }
 
       this.onsave = function(model) {
@@ -1460,6 +1385,9 @@ angular.module('formula')
 		var jsonLoader;
 
 		return (jsonLoader = function(uri, jsonp, rerun) {
+			if (typeof uri !== "string") {
+				return uri;
+			}
 			var deferred = $q.defer();
 
 			(jsonp ? $http.jsonp(uri + '?callback=JSON_CALLBACK') : $http.get(uri))
@@ -1566,6 +1494,7 @@ angular.module('formula')
     var model = {
       data: {}
     };
+
 
     return model;
   }]);
@@ -1804,6 +1733,76 @@ angular.module('formula')
 		};
 
 		return Schema;
+	}]);
+
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2015, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter inlineValues
+	 *
+	 * Filter used to inline an array of values.
+	 */
+
+	.filter('formulaInlineValues', [function() {
+		return function(input, params) {
+			var result = [];
+
+			angular.forEach(input, function(field) {
+				if(field.value instanceof Array) {
+					result.push('Array[' + field.value.length + ']');
+				} else switch(typeof field.value) {
+					case 'string':
+					case 'number':
+					case 'boolean':
+						result.push(field.value);
+						break;
+
+					default:
+				}
+			});
+
+			return result.join(', ');
+		};
+	}]);
+
+"use strict";
+/* globals angular */
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter replace
+	 *
+	 * Filter used to replace placeholders in a string.
+	 */
+
+	.filter('formulaReplace', [function() {
+		return function(input, params) {
+			var result = input, match = input.match(/\{[^\}]*\}/g);
+
+			angular.forEach(match, function(v, k) {
+				result = result.replace(v, params[v.substr(1, v.length - 2)]);
+			});
+
+			return result;
+		};
 	}]);
 
 "use strict";

@@ -67,35 +67,29 @@ angular.module('formula')
 
 				var loadModel = function (data) {
 					if (data) {
-						formLoaded.then(function () {
-							$scope.form.updateValues(data);
-							$scope.data.ready = true;
-						});
+						$scope.form.updateValues(data);
 					}
+					$scope.data.ready = true;
 				};
 
 				$scope.schema = new Schema();
-				Promise.resolve($scope.data.model).then(function(response) {
-					loadModel(response.data || response);
-				}, function () {
-					$scope.data.ready = true;
-				});
 
 				formulaCustomTemplateService.setTemplates($scope.data.templates);
 
 				$scope.template = $scope.data.template || 'default';
 				setLanguage($scope.data.language);
 
-				var asyncs = [loadTemplate($scope.data.template), $scope.schema.deref($scope.data.schema)];
+				var asyncs = [loadTemplate($scope.data.template),
+					$scope.schema.deref($scope.data.schema), Promise.resolve($scope.data.model)];
 				if ($scope.data.form) {
 					asyncs.push(jsonLoader($scope.data.form));
 				}
 
-				var formLoaded = $q.all(asyncs).then(function(data) {
-					$scope.form = $scope.data.formula = new Form(data[1], data[2]);
+				var formLoaded = $q.all(asyncs).then(function(responses) {
+					$scope.form = $scope.data.formula = new Form(responses[1], responses[2], responses[3]);
 					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
 					$scope.form.translate($scope.language.code);
-					$compile(angular.element(data[0]))($scope, function (cloned, scope) {
+					$compile(angular.element(responses[0]))($scope, function (cloned, scope) {
 						$element.prepend(cloned);
 					});
 					return true;
@@ -132,7 +126,6 @@ angular.module('formula')
 							field.destroyWatcher();
 						}
 					});
-					$scope.data.formula = undefined;
 					model.data = {};
 					$rootScope.$on('revalidate', function () {});
 				});

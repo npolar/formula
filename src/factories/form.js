@@ -19,7 +19,7 @@ angular.module('formula')
 .factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
   'formulaEvaluateConditionsService', 'formulaCustomTemplateService',
   function($rootScope, jsonLoader, model, Field, i18n, formulaEvaluateConditionsService, formulaCustomTemplateService) {
-    function fieldsetFromSchema(schema) {
+    function fieldsetFromSchema(schema, data) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
           fields: [],
@@ -30,7 +30,7 @@ angular.module('formula')
           var val = schema.properties[key];
           val.required = schema.required;
           var newField = new Field(val, key);
-          newField.valueFromModel(model.data);
+          newField.valueFromModel(data);
           if (newField.type) {
             fieldsets[0].fields.push(newField);
           }
@@ -42,7 +42,7 @@ angular.module('formula')
       return null;
     }
 
-    var fieldsetFromDefinition = function(schema, formDefinition) {
+    var fieldsetFromDefinition = function(schema, formDefinition, data) {
       if (schema && schema.type === 'object' && formDefinition.fieldsets) {
         var fieldsets = [];
 
@@ -63,7 +63,7 @@ angular.module('formula')
             var fieldSchema = schema.properties[key] || { id: key };
             fieldSchema.required = fieldSchema.required || schema.required;
             var newField = new Field(fieldSchema, key, null, f);
-            newField.valueFromModel(model.data);
+            newField.valueFromModel(data);
             if (newField.type) {
               fieldset.fields.push(newField);
             }
@@ -81,20 +81,22 @@ angular.module('formula')
      * HTML form handler class.
      *
      * @param schema Mandatory JSON Schema object
+     * @param data
      * @param formDefinition Optional form definition object
      */
-    function Form(schema, formDefinition) {
+    function Form(schema, data, formDefinition) {
       this.errors = null;
       this.i18n = i18n(null);
       this.schema = schema;
       this.title = null;
       this.valid = false;
+      data = data || {};
 
       if (formDefinition) {
         this.title = formDefinition.title;
-        this.fieldsets = fieldsetFromDefinition(schema, formDefinition);
+        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, data);
       } else {
-        this.fieldsets = fieldsetFromSchema(schema);
+        this.fieldsets = fieldsetFromSchema(schema, data);
       }
 
       this.onsave = function(model) {
