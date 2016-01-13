@@ -12,8 +12,8 @@
 angular.module('formula')
 	.directive('formula',
 	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n',
-		'formulaCustomTemplateService', '$http', '$compile', '$templateCache', '$templateRequest', '$q',
-	function(jsonLoader, model, Schema, Form, i18n, formulaCustomTemplateService, $http, $compile, $templateCache, $templateRequest, $q) {
+		'formulaCustomTemplateService', '$http', '$compile', '$templateCache', '$templateRequest', '$q', '$rootScope',
+	function(jsonLoader, model, Schema, Form, i18n, formulaCustomTemplateService, $http, $compile, $templateCache, $templateRequest, $q, $rootScope) {
 		return {
 			restrict: 'A',
       scope: { data: '=formula' },
@@ -21,7 +21,6 @@ angular.module('formula')
 				if(!$scope.data) {
 					throw "No formula options provided!";
 				}
-				model.data = {};
 
 				var setLanguage = function (uri) {
 					var code = i18n.code(uri);
@@ -119,6 +118,18 @@ angular.module('formula')
 							$scope.form.updateCustomTemplates();
 						}
 					}
+				});
+
+				// Don't leave memory leaks
+				$scope.$on('$destroy', function () {
+					$scope.form.fields().forEach(function (field) {
+						if (typeof field.destroyWatcher === 'function') {
+							field.destroyWatcher();
+						}
+					});
+					$scope.data.formula = undefined;
+					model.data = undefined;
+					$rootScope.$on('revalidate', function () {});
 				});
 
 				this.data = $scope.data; // Others need this

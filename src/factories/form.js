@@ -110,6 +110,24 @@ angular.module('formula')
 
     Form.prototype = {
 
+      fields: function () {
+        var fields = [];
+        var push = function (field) {
+          fields.push(field);
+        };
+        this.fieldsets.forEach(function(fieldset) {
+          fieldset.fields.forEach(function(field) {
+            if (field.typeOf('array')) {
+              field.values.forEach(push);
+            } else if (field.typeOf('object')) {
+              field.fields.forEach(push);
+            }
+            push(field);
+          });
+        });
+        return fields;
+      },
+
       updateValues: function(data) {
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
@@ -120,20 +138,7 @@ angular.module('formula')
       },
 
       updateCustomTemplates: function () {
-        this.fieldsets.forEach(function(fieldset) {
-          fieldset.fields.forEach(function(field) {
-            if (field.typeOf('array')) {
-              field.values.forEach(function(value) {
-                formulaCustomTemplateService.initField(value);
-              });
-            } else if (field.typeOf('object')) {
-              field.fields.forEach(function(subfield) {
-                formulaCustomTemplateService.initField(subfield);
-              });
-            }
-            formulaCustomTemplateService.initField(field);
-          });
-        });
+        this.fields.forEach(formulaCustomTemplateService.initField);
       },
 
       /**

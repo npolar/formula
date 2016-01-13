@@ -89,5 +89,9 @@ angular.module('demo', ['formula'])
 
       $timeout(updateModel, 1);
 
+
+      $scope.remove = function () {
+        $scope.$destroy();
+      };
     }
   ]);

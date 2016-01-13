@@ -29,7 +29,7 @@ angular.module('formula')
 
       var watchField = function(field) {
         if (field.typeOf('input')) {
-          $rootScope.$watch(function () {
+          field.destroyWatcher = $rootScope.$watch(function fieldWatch() {
             return field.value;
           }, function(n, o) {
             if (n !== o) {
