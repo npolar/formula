@@ -18,7 +18,6 @@ angular.module('formula')
 			restrict: 'A',
       scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
-				console.time('formula');
 				if(!$scope.data) {
 					throw "No formula options provided!";
 				}
@@ -87,7 +86,6 @@ angular.module('formula')
 						$element.prepend(cloned);
 					});
 					$scope.data.ready = true;
-					console.timeEnd('formula');
 					return true;
 				});
 
