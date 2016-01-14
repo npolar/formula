@@ -14,11 +14,8 @@
     .directive('formulaField', ['$compile', '$q',
       function($compile, $q) {
 
-        var getInputElement = function(scope, element, attrs) {
+        var getInputElement = function(field, type, element) {
           var elem;
-          var field = scope.field;
-          var type = getType(field);
-          var deferred = $q.defer();
           switch (type.sub) {
             case 'textarea':
               elem = angular.element('<textarea>');
@@ -61,12 +58,6 @@
               }
           }
 
-          angular.forEach(attrs, function(val, key) {
-            if (attrs.$attr[key]) {
-              elem.attr(attrs.$attr[key], val);
-            }
-          });
-
           if (type.sub === 'autocomplete') {
             var list = angular.element('<datalist>');
             var id = field.id + '_list';
@@ -79,15 +70,12 @@
                 opt.attr('value', item);
                 list.append(opt);
               });
-              deferred.resolve(elem);
             });
             list.on('change', field.onSelect);
             elem.append(list);
-          } else {
-            deferred.resolve(elem);
           }
 
-          return deferred.promise;
+          return elem;
         };
 
 
@@ -101,26 +89,11 @@
         };
 
 
-        var setAttrs = function(field, attrs) {
-          attrs.$set('id', field.uid);
+        var setAttrs = function(attrs) {
+          attrs.$set('id', '{{field.uid}}');
           attrs.$set('ngModel', 'field.value');
-          attrs.$set('formulaField'); // unset
-
-          if (field.disabled) {
-            attrs.$set('disabled', 'disabled');
-          }
-
-          if (field.readonly) {
-            attrs.$set('readonly', 'readonly');
-          }
-        };
-
-        var initScope = function(scope, controllers) {
-          scope.form = controllers[0].data.formula;
-
-          if (controllers[1]) {
-            scope.field = controllers[1].field;
-          }
+          attrs.$set('ng-disabled', 'field.disabled');
+          attrs.$set('ng-readonly', 'field.readonly');
         };
 
         // Add class based on field parents and ID
@@ -153,23 +126,28 @@
         };
 
         var getElement = function(scope, element, attrs, controllers) {
-          var deferred = $q.defer();
           var field = scope.field;
           var type = getType(field);
+          var elem;
 
           if (field.customTemplate) {
-            var elem = angular.element(field.customTemplate);
+            elem = angular.element(field.customTemplate);
             elem.addClass('formulaCustomObject');
-            deferred.resolve(elem);
           } else if (type.main === 'input') {
-            getInputElement(scope, element, attrs, type).then(function(elem) {
-              deferred.resolve(elem);
-            });
-          } else {
-            deferred.resolve(angular.element(element));
+            elem = getInputElement(field, type, element);
           }
 
-          return deferred.promise;
+          if (elem) {
+            angular.forEach(attrs, function(val, key) {
+              if (attrs.$attr[key]) {
+                elem.attr(attrs.$attr[key], val);
+              }
+            });
+          } else {
+            elem = element;
+          }
+
+          return elem;
         };
 
         return {
@@ -178,20 +156,22 @@
           scope: {
             field: '=formulaField'
           },
-          link: function(scope, element, attrs, controllers) {
-            var field = scope.field;
+          compile: function (tElement, tAttrs, transclude) {
+            setAttrs(tAttrs);
 
-            initScope(scope, controllers);
-            setAttrs(field, attrs);
+            return function link(scope, iElement, iAttrs, controllers) {
+              iAttrs.$set('formulaField'); // unset
+              var field = scope.field;
 
-            getElement(scope, element, attrs, controllers).then(function(elem) {
+              var elem = getElement(scope, iElement, iAttrs, controllers);
+
               addPathClass(field, elem);
               addSchemaClass(field, elem);
 
               $compile(elem)(scope, function(cloned, scope) {
-                element.replaceWith(cloned);
+                iElement.replaceWith(cloned);
               });
-            });
+            };
           },
           terminal: true
         };

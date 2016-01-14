@@ -18,6 +18,7 @@ angular.module('formula')
 			restrict: 'A',
       scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
+				console.time('formula');
 				if(!$scope.data) {
 					throw "No formula options provided!";
 				}
@@ -78,7 +79,7 @@ angular.module('formula')
 					asyncs.push(jsonLoader($scope.data.form));
 				}
 
-				$q.all(asyncs).then(function(responses) {
+				var formLoaded = $q.all(asyncs).then(function(responses) {
 					$scope.form = $scope.data.formula = new Form(responses[1], responses[2], responses[3]);
 					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
 					$scope.form.translate($scope.language.code);
@@ -86,6 +87,7 @@ angular.module('formula')
 						$element.prepend(cloned);
 					});
 					$scope.data.ready = true;
+					console.timeEnd('formula');
 					return true;
 				});
 
@@ -99,7 +101,9 @@ angular.module('formula')
 				// Enable data hot-swapping
 				$scope.$watchCollection('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
-						$scope.form.updateValues(newData);
+						formLoaded.then(function () {
+							$scope.form.updateValues(newData);
+						});
 					}
 				});
 

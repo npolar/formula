@@ -15,12 +15,12 @@
 
       <div ng-class="{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }" ng-if="::field.typeOf('input')" title="{{ field.description }}">
         <label for="{{ ::field.uid }}">{{ field.title }}</label>
-        <input formula:field="field"/>
+        <input class="field" formula:field="field"/>
         <span>{{ field.error.message || field.description }}</span>
       </div>
 
       <div ng-if="::field.typeOf('object')">
-        <fieldset formula:field="field">
+        <fieldset class="object" formula:field="field">
           <legend ng-if="::field.title">{{ field.title }}</legend>
 
           <div ng-repeat="field in field.fields" ng-show="field.visible">
@@ -30,7 +30,7 @@
       </div>
 
       <div ng-if="::field.typeOf('array')">
-        <div formula:field="field">
+        <div class="array" formula:field="field">
           <fieldset ng-class="{ valid: field.valid, error: field.errors }">
             <legend>{{ field.title }}
               ({{ field.nrArrayValues() || 0 }})</legend>
@@ -61,7 +61,7 @@
 
             <ul ng-if="::field.typeOf('field')">
               <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values">
-                <input formula:field="value" />
+                <input class="array-field" formula:field="value" />
                 <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
               </li>
               <li>
