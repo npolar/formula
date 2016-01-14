@@ -134,6 +134,10 @@
 											},
 											"obj_1_1_2": {
 												"type": "number"
+											},
+											"obj_1_1_3": {
+												"type": "string",
+												"enum": [ "foobar", "barqux" ]
 											}
 										}
 									}

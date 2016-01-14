@@ -5,7 +5,7 @@
   </header>
 
   <nav ng-if="::form.fieldsets.length > 1">
-    <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in ::form.fieldsets">{{ ::fieldset.title }}</a>
+    <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in ::form.fieldsets">{{ fieldset.title }}</a>
   </nav>
 
   <fieldset ng-if="fieldset.active" ng-repeat="fieldset in ::form.fieldsets">
