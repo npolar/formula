@@ -44,7 +44,7 @@
                     <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
                   </legend>
 
-                  <div ng-repeat="field in ::value.fields" ng-show="field.visible">
+                  <div ng-repeat="field in ::value.fields" ng-show="value.visible">
                     <formula:field-instance field="field"></formula:field-instance>
                   </div>
                 </fieldset>
