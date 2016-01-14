@@ -27,7 +27,7 @@
   },
   "fieldsets": [
     "Strenger",
-    "Tall og boleanske verdier",
+    "Tall og boolske verdier",
     "Lister og objekter",
     "Listehierarki",
     "Autokomplettering"
