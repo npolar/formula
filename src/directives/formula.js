@@ -94,7 +94,9 @@ angular.module('formula')
 				// Enable language hot-swapping
 				$scope.$watch('data.language', function(newUri, oldUri) {
 					if (newUri && newUri !== oldUri) {
-						setLanguage(newUri);
+						formLoaded.then(function () {
+							setLanguage(newUri);
+						});
 					}
 				});
 

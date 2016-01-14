@@ -1,9 +1,9 @@
 {
   "iso639-3": "nob",
   "title": "Norsk (Bokmål)",
-  "updated": "2014-03-02",
+  "updated": "1337-01-02",
   "authors": [
-    "remi@npolar.no"
+    "batman@batcave.org"
   ],
   "labels": {
     "add": [
@@ -26,366 +26,55 @@
     ]
   },
   "fieldsets": [
-    "Basisinformasjon",
-    "Lokasjon",
-    "Mennesker",
-    "Isbjørner"
+    "Strenger",
+    "Tall og boolske verdier",
+    "Lister og objekter",
+    "Listehierarki",
+    "Autokomplettering"
   ],
   "fields": {
-    "title": {
-      "title": "Tittel",
-      "description": "Tittel på hendelsesrapport (påkrevd)"
+    "string": {
+      "title": "ÜberString",
+      "description": "ÜberStringBeskrivelse"
     },
-    "author": {
-      "title": "Forfatter",
-      "description": "URI til personen som opprettet hendelsesrapporten (påkrevd)"
+    "string_enum_default": {
+      "values": [ "Første", "Andre", "Tredje", "Fjerde" ]
     },
-    "datetime": {
-      "title": "Opprettet",
-      "description": "Tidspunkt hendelsesrapporten ble opprettet (påkrevd)"
-    },
-    "update_author": {
-      "title": "Oppdatert av",
-      "description": "URI til personen som sist oppdaterte hendelesrapporten"
-    },
-    "update_datetime": {
-      "title": "Oppdatert",
-      "description": "Tidspunkt hendelsesrapporten sist ble oppdatert"
-    },
-    "status": {
-      "title": "Status",
-      "description": "Nåværende status på hendelsesrapporten",
-      "values": [
-        "Fullført",
-        "Ikke fullført"
-      ]
-    },
-    "incident": {
-      "title": "Hendelsesdetaljer",
+    "array_object": {
+      "title": "Objektliste",
+      "description": "Flyvende ku!",
       "fields": {
-        "category": {
-          "title": "Kategori",
-          "description": "Kategori på hendelse (påkrevd)",
-          "values": [
-            "Konflikt",
-            "Unngått konflikt"
-          ]
-        },
-        "datetime": {
-          "title": "Tidspunkt",
-          "description": "Tidspunkt hendelsen inntraff (påkrevd)"
-        },
-        "datetime_accuracy": {
-          "title": "Nøyaktighet",
-          "description": "Nøyaktighet på oppgitt tidspunkt (påkrevd)",
-          "values": [
-            "På minuttet",
-            "På timen",
-            "På dagen",
-            "På måneden",
-            "På året"
-          ]
-        },
-        "timezone": {
-          "title": "Tidssone",
-          "description": "Tidssone for oppgitt tidspunkt (påkrevd)"
-        },
-        "duration": {
-          "title": "Varighet",
-          "description": "Estimert varighet på hendelsen oppgitt i minutter"
-        },
-        "narrative": {
-          "title": "Beskrivelse",
-          "description": "Utdypende tekstbeskrivelse av hendelsen",
-          "fields": {
-            "language": {
-              "title": "Språk",
-              "description": "Språk beskrivelsen er skrevet på",
-              "values": [
-                "Dansk",
-                "Engelsk",
-                "Inuktitut",
-                "Fransk",
-                "Grønlandsk",
-                "Norsk (bokmål)",
-                "Norsk (nynorsk)",
-                "Russisk"
-              ]
-            },
-            "text": {
-              "title": "Beskrivelse",
-              "description": "Tekstbeskrivelse av hendelsen skrevet på oppgitt språk"
-            }
-          }
+        "number": {
+          "title": "Tall"
         }
       }
     },
-    "location": {
-      "title": "Stedsdetaljer",
-      "fields": {
-        "country": {
-          "title": "Land",
-          "description": "Land ansvarlig for området hvor hendelsen inntraff"
-        },
-        "region": {
-          "title": "Region",
-          "description": "Navn på region hvor hendelsen inntraff"
-        },
-        "name": {
-          "title": "Stedsnavn",
-          "description": "Navn på området hvor hendelsen inntraff"
-        },
-        "latitude": {
-          "title": "Breddegrad",
-          "description": "Breddegrad til hendelsessted (WGS-84)"
-        },
-        "longitude": {
-          "title": "Lengdegrad",
-          "description": "Lengegrad til hendelsessted (WGS-84)"
-        },
-        "accuracy": {
-          "title": "Nøyaktighet",
-          "description": "Nøyaktighet på oppgitte koordinater (oppgitt i meter)"
-        },
-        "use_frequency": {
-          "title": "Brukshyppighet",
-          "description": "Hvor ofte hendelsesstedet er benyttet av mennesker",
-          "values": [
-            "",
-            "Daglig",
-            "Ukentlig",
-            "Månedlig",
-            "Sjeldnere"
-          ]
-        },
-        "security": {
-          "title": "Isbjørnsikring",
-          "description": "Beskrivelse av isbjørnsikring tilgjengelig på hendelsesstedet"
-        },
-        "visibility": {
-          "title": "Sikt",
-          "description": "Evaluering av sikt under hendelsen (oppgitt i meter)"
-        },
-        "food_sources": {
-          "title": "Matkilder",
-          "description": "Matkilder tilgjengelig på hendelsesstedet",
-          "fields": {
-            "category": {
-              "title": "Kategori",
-              "description": "Kategori på matkilde",
-              "values": [
-                "",
-                "Antropogenisk",
-                "Villdyr",
-                "Annet"
-              ]
-            },
-            "description": {
-              "title": "Beskrivelse",
-              "description": "Beskrivelse av matkilde"
-            }
-          }
-        },
-        "description": {
-          "title": "Beskrivelse",
-          "description": "Utdypende tekstbeskrivelse av området"
-        }
-      }
+    "array_string_enum": {
+      "values": [ "Flodhest", "Elefant", "Blåhval", "Erna Solberg" ]
     },
-    "humans": {
-      "title": "Mennesker involvert",
-      "description": "Liste over mennesker involvert i hendelsen",
+    "array_hierarchy": {
+      "title": "I",
       "fields": {
-        "category": {
-          "title": "Kategori",
-          "description": "Kategori på personen",
-          "values": [
-            "",
-            "Innbygger",
-            "Turist",
-            "Forsker",
-            "Jeger"
-          ]
-        },
-        "experience": {
-          "title": "Erfaring",
-          "description": "Personens erfaring med isbjørner",
-          "values": [
-            "",
-            "Ingen erfaring",
-            "Noe erfaring",
-            "Mye erfaring"
-          ]
-        },
-        "nationality": {
-          "title": "Nasjonalitet",
-          "description": "Personens nasjonalitet"
-        },
-        "gender": {
-          "title": "Kjønn",
-          "description": "Personens kjønn",
-          "values": [
-            "",
-            "Mann",
-            "Kvinne"
-          ]
-        },
-        "age": {
-          "title": "Alder",
-          "description": "Personens alder"
-        },
-        "conveyance": {
-          "title": "Framkomstmidler",
-          "description": "Framkomstmiddler",
-          "values": [
-            "Luftfartøy",
-            "Terrengbil",
-            "Personbil",
-            "Båt",
-            "Hundeslede",
-            "Snøskuter"
-          ]
-        },
-        "action": {
-          "title": "Handling",
-          "description": "Personens handling under hendelsen",
-          "values": [
-            "",
-            "Ingen",
-            "Stoppet opp",
-            "Løp fra stedet",
-            "Avlivet bjørn",
-            "Skremte bjørn"
-          ]
-        },
-        "injury": {
-          "title": "Skader",
-          "description": "Skader personen påtok seg under hendelsen",
-          "values": [
-            "",
-            "Ingen skader",
-            "Lettere skader",
-            "Alvorlige skader",
-            "Fatale skader"
-          ]
-        },
-        "injury_description": {
-          "title": "Skadebeskrivelse",
-          "description": "Utdypende beskrivese av skader påført under hendelsen",
+        "sub_array_one": {
+          "title": "II",
           "fields": {
-            "language": {
-              "title": "Språk",
-              "description": "Språk skadebeskrivelsen er skrevet på",
-              "values": [
-                "Dansk",
-                "Engelsk",
-                "Inuktitut",
-                "Fransk",
-                "Grønlandsk",
-                "Norsk (bokmål)",
-                "Norsk (nynorsk)",
-                "Russisk"
-              ]
-            },
-            "text": {
-              "title": "Beskrivelse",
-              "description": "Tekstbeskrivelse av skadeomfanget"
+            "sub_sub_array_one": {
+              "title": "III",
+              "fields": {
+                "obj_1_1_1": {
+                  "title": "Julenisse"
+                },
+                "obj_1_1_2": {
+                  "title": "Iskaffe",
+                  "description": "Caffe Cortado"
+                },
+                "obj_1_1_3": {
+                  "title": "Velg side",
+                  "values": [ "Den MØRKE siden", "Den LYSE siden" ]
+                }
+              }
             }
           }
-        },
-        "activity": {
-          "title": "Aktivitet",
-          "description": "Beskrivelse av aktiviteter utført av personen før hendelsen inntraff"
-        },
-        "weapons": {
-          "title": "Våpen",
-          "description": "Liste over våpen bært av personen under hendelsen",
-          "fields": {
-            "description": {
-              "title": "Beskrivelse",
-              "description": "Beskrivelse av våpenet (f.eks. produsent, modell, ammunisjon etc.)"
-            },
-            "utilisation": {
-              "title": "Anvendelse",
-              "description": "Hvordan våpenet ble anvendt under hendelsen",
-              "values": [
-                "",
-                "Ikke anvendt",
-                "Skremming",
-                "Avliving"
-              ]
-            }
-          }
-        }
-      }
-    },
-    "polar_bear_involvement": {
-      "title": "Liste over isbjørner",
-      "description": "Liste over isbjørner involvert i hendelsen",
-      "fields": {
-        "gender": {
-          "title": "Kjønn",
-          "description": "Isbjørnens kjønn",
-          "values": [
-            "Ukjent",
-            "Bamse",
-            "Binne"
-          ]
-        },
-        "age": {
-          "title": "Alder",
-          "description": "Isbjørnens alder da hendelsen inntraff"
-        },
-        "result": {
-          "title": "Resultat",
-          "description": "Resulterende handling mot bjørnen etter hendelsen",
-          "values": [
-            "Ukjent",
-            "Ingen",
-            "Forflyttet",
-            "Avlivet"
-          ]
-        },
-        "food_reward": {
-          "title": "Mat",
-          "description": "Hvorvidt bjørnen ble gitt mat under hendelsen",
-          "values": [
-            "Ukjent",
-            "Ja",
-            "Nei"
-          ]
-        },
-        "attacked": {
-          "title": "Angrep",
-          "description": "Hvorvidt bjørnen forsøkte å angrip mennesker under hendelsen",
-          "values": [
-            "Ukjent",
-            "Ja",
-            "Nei"
-          ]
-        },
-        "structure_entry": {
-          "title": "Strukturell inntredelse",
-          "description": "Hvorvidt bjørnen forsøkte å inntre noen strukturer",
-          "values": [
-            "Ukjent",
-            "Nei",
-            "Forsøkt",
-            "Lykkes"
-          ]
-        },
-        "property_damage": {
-          "title": "Skade på utstyr",
-          "description": "Hvorvidt bjørnen påførte skade til menneskelig utstyr",
-          "values": [
-            "Ukjent",
-            "Ja",
-            "Nei"
-          ]
-        },
-        "activity": {
-          "title": "Foregående aktivitet",
-          "description": "Kort beskrivelse av bjørnens aktiviteter før hendelsen"
         }
       }
     }
