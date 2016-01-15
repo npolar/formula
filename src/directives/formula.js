@@ -1,5 +1,7 @@
-(function() {
 "use strict";
+/* globals angular */
+
+(function() {
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -9,47 +11,32 @@
 
 angular.module('formula')
 	.directive('formula',
-	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n', '$http', '$compile', '$templateCache', '$templateRequest', '$q',
-	function(jsonLoader, model, Schema, Form, i18n, $http, $compile, $templateCache, $templateRequest, $q) {
+	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n',
+		'formulaCustomTemplateService', '$http', '$compile', '$templateCache', '$templateRequest', '$q', '$rootScope',
+	function(jsonLoader, model, Schema, Form, i18n, formulaCustomTemplateService, $http, $compile, $templateCache, $templateRequest, $q, $rootScope) {
 		return {
 			restrict: 'A',
       scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
-				var controller = this, formBuffer = { pending: false, data: null };
-
 				if(!$scope.data) {
-					$scope.data = {};
+					throw "No formula options provided!";
 				}
 
-				if($scope.data.model) {
-					model.data = $scope.data.model;
-					model.locked = true;
-				}
+				var setLanguage = function (uri) {
+					var code = i18n.code(uri);
+					$scope.language = { uri: uri, code: code };
+					if(!code) {
+						i18n.add(uri).then(function (code) {
+							$scope.language.code = code;
 
-				controller.schema	= $scope.schema = new Schema();
-				controller.form  	= $scope.form = new Form();
-
-				$scope.onsave		= $scope.form.onsave;
-				$scope.template 	= $scope.data.template || 'default';
-				$scope.language 	= { uri: $scope.data.language || null, code: null };
-
-				function formBuild(formURI) {
-					if(!formBuffer.pending || formURI) {
-						$scope.schema.then(function(schemaData) {
-							if(schemaData) {
-								formBuffer.pending = false;
-								controller.form = $scope.form = $scope.data.formula = new Form(formURI);
-								$scope.form.onsave = $scope.onsave;
-								$scope.form.build(schemaData, formBuffer.data);
-								$scope.form.translate($scope.language.code);
-								$scope.form.uiSaveHidden = !!$scope.data.saveHidden;
-								$scope.form.uiValidateHidden = !!$scope.data.validateHidden;
+							if ($scope.form) {
+								$scope.form.translate(code);
 							}
 						});
 					}
-				}
+				};
 
-				function loadTemplate (templateId) {
+				var loadTemplate = function (templateId) {
 					return $q(function(resolve, reject) {
 						var prefix = 'formula/';
 						var defaultTemplate = 'default.html';
@@ -76,85 +63,74 @@ angular.module('formula')
 							resolve(templateElement);
 						}
 					});
+				};
+
+				$scope.schema = new Schema();
+
+				formulaCustomTemplateService.setTemplates($scope.data.templates);
+
+				$scope.template = $scope.data.template || 'default';
+				setLanguage($scope.data.language);
+
+				var asyncs = [loadTemplate($scope.data.template),
+					$scope.schema.deref($scope.data.schema), Promise.resolve($scope.data.model)];
+				if ($scope.data.form) {
+					asyncs.push(jsonLoader($scope.data.form));
 				}
 
-				// Enable form definition hot-swapping
-				$scope.$watch('data.form', function(uri) {
-					if(uri) {
-						formBuffer.pending = true;
-						jsonLoader(uri).then(function(data) {
-							formBuffer.data = data;
-							 formBuild(uri);
+				var formLoaded = $q.all(asyncs).then(function(responses) {
+					$scope.form = $scope.data.formula = new Form(responses[1], responses[2], responses[3]);
+					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
+					$scope.form.translate($scope.language.code);
+					$compile(angular.element(responses[0]))($scope, function (cloned, scope) {
+						$element.prepend(cloned);
+					});
+					$scope.data.ready = true;
+					return true;
+				});
+
+				// Enable language hot-swapping
+				$scope.$watch('data.language', function(newUri, oldUri) {
+					if (newUri && newUri !== oldUri) {
+						formLoaded.then(function () {
+							setLanguage(newUri);
 						});
-					} else {
-						formBuffer.data = null;
-						formBuild(null);
 					}
 				});
 
-				// Enable schema hot-swapping
-				$scope.$watch('data.schema', function(uri) {
-					if(($scope.schema.uri = uri)) {
-						$scope.schema.deref(uri).then(function(schemaData) {
-							formBuild();
+				// Enable data hot-swapping
+				$scope.$watchCollection('data.model', function(newData, oldData) {
+					if (newData && newData !== oldData) {
+						formLoaded.then(function () {
+							$scope.form.updateValues(newData);
 						});
 					}
 				});
 
 				// Enable template hot-swapping
-				$scope.$watch('data.template', function(template, oldVal) {
-					loadTemplate(template).then(function (templateElement) {
-						$element.empty();
-						$compile(angular.element(templateElement))($scope, function (cloned, scope) {
-							$element.prepend(cloned);
-						});
+				$scope.$watchCollection('data.templates', function(newData, oldData) {
+					if (newData && newData !== oldData) {
+						formulaCustomTemplateService.setTemplates(newData);
+						if ($scope.form) {
+							$scope.form.updateCustomTemplates();
+						}
+					}
+				});
+
+				// Don't leave memory leaks
+				$scope.$on('$destroy', function () {
+					$scope.form.fields().forEach(function (field) {
+						if (typeof field.destroyWatcher === 'function') {
+							field.destroyWatcher();
+						}
 					});
+					model.data = {};
+					$rootScope.$on('revalidate', function () {});
 				});
 
-				// Enable language hot-swapping
-				$scope.$watch('data.language', function(uri) {
-					var code = i18n.code(uri);
-
-					if(uri && !code) {
-						i18n.add(uri).then(function(code) {
-							$scope.language.code = code;
-							$scope.form.translate(code);
-						});
-					} else {
-						$scope.language.code = code;
-						$scope.form.translate(code);
-					}
-				});
-
-				// Enable data hot-swapping
-				$scope.$watch('data.model', function(data) {
-					if(model.set(data)) {
-						formBuild();
-					}
-
-					model.locked = false;
-				}, true);
-
-				// Enable onsave callback hot-swapping
-				$scope.$watch('data.onsave', function(callback) {
-					if(callback) {
-						$scope.form.onsave = $scope.onsave = callback;
-					}
-				});
-
-				$scope.$watch('data', function(n, o) {
-					// Enable saveHidden and validateHidden toggling
-					if(n.saveHidden != o.saveHidden) {
-						$scope.form.uiSaveHidden = !!n.saveHidden;
-					}
-					
-					if(n.validateHidden != o.validateHidden) {
-						$scope.form.uiValidateHidden = !!n.validateHidden;
-					}
-				});
+				this.data = $scope.data; // Others need this
 			}]
 		};
 	}]);
 
-// End of strict
 })();

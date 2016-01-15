@@ -49,7 +49,7 @@
 			"maximum": 10
 		},
 		"number_default": {
-			"type": "number",
+			"type": ["number", "null"],
 			"description": "number input with default property set",
 			"default": 123
 		},
@@ -77,6 +77,18 @@
 					"number": {
 						"type": "number",
 						"description": "required number input"
+					},
+					"number2": {
+						"type": "number",
+						"description": "number input"
+					},
+					"number3": {
+						"type": "number",
+						"description": "number input"
+					},
+					"number4": {
+						"type": "number",
+						"description": "number input"
 					}
 				},
 				"required": [ "number" ]
@@ -102,6 +114,15 @@
 		"ref_object": {
 			"$ref": "http://api.npolar.no/schema/user"
 		},
+		"nested_array": {
+			"type": "array",
+			"items": {
+				"type": "array",
+				"items": {
+					"type": "number"
+				}
+			}
+		},
 		"array_hierarchy": {
 			"type": "array",
 			"description": "first level array",
@@ -125,6 +146,10 @@
 											},
 											"obj_1_1_2": {
 												"type": "number"
+											},
+											"obj_1_1_3": {
+												"type": "string",
+												"enum": [ "foobar", "barqux" ]
 											}
 										}
 									}
@@ -132,10 +157,22 @@
 							}
 						}
 					}
-					
+
 				}
 			}
-		}
+		},
+    "autocomplete_array": {
+      "type": "string"
+    },
+    "autocomplete_url": {
+      "type": "string"
+    },
+    "autocomplete_fn": {
+      "type": "string"
+    },
+    "autocomplete_obj": {
+      "type": "string"
+    }
 	},
 	"required": [ "string_required" ]
 }

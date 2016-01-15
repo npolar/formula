@@ -1,0 +1,12 @@
+body {
+  margin: 0;
+  overflow-y: scroll;
+}
+
+.container {
+  box-sizing: border-box;
+  height: 100%;
+  margin: 0 10%;
+  padding: 20px;
+  position: relative;
+}

@@ -7,7 +7,7 @@ For useage examples, check out the [Formula demo](http://npolar.github.io/formul
 
 
 ## Dependencies
-* [AngularJS](https://angularjs.org/) (1.3.x)
+* [AngularJS](https://angularjs.org/) (^1.4.7)
 * [tv4.js](https://github.com/geraintluff/tv4/)
 
 
@@ -15,11 +15,25 @@ For useage examples, check out the [Formula demo](http://npolar.github.io/formul
 Bootstrapping is done using the **formula** directive, which takes one *object* as a parameter, currently supporting the following properties:
 
 * **schema** - URL to a JSON Schema used for form-building and validation *(mandatory)*
-* **form** - URL to a JSON Schema used to customise the form layout
+* **form** - URL to a JSON Schema used to customize the form layout
 * **language** - URL to a JSON translation file used for form translations
 * **model** - Object used to store form data
 * **template** - String representing the form template layout name used for form-building
+* **templates** - Object to configure custom field templates
 
+### Custom Templates
+Custom templates is configured like this:
+```
+templates: [{
+  match(field) {
+      return field.id === "ref_object";
+    },
+    templateUrl: 'customObject.html',
+    //template: '<p>{{field.title}}</p>',
+    //template: '',
+    //hidden: true
+}]
+```
 
 ## Templates
 The following layout templates are bundled with Formula:
@@ -50,6 +64,7 @@ The following layout templates are bundled with Formula:
  * **textarea** if the *type* property is set to *textarea* (in a separate form definition)
  * **number input** if the *format* property is set to *utc-millisec*
  * **select** if the *enum* property is set
+ * **autocomplete** if the *autocomplete* property in set for *string* fields (in a separate form definition)
  * **text input** otherwise
 
 
@@ -59,3 +74,28 @@ The following layout templates are bundled with Formula:
 * **date-time** for ISO 8601 date-time combinations
 * **time** for ISO 8601 time
 * **uri** for RFC 3986 uniform resource identifier
+
+
+### Autocomplete
+Autocomplete is available for string fields and is configured in the form definition in any of these ways:
+
+    {
+      "id": "autocomplete_array",
+      "autocomplete": ["Dalene", "Allan"] <- static array
+    },
+    {
+      "id": "autocomplete_url",
+      "autocomplete": "//api.npolar.no/" <- GET returns array
+    },
+    {
+      "id": "autocomplete_fn",
+      "autocomplete": true <- function returns array
+    }
+
+Callback functions are defined via ```formulaAutoCompleteService``` like so:
+
+    formulaAutoCompleteService.bindSourceCallback(field.path, function (response) {
+      // return a array here
+    });
+
+If the source is an url new results will be fetched with ```?q=value``` for each input change.

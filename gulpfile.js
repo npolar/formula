@@ -23,20 +23,22 @@ gulp.task('compile-templates', function() {
 });
 
 gulp.task('compile-js', ['compile-templates'], function() {
-	return gulp.src(['./src/*.js', './src/**/*.js'])
+	return gulp.src(['./src/**/*.js'])
 	.pipe(concat('formula.js'))
 	.pipe(gulp.dest('./dist/'));
 });
 
 gulp.task('minify-js', ['compile-templates'], function(cb) {
-	return gulp.src(['./src/*.js', './src/**/*.js'])
+	return gulp.src(['./src/**/*.js'])
 	.pipe(concat('formula.min.js'))
-	.pipe(uglify())
+	.pipe(uglify().on('error', function(err){
+    console.log(err);
+  }))
 	.pipe(gulp.dest('./dist/'));
 });
 
 gulp.task('validate-js', ['compile-templates'], function() {
-	return gulp.src(['./src/*.js', './src/**/*.js'])
+	return gulp.src(['./src/**/*.js'])
 	.pipe(jshint({
 		globals: {angular: true}
 	}))

@@ -1,5 +1,8 @@
-(function() {
 "use strict";
+/* globals angular */
+
+(function() {
+
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -9,12 +12,12 @@
 
 angular.module('formula')
 	.directive('formulaFieldDefinition',
-	function() {
+	[function() {
 		return {
 			restrict: 'A',
 			require: '^formula',
+			scope: false,
 			compile: function(element, attrs) {
-				attrs.$set('formulaFieldDefinition'); // unset
 				var html = element.html();
 
 				return function(scope, element, attrs, controller) {
@@ -22,8 +25,7 @@ angular.module('formula')
 				};
 			}
 		};
-	});
+	}]);
 
-// End of strict
+
 })();
-

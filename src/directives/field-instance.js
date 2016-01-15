@@ -1,5 +1,7 @@
-(function() {
 "use strict";
+/* globals angular */
+
+(function() {
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -15,19 +17,12 @@ angular.module('formula')
 			restrict: 'AE',
 			require: '^formula',
 			scope: { field: '=' },
-			compile: function() {
-				// TODO: append element.html() to element?
-
-				return function(scope, element, attrs, controller) {
-					var elem = angular.element(controller.fieldDefinition);
-					$compile(elem)(scope, function (cloned, scope) {
-						element.prepend(cloned);
-					});
-				};
+			link: function(scope, element, attrs, controller) {
+				element[0].innerHTML = controller.fieldDefinition;
+				$compile(element.contents())(scope);
 			}
 		};
 	}]);
 
-// End of strict
-})();
 
+})();

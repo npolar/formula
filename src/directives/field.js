@@ -1,210 +1,181 @@
-(function() {
 "use strict";
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
+/* globals angular */
 
-angular.module('formula')
-	.directive('formulaField',
-	['$compile', 'formulaModel',
-	function($compile, model) {
-		return {
-			restrict: 'A',
-			require: [ '^formula', '?^formulaFieldInstance' ],
-			scope: { field: '=formulaField' },
-			link: function(scope, element, attrs, controller) {
-				var field = scope.field;
-				scope.form = controller[0].form;
-				scope.backupValue = null;
+(function() {
 
-				if(controller[1]) {
-					scope.field = controller[1].field;
-				}
 
-				attrs.$set('id', field.uid);
-				attrs.$set('ngModel', 'field.value');
-				attrs.$set('formulaField'); // unset
+  /**
+   * formula.js
+   * Generic JSON Schema form builder
+   *
+   * Norsk Polarinstutt 2014, http://npolar.no/
+   */
+  angular.module('formula')
+    .directive('formulaField', ['$compile', '$q',
+      function($compile, $q) {
 
-				if(field.disabled) {
-					attrs.$set('disabled', 'disabled');
-				}
+        var getInputElement = function(field, type, element) {
+          var elem;
+          switch (type.sub) {
+            case 'textarea':
+              elem = angular.element('<textarea>');
+              break;
 
-				if(field.readonly) {
-					attrs.$set('readonly', 'readonly');
-				}
+            case 'select':
+              elem = angular.element('<select>');
 
-				var elem = angular.element(element), schemaType;
-				var type = field.type ? field.type.split(':') : null;
-				type = type ? { main: type[0], sub: type[1] } : null;
+              if (element.children().length) {
+                angular.forEach(element.children(), function(child) {
+                  elem.append(child);
+                });
+              } else {
+                elem.attr('ng-options', 'value.id as value.label for value in field.values');
+              }
 
-				if(type.main === 'input') {
-					switch(type.sub) {
-					case 'textarea':
-						elem = angular.element('<textarea>');
-						break;
+              if (field.multiple) {
+                elem.attr('multiple', 'multiple');
+              }
+              break;
 
-					case 'select':
-						elem = angular.element('<select>');
+            default:
+              elem = angular.element('<input>');
+              elem.attr('type', type.sub);
 
-						if(element.children().length) {
-							angular.forEach(element.children(), function(child) {
-								elem.append(child);
-							});
-						} else {
-							elem.attr('ng-options', 'value.id as value.label for value in field.values');
-						}
+              switch (type.sub) {
+                case 'number':
+                case 'range':
+                  if (field.step !== null) {
+                    elem.attr('step', field.step);
+                  }
+                  break;
 
-						if(field.multiple) {
-							elem.attr('multiple', 'multiple');
-						}
-						break;
+                case 'any':
+                case 'date':
+                case 'datetime':
+                case 'time':
+                  elem.attr('type', 'text');
+                  break;
+              }
+          }
 
-					default:
-						elem = angular.element('<input>');
-						elem.attr('type', type.sub);
+          if (type.sub === 'autocomplete') {
+            var list = angular.element('<datalist>');
+            var id = field.id + '_list';
+            elem = angular.element('<input>');
+            elem.attr('list', id);
+            list.attr('id', id);
+            field.querySearch('').then(function(matches) {
+              matches.forEach(function(item) {
+                var opt = angular.element('<option>');
+                opt.attr('value', item);
+                list.append(opt);
+              });
+            });
+            list.on('change', field.onSelect);
+            elem.append(list);
+          }
 
-						switch(type.sub) {
-						case 'number':
-						case 'range':
-							if(field.step !== null) {
-								elem.attr('step', field.step);
-							}
-							break;
+          return elem;
+        };
 
-						case 'any':
-						case 'date':
-						case 'datetime':
-						case 'time':
-							elem.attr('type', 'text');
-							break;
-						}
-					}
 
-					angular.forEach(attrs, function(val, key) {
-						if(attrs.$attr[key]) {
-							elem.attr(attrs.$attr[key], val);
-						}
-					});
-				}
+        var getType = function(field) {
+          var type = field.type ? field.type.split(':') : null;
+          type = type ? {
+            main: type[0],
+            sub: type[1]
+          } : null;
+          return type;
+        };
 
-				// Add class based on field parents and ID
-				var path = 'formula-';
 
-				angular.forEach(field.parents, function(parent) {
-					path += parent.id + '/';
-				});
+        var setAttrs = function(attrs) {
+          attrs.$set('id', '{{field.uid}}');
+          attrs.$set('ngModel', 'field.value');
+          attrs.$set('ng-disabled', 'field.disabled');
+          attrs.$set('ng-readonly', 'field.readonly');
+        };
 
-				if(field.id) {
-					path += field.id;
-				} else if(field.parents) {
-					path = path.substr(0, path.length - 1);
-				}
+        // Add class based on field parents and ID
+        var addPathClass = function(field, elem) {
+          var path = 'formula-';
 
-				elem.addClass(path);
+          angular.forEach(field.parents, function(parent) {
+            path += parent.id + '/';
+          });
 
-				// Add css class of schema type
-				if((schemaType = field.schema.type)) {
-					elem.addClass(
-						"formula" +
-						schemaType.charAt(0).toUpperCase() +
-						schemaType.slice(1)
-					);
-				}
+          if (field.id) {
+            path += field.id;
+          } else if (field.parents) {
+            path = path.substr(0, path.length - 1);
+          }
 
-				$compile(elem)(scope, function (cloned, scope) {
-					element.replaceWith(cloned);
-				});
+          elem.addClass(path);
+        };
 
-				if(type.main === 'input') {
-					scope.$watch('field.value', function(n, o) {
-						if(!field.dirty && (n !== o)) {
-							field.dirty = true;
-						}
+        // Add css class of schema type
+        var addSchemaClass = function(field, elem) {
+          var schemaType = field.mainType;
+          if (schemaType) {
+            elem.addClass(
+              "formula" +
+              schemaType.charAt(0).toUpperCase() +
+              schemaType.slice(1)
+            );
+          }
+        };
 
-						if(!field.parents) {
-							field.validate(true, true);
-						}
-					});
-				} else if(type.main === 'object') {
-					scope.$watch('field.fields', function() {
-						field.validate(false, true);
-					}, true);
-				} else if(type.main === 'array') {
-					scope.$watch('field.values', function() {
-						field.validate(false, true);
-					}, true);
-				}
+        var getElement = function(scope, element, attrs, controllers) {
+          var field = scope.field;
+          var type = getType(field);
+          var elem;
 
-				// Evaluate condition
-				if(field.condition) {
-					scope.model = model.data;
-					scope.$watchCollection('model', function(model) {
-						var pass = true, condition = (field.condition instanceof Array ? field.condition : [ field.condition ]);
+          if (field.customTemplate) {
+            elem = angular.element(field.customTemplate);
+            elem.addClass('formulaCustomObject');
+          } else if (type.main === 'input') {
+            elem = getInputElement(field, type, element);
+          }
 
-						angular.forEach(condition, function(cond) {
-							var local = model, parents = field.parents, pathSplitted;
+          if (elem) {
+            angular.forEach(attrs, function(val, key) {
+              if (attrs.$attr[key]) {
+                elem.attr(attrs.$attr[key], val);
+              }
+            });
+          } else {
+            elem = element;
+          }
 
-							if(pass) {
-								// Absolute JSON path
-								if(cond[0] === '#') {
-									parents = [];
+          return elem;
+        };
 
-									// Slash-delimited resolution
-									if(cond[1] === '/') {
-										pathSplitted = cond.substr(1).split('/');
-									}
+        return {
+          restrict: 'A',
+          require: ['^formula', '?^formulaFieldInstance'],
+          scope: {
+            field: '=formulaField'
+          },
+          compile: function (tElement, tAttrs, transclude) {
+            setAttrs(tAttrs);
 
-									// Dot-delimited resolution
-									else {
-										pathSplitted = cond.substr(1).split('.');
-										if(!pathSplitted[0].length) {
-											parents.splice(0, 1);
-										}
-									}
+            return function link(scope, iElement, iAttrs, controllers) {
+              iAttrs.$set('formulaField'); // unset
+              var field = scope.field;
 
-									angular.forEach(pathSplitted, function(split, index) {
-										if(isNaN(split)) {
-											parents.push({ id: split, index: null });
-										} else if(index > 0) {
-											parents[index - 1].index = Number(split);
-										}
-									});
+              var elem = getElement(scope, iElement, iAttrs, controllers);
 
-									cond = parents[parents.length - 1].id;
-									parents.splice(parents.length - 1, 1);
-								}
+              addPathClass(field, elem);
+              addSchemaClass(field, elem);
 
-								angular.forEach(parents, function(parent) {
-									if(local) {
-										local = (parent.index !== null ? local[parent.index][parent.id] : local[parent.id]);
-									}
-								});
+              $compile(elem)(scope, function(cloned, scope) {
+                iElement.replaceWith(cloned);
+              });
+            };
+          },
+          terminal: true
+        };
+      }
+    ]);
 
-								if(local && field.index !== null) {
-									local = local[field.index];
-								}
-
-								var evaluate = scope.$eval(cond, local);
-								if(!local || evaluate === undefined || evaluate === false) {
-									pass = false;
-								}
-							}
-						});
-
-						if(field.visible !== (field.visible = field.hidden ? false : pass)) {
-							var currentValue = field.value;
-							field.value = scope.backupValue;
-							scope.backupValue = currentValue;
-						}
-					});
-				}
-			},
-			terminal: true
-		};
-	}]);
-
-// End of strict
 })();

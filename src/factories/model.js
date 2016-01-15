@@ -1,3 +1,6 @@
+"use strict";
+/* globals angular */
+
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -16,19 +19,11 @@ angular.module('formula')
  */
 
 .service('formulaModel',
-  function() {
+  [function() {
     var model = {
-      data: {},
-      locked: false,
-      set: function(data) {
-        if (!this.locked && data) {
-          this.data = data;
-          return true;
-        }
-
-        return false;
-      }
+      data: {}
     };
 
+
     return model;
-  });
+  }]);
