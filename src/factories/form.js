@@ -90,7 +90,7 @@ angular.module('formula')
       this.schema = schema;
       this.title = null;
       this.valid = false;
-      data = data || {};
+      data = model.data = data = data || {};
 
       if (formDefinition) {
         this.title = formDefinition.title;
@@ -131,6 +131,7 @@ angular.module('formula')
       },
 
       updateValues: function(data) {
+        model.data = data;
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
             field.valueFromModel(data);

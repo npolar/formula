@@ -11,9 +11,9 @@
 
 angular.module('formula')
 	.directive('formula',
-	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n',
+	['formulaJsonLoader', 'formulaSchema', 'formulaForm', 'formulaI18n',
 		'formulaCustomTemplateService', '$http', '$compile', '$templateCache', '$templateRequest', '$q', '$rootScope',
-	function(jsonLoader, model, Schema, Form, i18n, formulaCustomTemplateService, $http, $compile, $templateCache, $templateRequest, $q, $rootScope) {
+	function(jsonLoader, Schema, Form, i18n, formulaCustomTemplateService, $http, $compile, $templateCache, $templateRequest, $q, $rootScope) {
 		return {
 			restrict: 'A',
       scope: { data: '=formula' },
@@ -124,7 +124,6 @@ angular.module('formula')
 							field.destroyWatcher();
 						}
 					});
-					model.data = {};
 					$rootScope.$on('revalidate', function () {});
 				});
 
