@@ -30,8 +30,8 @@ angular.module('formula')
           var val = schema.properties[key];
           val.required = schema.required;
           var newField = new Field(val, key);
-          newField.valueFromModel(data);
           if (newField.type) {
+            newField.valueFromModel(data);
             fieldsets[0].fields.push(newField);
           }
         });
@@ -63,8 +63,8 @@ angular.module('formula')
             var fieldSchema = schema.properties[key] || { id: key };
             fieldSchema.required = fieldSchema.required || schema.required;
             var newField = new Field(fieldSchema, key, null, f);
-            newField.valueFromModel(data);
             if (newField.type) {
+              newField.valueFromModel(data);
               fieldset.fields.push(newField);
             }
           });

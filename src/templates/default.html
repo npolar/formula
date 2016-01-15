@@ -5,38 +5,37 @@
   </header>
 
   <nav ng-if="::form.fieldsets.length > 1">
-    <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in ::form.fieldsets">{{ fieldset.title }}</a>
+    <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in ::form.fieldsets track by fieldset.id">{{ fieldset.title }}</a>
   </nav>
 
-  <fieldset ng-if="fieldset.active" ng-repeat="fieldset in ::form.fieldsets">
-    <legend ng-if="::fieldset.title">{{ fieldset.title }}</legend>
+  <fieldset ng-if="fieldset.active" ng-repeat="fieldset in ::form.fieldsets track by fieldset.id">
 
-    <div formula:field-definition ng-repeat="field in ::fieldset.fields" ng-show="field.visible">
+    <div formula:field-definition ng-repeat="field in ::fieldset.fields track by field.id" ng-if="field.visible">
 
       <div ng-class="{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }" ng-if="::field.typeOf('input')" title="{{ field.description }}">
         <label for="{{ ::field.uid }}">{{ field.title }}</label>
-        <input class="field" formula:field="field"/>
+        <input formula:field="field"/>
         <span>{{ field.error.message || field.description }}</span>
       </div>
 
       <div ng-if="::field.typeOf('object')">
-        <fieldset class="object" formula:field="field">
+        <fieldset formula:field="field">
           <legend ng-if="::field.title">{{ field.title }}</legend>
 
-          <div ng-repeat="field in field.fields" ng-show="field.visible">
+          <div ng-repeat="field in ::field.fields track by field.id" ng-if="field.visible">
             <formula:field-instance field="field"></formula:field-instance>
           </div>
         </fieldset>
       </div>
 
       <div ng-if="::field.typeOf('array')">
-        <div class="array" formula:field="field">
+        <div formula:field="field">
           <fieldset ng-class="{ valid: field.valid, error: field.errors }">
             <legend>{{ field.title }}
               ({{ field.nrArrayValues() || 0 }})</legend>
 
             <ul ng-if="::field.typeOf('fieldset')">
-              <li ng-if="!value.hidden" ng-repeat="value in field.values">
+              <li ng-repeat="value in field.values track by value.path" ng-if="!value.hidden">
                 <fieldset ng-class="{ valid: value.valid }">
                   <legend>
                     <span ng-if="!value.visible">{{ value.fields | formulaInlineValues }}</span>
@@ -44,7 +43,7 @@
                     <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
                   </legend>
 
-                  <div ng-repeat="field in ::value.fields" ng-show="value.visible">
+                  <div ng-repeat="field in ::value.fields track by field.id" ng-if="value.visible">
                     <formula:field-instance field="field"></formula:field-instance>
                   </div>
                 </fieldset>
@@ -60,8 +59,8 @@
             </ul>
 
             <ul ng-if="::field.typeOf('field')">
-              <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values">
-                <input class="array-field" formula:field="value" />
+              <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values track by value.path">
+                <input formula:field="value" />
                 <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ form.i18n.remove[1] }}">X</a>
               </li>
               <li>

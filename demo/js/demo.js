@@ -9,13 +9,13 @@ angular.module('demo', ['formula'])
           _id: 'foobarID',
           string: 'timeoutfoobar',
           boolean: true,
-          array_object: [{
+          array_object: Array(100).fill({
             string_default: 'foo',
-            number: 1
-          }, {
-            string_default: 'bar',
-            number: 2
-          }],
+            number: 1,
+            number2: 2,
+            number3: 3,
+            number4: 4
+          }),
           array_string_enum: ['foo', 'qux'],
           array_string: ['foobar', 'bazquz'],
           ref_object: {

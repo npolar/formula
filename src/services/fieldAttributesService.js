@@ -64,7 +64,7 @@ angular.module('formula')
         field.required = (field.schema.required && field.schema.required.indexOf(field.id) !== -1);
 
         var invalidCharacters = ['.', '/', '#'];
-        angular.forEach(invalidCharacters, function(char) {
+        invalidCharacters.forEach(function(char) {
           if (this.id && this.id.indexOf(char) >= 0) {
             log.warning(log.codes.FIELD_INVALID_ID, {
               character: char,
@@ -77,6 +77,9 @@ angular.module('formula')
 
         formulaFieldTranslateDefaultsService.translateDefaultValues(field);
         formulaFieldTypeService.setFieldType(field);
+        if (!field.type) {
+          return field;
+        }
 
         if (field.typeOf('array')) {
           field.value = [];
