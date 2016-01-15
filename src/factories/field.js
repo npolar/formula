@@ -91,6 +91,10 @@ angular.module('formula')
           var schema = this.schema.items;
           newField = new Field(schema, id, parents, fieldDefinition);
           newField.index = this.fields.length;
+          // Only a prototype for array values, don't need watcher
+          if (typeof newField.destroyWatcher === 'function') {
+            newField.destroyWatcher();
+          }
           if (newField.type) {
             this.fields.push(newField);
           }
@@ -151,9 +155,10 @@ angular.module('formula')
        * Function used to add a copy of the subfields for validating.
        * The values of each fieldset are automatically monitored.
        *
+       * @param preventValidation bool
        * @returns Reference to the item just added
        */
-      itemAdd: function() {
+      itemAdd: function(preventValidation) {
         if (this.typeOf('array') && this.fields) {
           var parents = this.parents.slice(),
             index;
@@ -176,7 +181,9 @@ angular.module('formula')
           }
           this.dirty = true;
           this.dirtyParents();
-          $rootScope.$emit('revalidate');
+          if (preventValidation !== true) {
+            $rootScope.$emit('revalidate');
+          }
           return field;
         }
 
@@ -216,6 +223,10 @@ angular.module('formula')
           this.values.forEach(function(fs, i) {
             fs.index = i;
           }, this);
+
+          if (typeof item.destroyWatcher === 'function') {
+            item.destroyWatcher();
+          }
 
           this.dirty = true;
           this.dirtyParents();
@@ -303,16 +314,8 @@ angular.module('formula')
         if (!(this.type && typeof this.type === 'string')) {
           return false;
         }
-        var types = this.type.split(':'),
-          match = false;
-
-        type.split(' ').forEach(function(type) {
-          if (!match && type === this.type || type === types[0] || type === types[1]) {
-            match = true;
-          }
-        }, this);
-
-        return match;
+        var types;
+        return (type === this.type || type === (types = this.type.split(':'))[0] || type === types[1]);
       },
 
       /**

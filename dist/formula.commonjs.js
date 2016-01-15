@@ -510,6 +510,10 @@ angular.module('formula')
           var schema = this.schema.items;
           newField = new Field(schema, id, parents, fieldDefinition);
           newField.index = this.fields.length;
+          // Only a prototype for array values, don't need watcher
+          if (typeof newField.destroyWatcher === 'function') {
+            newField.destroyWatcher();
+          }
           if (newField.type) {
             this.fields.push(newField);
           }
@@ -570,9 +574,10 @@ angular.module('formula')
        * Function used to add a copy of the subfields for validating.
        * The values of each fieldset are automatically monitored.
        *
+       * @param preventValidation bool
        * @returns Reference to the item just added
        */
-      itemAdd: function() {
+      itemAdd: function(preventValidation) {
         if (this.typeOf('array') && this.fields) {
           var parents = this.parents.slice(),
             index;
@@ -595,7 +600,9 @@ angular.module('formula')
           }
           this.dirty = true;
           this.dirtyParents();
-          $rootScope.$emit('revalidate');
+          if (preventValidation !== true) {
+            $rootScope.$emit('revalidate');
+          }
           return field;
         }
 
@@ -635,6 +642,10 @@ angular.module('formula')
           this.values.forEach(function(fs, i) {
             fs.index = i;
           }, this);
+
+          if (typeof item.destroyWatcher === 'function') {
+            item.destroyWatcher();
+          }
 
           this.dirty = true;
           this.dirtyParents();
@@ -722,16 +733,8 @@ angular.module('formula')
         if (!(this.type && typeof this.type === 'string')) {
           return false;
         }
-        var types = this.type.split(':'),
-          match = false;
-
-        type.split(' ').forEach(function(type) {
-          if (!match && type === this.type || type === types[0] || type === types[1]) {
-            match = true;
-          }
-        }, this);
-
-        return match;
+        var types;
+        return (type === this.type || type === (types = this.type.split(':'))[0] || type === types[1]);
       },
 
       /**
@@ -835,8 +838,8 @@ angular.module('formula')
           var val = schema.properties[key];
           val.required = schema.required;
           var newField = new Field(val, key);
-          newField.valueFromModel(data);
           if (newField.type) {
+            newField.valueFromModel(data);
             fieldsets[0].fields.push(newField);
           }
         });
@@ -868,8 +871,8 @@ angular.module('formula')
             var fieldSchema = schema.properties[key] || { id: key };
             fieldSchema.required = fieldSchema.required || schema.required;
             var newField = new Field(fieldSchema, key, null, f);
-            newField.valueFromModel(data);
             if (newField.type) {
+              newField.valueFromModel(data);
               fieldset.fields.push(newField);
             }
           });
@@ -1924,7 +1927,7 @@ angular.module('formula')
       var getMatchingTemplate = function(templates, field) {
         if (templates) {
           for (var i in templates) {
-            if (templates[i].match && templates[i].match.call({}, angular.copy(field))) {
+            if (templates[i].match && templates[i].match.call({}, field)) {
               return templates[i];
             }
           }
@@ -1943,9 +1946,8 @@ angular.module('formula')
       };
 
 
-      var getCustomTemplate = function(templates, field) {
+      var getCustomTemplate = function(template, field) {
         var deferred = $q.defer();
-        var template = getMatchingTemplate(templates, field);
         if (template) {
           if (template.hidden) {
             deferred.resolve(false);
@@ -1977,7 +1979,11 @@ angular.module('formula')
         if (!templates) {
           return;
         }
-        getCustomTemplate(templates, field).then(function (template) {
+        var template = getMatchingTemplate(templates, field);
+        if (!template) {
+          return;
+        }
+        getCustomTemplate(template, field).then(function (template) {
           if (template) {
             field.customTemplate = template;
           } else {
@@ -2137,7 +2143,7 @@ angular.module('formula')
         field.required = (field.schema.required && field.schema.required.indexOf(field.id) !== -1);
 
         var invalidCharacters = ['.', '/', '#'];
-        angular.forEach(invalidCharacters, function(char) {
+        invalidCharacters.forEach(function(char) {
           if (this.id && this.id.indexOf(char) >= 0) {
             log.warning(log.codes.FIELD_INVALID_ID, {
               character: char,
@@ -2150,6 +2156,9 @@ angular.module('formula')
 
         formulaFieldTranslateDefaultsService.translateDefaultValues(field);
         formulaFieldTypeService.setFieldType(field);
+        if (!field.type) {
+          return field;
+        }
 
         if (field.typeOf('array')) {
           field.value = [];
@@ -2566,14 +2575,17 @@ angular.module('formula')
             model[field.id].forEach(function(item, index) {
               var newField;
               if (field.typeOf('fieldset')) {
-                newField = field.itemAdd();
+                newField = field.itemAdd(true /* preventValidation */);
+                if (newField.index !== 0) {
+                  newField.visible = false;
+                }
                 if (newField) {
                   var valueModel = {};
                   valueModel[field.values[index].id] = item;
                   valueFromModel(field.values[index], valueModel);
                 }
               } else if (field.typeOf('field')) {
-                newField = field.itemAdd();
+                newField = field.itemAdd(true /* preventValidation */);
                 if (newField) {
                   field.values[index].value = item;
                 }
@@ -2583,9 +2595,12 @@ angular.module('formula')
               }
             }, field);
           }
-          field.value = model[field.id];
-          field.dirty = true;
-          formulaCustomTemplateService.initField(field);
+
+          if (field.value !== model[field.id]) {
+            field.value = model[field.id];
+            field.dirty = true;
+            formulaCustomTemplateService.initField(field);
+          }
         }
       };
 
@@ -2594,4 +2609,4 @@ angular.module('formula')
       };
     }]);
 
-angular.module("formula").run(["$templateCache", function($templateCache) {$templateCache.put("formula/default.html","<!DOCTYPE html><form class=\"formula\" ng-if=\"form.fieldsets\"><header ng-if=\"::form.title\">{{ ::form.title }}</header><nav ng-if=\"::form.fieldsets.length > 1\"><a href=\"\" ng-class=\"{ active: fieldset.active }\" ng-click=\"form.activate(fieldset)\" ng-repeat=\"fieldset in ::form.fieldsets\">{{ fieldset.title }}</a></nav><fieldset ng-if=\"fieldset.active\" ng-repeat=\"fieldset in ::form.fieldsets\"><legend ng-if=\"::fieldset.title\">{{ fieldset.title }}</legend><div formula:field-definition=\"\" ng-repeat=\"field in ::fieldset.fields\" ng-show=\"field.visible\"><div ng-class=\"{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }\" ng-if=\"::field.typeOf(\'input\')\" title=\"{{ field.description }}\"><label for=\"{{ ::field.uid }}\">{{ field.title }}</label> <input formula:field=\"field\"> <span>{{ field.error.message || field.description }}</span></div><div ng-if=\"::field.typeOf(\'object\')\"><fieldset formula:field=\"field\"><legend ng-if=\"::field.title\">{{ field.title }}</legend><div ng-repeat=\"field in field.fields\" ng-show=\"field.visible\"><formula:field-instance field=\"field\"></formula:field-instance></div></fieldset></div><div ng-if=\"::field.typeOf(\'array\')\"><div formula:field=\"field\"><fieldset ng-class=\"{ valid: field.valid, error: field.errors }\"><legend>{{ field.title }} ({{ field.nrArrayValues() || 0 }})</legend><ul ng-if=\"::field.typeOf(\'fieldset\')\"><li ng-if=\"!value.hidden\" ng-repeat=\"value in field.values\"><fieldset ng-class=\"{ valid: value.valid }\"><legend><span ng-if=\"!value.visible\">{{ value.fields | formulaInlineValues }}</span> <a class=\"toggle\" href=\"\" ng-click=\"field.itemToggle($index)\" title=\"{{ value.visible ? form.i18n.minimize[1] : form.i18n.maximize[1] }}\">{{ value.visible ? \'_\' : \'‾\' }}</a> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.remove[1] }}\">X</a></legend><div ng-repeat=\"field in ::value.fields\" ng-show=\"value.visible\"><formula:field-instance field=\"field\"></formula:field-instance></div></fieldset></li><li><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ form.i18n.add[1] }}\" type=\"button\"><strong>+</strong> {{ form.i18n.add[0] }}</button></li></ul><ul ng-if=\"::field.typeOf(\'field\')\"><li ng-class=\"{ valid: value.valid, error: value.error }\" ng-repeat=\"value in field.values\"><input formula:field=\"value\"> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.remove[1] }}\">X</a></li><li><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ form.i18n.add[1] }}\" type=\"button\"><strong>+</strong> {{ form.i18n.add[0] }}</button></li></ul></fieldset></div></div></div></fieldset><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-click=\"form.validate(true);\" ng-if=\"!data.hideButtons\" title=\"{{ form.i18n.validate[1] }}\"><strong>&#10003;</strong> {{ form.i18n.validate[0] }}</button> <button ng-click=\"form.save()\" ng-disabled=\"!form.valid\" ng-if=\"!data.hideButtons\" title=\"{{ form.i18n.save[1] }}\"><strong>&#9921;</strong> {{ form.i18n.save[0] }}</button></footer></form><div class=\"formula\" ng-if=\"!form.fieldsets\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div>");}]);;
+angular.module("formula").run(["$templateCache", function($templateCache) {$templateCache.put("formula/default.html","<!DOCTYPE html><form class=\"formula\" ng-if=\"form.fieldsets\"><header ng-if=\"::form.title\">{{ ::form.title }}</header><nav ng-if=\"::form.fieldsets.length > 1\"><a href=\"\" ng-class=\"{ active: fieldset.active }\" ng-click=\"form.activate(fieldset)\" ng-repeat=\"fieldset in ::form.fieldsets track by fieldset.id\">{{ fieldset.title }}</a></nav><fieldset ng-if=\"fieldset.active\" ng-repeat=\"fieldset in ::form.fieldsets track by fieldset.id\"><div formula:field-definition=\"\" ng-repeat=\"field in ::fieldset.fields track by field.id\" ng-if=\"field.visible\"><div ng-class=\"{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }\" ng-if=\"::field.typeOf(\'input\')\" title=\"{{ field.description }}\"><label for=\"{{ ::field.uid }}\">{{ field.title }}</label> <input formula:field=\"field\"> <span>{{ field.error.message || field.description }}</span></div><div ng-if=\"::field.typeOf(\'object\')\"><fieldset formula:field=\"field\"><legend ng-if=\"::field.title\">{{ field.title }}</legend><div ng-repeat=\"field in ::field.fields track by field.id\" ng-if=\"field.visible\"><formula:field-instance field=\"field\"></formula:field-instance></div></fieldset></div><div ng-if=\"::field.typeOf(\'array\')\"><div formula:field=\"field\"><fieldset ng-class=\"{ valid: field.valid, error: field.errors }\"><legend>{{ field.title }} ({{ field.nrArrayValues() || 0 }})</legend><ul ng-if=\"::field.typeOf(\'fieldset\')\"><li ng-repeat=\"value in field.values track by value.path\" ng-if=\"!value.hidden\"><fieldset ng-class=\"{ valid: value.valid }\"><legend><span ng-if=\"!value.visible\">{{ value.fields | formulaInlineValues }}</span> <a class=\"toggle\" href=\"\" ng-click=\"field.itemToggle($index)\" title=\"{{ value.visible ? form.i18n.minimize[1] : form.i18n.maximize[1] }}\">{{ value.visible ? \'_\' : \'‾\' }}</a> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.remove[1] }}\">X</a></legend><div ng-repeat=\"field in ::value.fields track by field.id\" ng-if=\"value.visible\"><formula:field-instance field=\"field\"></formula:field-instance></div></fieldset></li><li><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ form.i18n.add[1] }}\" type=\"button\"><strong>+</strong> {{ form.i18n.add[0] }}</button></li></ul><ul ng-if=\"::field.typeOf(\'field\')\"><li ng-class=\"{ valid: value.valid, error: value.error }\" ng-repeat=\"value in field.values track by value.path\"><input formula:field=\"value\"> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.remove[1] }}\">X</a></li><li><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ form.i18n.add[1] }}\" type=\"button\"><strong>+</strong> {{ form.i18n.add[0] }}</button></li></ul></fieldset></div></div></div></fieldset><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-click=\"form.validate(true);\" ng-if=\"!data.hideButtons\" title=\"{{ form.i18n.validate[1] }}\"><strong>&#10003;</strong> {{ form.i18n.validate[0] }}</button> <button ng-click=\"form.save()\" ng-disabled=\"!form.valid\" ng-if=\"!data.hideButtons\" title=\"{{ form.i18n.save[1] }}\"><strong>&#9921;</strong> {{ form.i18n.save[0] }}</button></footer></form><div class=\"formula\" ng-if=\"!form.fieldsets\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div>");}]);;

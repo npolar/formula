@@ -24,14 +24,17 @@ angular.module('formula')
             model[field.id].forEach(function(item, index) {
               var newField;
               if (field.typeOf('fieldset')) {
-                newField = field.itemAdd();
+                newField = field.itemAdd(true /* preventValidation */);
+                if (newField.index !== 0) {
+                  newField.visible = false;
+                }
                 if (newField) {
                   var valueModel = {};
                   valueModel[field.values[index].id] = item;
                   valueFromModel(field.values[index], valueModel);
                 }
               } else if (field.typeOf('field')) {
-                newField = field.itemAdd();
+                newField = field.itemAdd(true /* preventValidation */);
                 if (newField) {
                   field.values[index].value = item;
                 }
@@ -41,9 +44,12 @@ angular.module('formula')
               }
             }, field);
           }
-          field.value = model[field.id];
-          field.dirty = true;
-          formulaCustomTemplateService.initField(field);
+
+          if (field.value !== model[field.id]) {
+            field.value = model[field.id];
+            field.dirty = true;
+            formulaCustomTemplateService.initField(field);
+          }
         }
       };
 

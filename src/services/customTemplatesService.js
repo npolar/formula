@@ -16,7 +16,7 @@ angular.module('formula')
       var getMatchingTemplate = function(templates, field) {
         if (templates) {
           for (var i in templates) {
-            if (templates[i].match && templates[i].match.call({}, angular.copy(field))) {
+            if (templates[i].match && templates[i].match.call({}, field)) {
               return templates[i];
             }
           }
@@ -35,9 +35,8 @@ angular.module('formula')
       };
 
 
-      var getCustomTemplate = function(templates, field) {
+      var getCustomTemplate = function(template, field) {
         var deferred = $q.defer();
-        var template = getMatchingTemplate(templates, field);
         if (template) {
           if (template.hidden) {
             deferred.resolve(false);
@@ -69,7 +68,11 @@ angular.module('formula')
         if (!templates) {
           return;
         }
-        getCustomTemplate(templates, field).then(function (template) {
+        var template = getMatchingTemplate(templates, field);
+        if (!template) {
+          return;
+        }
+        getCustomTemplate(template, field).then(function (template) {
           if (template) {
             field.customTemplate = template;
           } else {
