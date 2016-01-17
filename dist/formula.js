@@ -28,6 +28,7 @@ angular.module('formula')
 		return {
 			restrict: 'A',
 			require: '^formula',
+			scope: false,
 			compile: function(element, attrs) {
 				var html = element.html();
 
@@ -59,7 +60,7 @@ angular.module('formula')
 		return {
 			restrict: 'AE',
 			require: '^formula',
-			scope: { field: '=*' },
+			scope: { field: '=' },
 			link: function(scope, element, attrs, controller) {
 				scope.form = controller.form;
 				element[0].innerHTML = controller.fieldDefinition;
