@@ -9,7 +9,7 @@ angular.module('demo', ['formula'])
           _id: 'foobarID',
           string: 'timeoutfoobar',
           boolean: true,
-          array_object: Array(100).fill({
+          array_object: Array(10).fill({
             string_default: 'foo',
             number: 1,
             number2: 2,

@@ -61,7 +61,12 @@ angular.module('formula')
         field.fieldDefinition = fieldDefinition || {};
         copyFrom(field, schema);
         copyFrom(field, fieldDefinition);
-        field.required = (field.schema.required && field.schema.required.indexOf(field.id) !== -1);
+        if (field.schema.required && field.schema.required.indexOf(field.id) !== -1) {
+          field.required = true;
+        } else {
+          field.required = false;
+          field.schema.required = undefined;
+        }
 
         var invalidCharacters = ['.', '/', '#'];
         invalidCharacters.forEach(function(char) {

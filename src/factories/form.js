@@ -301,7 +301,6 @@ angular.module('formula')
 
           if (field.dirty || force) {
             var index;
-
             if (field.validate(force, silent)) {
               if ((index = errors.indexOf(field.path)) !== -1) {
                 errors.splice(index, 1);
