@@ -18,6 +18,7 @@ angular.module('formula')
 			restrict: 'A',
       scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
+				var ctrl = this;
 				if(!$scope.data) {
 					throw "No formula options provided!";
 				}
@@ -79,7 +80,7 @@ angular.module('formula')
 				}
 
 				var formLoaded = $q.all(asyncs).then(function(responses) {
-					$scope.form = $scope.data.formula = new Form(responses[1], responses[2], responses[3]);
+					$scope.form = ctrl.form = $scope.data.formula = new Form(responses[1], responses[2], responses[3]);
 					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
 					$scope.form.translate($scope.language.code);
 					$compile(angular.element(responses[0]))($scope, function (cloned, scope) {

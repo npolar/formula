@@ -28,7 +28,6 @@ angular.module('formula')
 		return {
 			restrict: 'A',
 			require: '^formula',
-			scope: false,
 			compile: function(element, attrs) {
 				var html = element.html();
 
@@ -60,8 +59,9 @@ angular.module('formula')
 		return {
 			restrict: 'AE',
 			require: '^formula',
-			scope: { field: '=' },
+			scope: { field: '=*' },
 			link: function(scope, element, attrs, controller) {
+				scope.form = controller.form;
 				element[0].innerHTML = controller.fieldDefinition;
 				$compile(element.contents())(scope);
 			}
@@ -227,13 +227,14 @@ angular.module('formula')
           restrict: 'A',
           require: ['^formula', '?^formulaFieldInstance'],
           scope: {
-            field: '=formulaField'
+            field: '=*formulaField'
           },
           compile: function (tElement, tAttrs, transclude) {
             setAttrs(tAttrs);
 
             return function link(scope, iElement, iAttrs, controllers) {
               iAttrs.$set('formulaField'); // unset
+              scope.form = controllers[0].form;
               var field = scope.field;
 
               var elem = getElement(scope, iElement, iAttrs, controllers);
@@ -266,13 +267,14 @@ angular.module('formula')
 
 angular.module('formula')
 	.directive('formula',
-	['formulaJsonLoader', 'formulaModel', 'formulaSchema', 'formulaForm', 'formulaI18n',
+	['formulaJsonLoader', 'formulaSchema', 'formulaForm', 'formulaI18n',
 		'formulaCustomTemplateService', '$http', '$compile', '$templateCache', '$templateRequest', '$q', '$rootScope',
-	function(jsonLoader, model, Schema, Form, i18n, formulaCustomTemplateService, $http, $compile, $templateCache, $templateRequest, $q, $rootScope) {
+	function(jsonLoader, Schema, Form, i18n, formulaCustomTemplateService, $http, $compile, $templateCache, $templateRequest, $q, $rootScope) {
 		return {
 			restrict: 'A',
       scope: { data: '=formula' },
 			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
+				var ctrl = this;
 				if(!$scope.data) {
 					throw "No formula options provided!";
 				}
@@ -334,7 +336,7 @@ angular.module('formula')
 				}
 
 				var formLoaded = $q.all(asyncs).then(function(responses) {
-					$scope.form = $scope.data.formula = new Form(responses[1], responses[2], responses[3]);
+					$scope.form = ctrl.form = $scope.data.formula = new Form(responses[1], responses[2], responses[3]);
 					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
 					$scope.form.translate($scope.language.code);
 					$compile(angular.element(responses[0]))($scope, function (cloned, scope) {
@@ -379,7 +381,6 @@ angular.module('formula')
 							field.destroyWatcher();
 						}
 					});
-					model.data = {};
 					$rootScope.$on('revalidate', function () {});
 				});
 
@@ -871,7 +872,7 @@ angular.module('formula')
       this.schema = schema;
       this.title = null;
       this.valid = false;
-      data = data || {};
+      data = model.data = data = data || {};
 
       if (formDefinition) {
         this.title = formDefinition.title;
@@ -912,6 +913,7 @@ angular.module('formula')
       },
 
       updateValues: function(data) {
+        model.data = data;
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
             field.valueFromModel(data);

@@ -16,7 +16,6 @@ angular.module('formula')
 		return {
 			restrict: 'A',
 			require: '^formula',
-			scope: false,
 			compile: function(element, attrs) {
 				var html = element.html();
 

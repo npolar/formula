@@ -154,13 +154,14 @@
           restrict: 'A',
           require: ['^formula', '?^formulaFieldInstance'],
           scope: {
-            field: '=formulaField'
+            field: '=*formulaField'
           },
           compile: function (tElement, tAttrs, transclude) {
             setAttrs(tAttrs);
 
             return function link(scope, iElement, iAttrs, controllers) {
               iAttrs.$set('formulaField'); // unset
+              scope.form = controllers[0].form;
               var field = scope.field;
 
               var elem = getElement(scope, iElement, iAttrs, controllers);
