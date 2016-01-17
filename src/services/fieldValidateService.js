@@ -14,14 +14,14 @@ angular.module('formula')
         var validate = function (field, options) {
           var silent = options.silent, force = options.force;
           if (field.schema) {
-            var tempValue, result;
+            var result;
 
             if (field.value === null || field.value === "") {
               field.value = undefined;
             }
 
             if ((field.dirty || force) && (field.required || field.value !== undefined)) {
-              result = tv4.validateMultiple(tempValue || field.value, field.schema);
+              result = tv4.validateMultiple(field.value, field.schema);
               field.valid = result.valid;
             }
 

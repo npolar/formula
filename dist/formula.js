@@ -484,12 +484,13 @@ angular.module('formula')
           fieldDefinition.fields = this.fieldDefinition.fields || null;
           var schema = this.schema.items;
           newField = new Field(schema, id, parents, fieldDefinition);
-          newField.index = this.fields.length;
           // Only a prototype for array values, don't need watcher
           if (typeof newField.destroyWatcher === 'function') {
             newField.destroyWatcher();
           }
           if (newField.type) {
+            newField.setRequired(this.schema.required);
+            newField.index = this.fields.length;
             this.fields.push(newField);
           }
 
@@ -511,9 +512,9 @@ angular.module('formula')
               });
             }
             if (!skipField(fieldDefinition)) {
-              schema.required = schema.required || this.schema.required;
               var newField = new Field(schema, key, parents, fieldDefinition);
               if (newField.type) {
+                newField.setRequired(this.schema.required);
                 this.fields.push(newField);
               }
             }
@@ -774,6 +775,10 @@ angular.module('formula')
           return this.values.reduce(countHidden, 0);
         }
         return 0;
+      },
+
+      setRequired: function(required) {
+        this.required = (required === true) || (required instanceof Array && required.indexOf(this.id) !== -1);
       }
     };
 
@@ -811,9 +816,9 @@ angular.module('formula')
 
         Object.keys(schema.properties).forEach(function(key) {
           var val = schema.properties[key];
-          val.required = schema.required;
           var newField = new Field(val, key);
           if (newField.type) {
+            newField.setRequired(schema.required);
             newField.valueFromModel(data);
             fieldsets[0].fields.push(newField);
           }
@@ -844,9 +849,9 @@ angular.module('formula')
               key = f.id;
             }
             var fieldSchema = schema.properties[key] || { id: key };
-            fieldSchema.required = fieldSchema.required || schema.required;
             var newField = new Field(fieldSchema, key, null, f);
             if (newField.type) {
+              newField.setRequired(schema.required);
               newField.valueFromModel(data);
               fieldset.fields.push(newField);
             }
@@ -914,7 +919,7 @@ angular.module('formula')
       },
 
       updateValues: function(data) {
-        model.data = data;
+        model.data = angular.copy(data);
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
             field.valueFromModel(data);
@@ -924,7 +929,7 @@ angular.module('formula')
       },
 
       updateCustomTemplates: function () {
-        this.fields.forEach(function (field) {
+        this.fields().forEach(function (field) {
           formulaCustomTemplateService.initField(field);
         });
       },
@@ -2115,12 +2120,6 @@ angular.module('formula')
         field.fieldDefinition = fieldDefinition || {};
         copyFrom(field, schema);
         copyFrom(field, fieldDefinition);
-        if (field.schema.required && field.schema.required.indexOf(field.id) !== -1) {
-          field.required = true;
-        } else {
-          field.required = false;
-          field.schema.required = undefined;
-        }
 
         var invalidCharacters = ['.', '/', '#'];
         invalidCharacters.forEach(function(char) {
@@ -2464,14 +2463,14 @@ angular.module('formula')
         var validate = function (field, options) {
           var silent = options.silent, force = options.force;
           if (field.schema) {
-            var tempValue, result;
+            var result;
 
             if (field.value === null || field.value === "") {
               field.value = undefined;
             }
 
             if ((field.dirty || force) && (field.required || field.value !== undefined)) {
-              result = tv4.validateMultiple(tempValue || field.value, field.schema);
+              result = tv4.validateMultiple(field.value, field.schema);
               field.valid = result.valid;
             }
 

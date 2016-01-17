@@ -90,12 +90,13 @@ angular.module('formula')
           fieldDefinition.fields = this.fieldDefinition.fields || null;
           var schema = this.schema.items;
           newField = new Field(schema, id, parents, fieldDefinition);
-          newField.index = this.fields.length;
           // Only a prototype for array values, don't need watcher
           if (typeof newField.destroyWatcher === 'function') {
             newField.destroyWatcher();
           }
           if (newField.type) {
+            newField.setRequired(this.schema.required);
+            newField.index = this.fields.length;
             this.fields.push(newField);
           }
 
@@ -117,9 +118,9 @@ angular.module('formula')
               });
             }
             if (!skipField(fieldDefinition)) {
-              schema.required = schema.required || this.schema.required;
               var newField = new Field(schema, key, parents, fieldDefinition);
               if (newField.type) {
+                newField.setRequired(this.schema.required);
                 this.fields.push(newField);
               }
             }
@@ -380,6 +381,10 @@ angular.module('formula')
           return this.values.reduce(countHidden, 0);
         }
         return 0;
+      },
+
+      setRequired: function(required) {
+        this.required = (required === true) || (required instanceof Array && required.indexOf(this.id) !== -1);
       }
     };
 

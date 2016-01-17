@@ -28,9 +28,9 @@ angular.module('formula')
 
         Object.keys(schema.properties).forEach(function(key) {
           var val = schema.properties[key];
-          val.required = schema.required;
           var newField = new Field(val, key);
           if (newField.type) {
+            newField.setRequired(schema.required);
             newField.valueFromModel(data);
             fieldsets[0].fields.push(newField);
           }
@@ -61,9 +61,9 @@ angular.module('formula')
               key = f.id;
             }
             var fieldSchema = schema.properties[key] || { id: key };
-            fieldSchema.required = fieldSchema.required || schema.required;
             var newField = new Field(fieldSchema, key, null, f);
             if (newField.type) {
+              newField.setRequired(schema.required);
               newField.valueFromModel(data);
               fieldset.fields.push(newField);
             }
@@ -131,7 +131,7 @@ angular.module('formula')
       },
 
       updateValues: function(data) {
-        model.data = data;
+        model.data = angular.copy(data);
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
             field.valueFromModel(data);
@@ -141,7 +141,7 @@ angular.module('formula')
       },
 
       updateCustomTemplates: function () {
-        this.fields.forEach(function (field) {
+        this.fields().forEach(function (field) {
           formulaCustomTemplateService.initField(field);
         });
       },
