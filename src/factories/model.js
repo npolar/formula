@@ -1,5 +1,7 @@
-"use strict";
 /* globals angular */
+
+(function() {
+"use strict";
 
 /**
  * formula.js
@@ -27,3 +29,5 @@ angular.module('formula')
 
     return model;
   }]);
+
+})();

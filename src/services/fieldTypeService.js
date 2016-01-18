@@ -1,5 +1,7 @@
-"use strict";
 /* globals angular,tv4 */
+
+(function() {
+"use strict";
 
 /**
  * formula.js
@@ -175,3 +177,5 @@ angular.module('formula')
         setFieldType: setFieldType
       };
     }]);
+
+})();

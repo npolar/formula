@@ -1,5 +1,7 @@
-"use strict";
 /* globals angular */
+
+(function() {
+"use strict";
 
 /**
  * formula.js
@@ -11,8 +13,8 @@ angular.module('formula')
   .service('formulaAutoCompleteService', ['$http', '$q',
     function($http, $q) {
 
-      const URI_REGEX = /^(https?|\/\/)/;
-      const ERR = "Invalid autocomplete source ";
+      var URI_REGEX = /^(https?|\/\/)/;
+      var ERR = "Invalid autocomplete source ";
 
       var sources = {};
       var selects = {};
@@ -100,3 +102,5 @@ angular.module('formula')
       };
     }
   ]);
+
+})();
