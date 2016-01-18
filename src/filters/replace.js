@@ -18,10 +18,11 @@ angular.module('formula')
 
 	.filter('formulaReplace', [function() {
 		return function(input, params) {
-			var result = input, match = input.match(/\{[^\}]*\}/g);
+			var result = input;
 
-			angular.forEach(match, function(v, k) {
-				result = result.replace(v, params[v.substr(1, v.length - 2)]);
+			(input.match(/\{[^\}]*\}/g) || [])
+			.forEach(function(val) {
+				result = result.replace(val, params[val.substr(1, val.length - 2)]);
 			});
 
 			return result;
