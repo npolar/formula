@@ -1,5 +1,7 @@
+/* globals angular,window,console */
+
+(function() {
 "use strict";
-/* globals angular */
 
 /**
  * formula.js
@@ -331,3 +333,5 @@ angular.module('formula')
     return Form;
   }
 ]);
+
+})();

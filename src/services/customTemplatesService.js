@@ -1,5 +1,7 @@
-"use strict";
 /* globals angular */
+
+(function() {
+"use strict";
 
 /**
  * formula.js
@@ -40,14 +42,10 @@ angular.module('formula')
         if (template) {
           if (template.hidden) {
             deferred.resolve(false);
-            // intentional != (allow empty string)
-            // jshint -W116
-          } else if (template.template != null) {
-            if (template.template === "") {
-              deferred.resolve(false);
-            } else {
-              deferred.resolve(template.template);
-            }
+          } else if (template.template) {
+            deferred.resolve(template.template);
+          } else if (template.template === "") {
+            deferred.resolve(false);
           } else if (template.templateUrl) {
             doTemplateRequest(template.templateUrl).then(function (template) {
               deferred.resolve(template);
@@ -91,3 +89,5 @@ angular.module('formula')
       };
     }
   ]);
+
+})();

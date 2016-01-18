@@ -1,5 +1,7 @@
-"use strict";
 /* globals angular */
+
+(function() {
+"use strict";
 
 /**
  * formula.js
@@ -126,6 +128,8 @@ angular.module('formula')
           }
 
           // Set intial value for select fields with no default
+          // jshint -W116
+          // Intentional loose compare (null || undefined)
           if (field.typeOf('select') && !field.multiple && (field.value == null)) {
             field.value = field.enum[0];
           }
@@ -145,3 +149,5 @@ angular.module('formula')
         attrsSet: attrsSet
       };
     }]);
+
+})();

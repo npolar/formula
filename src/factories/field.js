@@ -1,5 +1,7 @@
-'use strict';
 /* globals angular */
+
+(function() {
+"use strict";
 
 /**
  * formula.js
@@ -287,6 +289,8 @@ angular.module('formula')
         // jshint -W116
         var genFieldPath = function (field) {
           var path = '/';
+
+          // (null || undefined)
           if (field.index != null) {
             path += field.index;
           } else {
@@ -344,7 +348,7 @@ angular.module('formula')
         return uid;
       },
       isEmpty: function() {
-        // intetional ==
+        // intentional == (null || undefined)
         // jshint -W116
         return (this.value == null || this.value.length === 0);
       },
@@ -391,3 +395,5 @@ angular.module('formula')
     return Field;
   }
 ]);
+
+})();

@@ -1,8 +1,7 @@
-"use strict";
 /* globals angular */
 
 (function() {
-
+"use strict";
 /**
  * formula.js
  * Generic JSON Schema form builder
