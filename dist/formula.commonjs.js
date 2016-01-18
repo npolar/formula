@@ -1017,10 +1017,6 @@ angular.module('formula')
           if (fieldTranslation) {
             field.title = fieldTranslation.title || field.title;
 
-            if (field.title === undefined) {
-              field.title = field.id;
-            }
-
             field.description = fieldTranslation.description || field.description;
 
             if (field.typeOf('select')) {
@@ -1034,12 +1030,6 @@ angular.module('formula')
               });
             }
           } else {
-            field.title = field.title;
-
-            if (field.title === undefined) {
-              field.title = field.id;
-            }
-
             if (field.typeOf('select')) {
               field.values = [];
 
@@ -2037,6 +2027,7 @@ angular.module('formula')
               cond = cond.replace('=', '==').replace('===', '==');
 
               var evaluate = $rootScope.$eval(cond, values);
+
               if (!values || evaluate === undefined || evaluate === false) {
                 pass = false;
               }

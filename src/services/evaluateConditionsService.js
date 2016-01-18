@@ -52,6 +52,7 @@ angular.module('formula')
               cond = cond.replace('=', '==').replace('===', '==');
 
               var evaluate = $rootScope.$eval(cond, values);
+
               if (!values || evaluate === undefined || evaluate === false) {
                 pass = false;
               }
