@@ -878,13 +878,13 @@ angular.module('formula')
       this.schema = schema;
       this.title = null;
       this.valid = false;
-      data = model.data = data = data || {};
+      model.data = angular.copy(data || {});
 
       if (formDefinition) {
         this.title = formDefinition.title;
-        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, data);
+        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, model.data);
       } else {
-        this.fieldsets = fieldsetFromSchema(schema, data);
+        this.fieldsets = fieldsetFromSchema(schema, model.data);
       }
 
       this.onsave = function(model) {
