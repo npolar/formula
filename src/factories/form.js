@@ -20,7 +20,7 @@ angular.module('formula')
  */
 .factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
   'formulaEvaluateConditionsService', 'formulaCustomTemplateService',
-  function($rootScope, jsonLoader, model, Field, i18n, formulaEvaluateConditionsService, formulaCustomTemplateService) {
+  function($rootScope, jsonLoader, Model, Field, i18n, formulaEvaluateConditionsService, formulaCustomTemplateService) {
     function fieldsetFromSchema(schema, data) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
@@ -92,13 +92,13 @@ angular.module('formula')
       this.schema = schema;
       this.title = null;
       this.valid = false;
-      model.data = angular.copy(data || {});
+      this.model = new Model(data);
 
       if (formDefinition) {
         this.title = formDefinition.title;
-        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, model.data);
+        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, this.model.data);
       } else {
-        this.fieldsets = fieldsetFromSchema(schema, model.data);
+        this.fieldsets = fieldsetFromSchema(schema, this.model.data);
       }
 
       this.onsave = function(model) {
@@ -133,7 +133,7 @@ angular.module('formula')
       },
 
       updateValues: function(data) {
-        model.data = angular.copy(data);
+        this.model.data = angular.copy(data);
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
             field.valueFromModel(data);
@@ -200,7 +200,7 @@ angular.module('formula')
         }
 
         if (typeof this.onsave === 'function') {
-          this.onsave(model.data);
+          this.onsave(this.model.data);
         }
       },
 
@@ -314,12 +314,12 @@ angular.module('formula')
             fieldValidate(field);
 
             if (field.valid) {
-              model.data[field.id] = field.value;
+              this.model.data[field.id] = field.value;
             } else {
-              delete model.data[field.id];
+              delete this.model.data[field.id];
             }
-          });
-        });
+          }, this);
+        }, this);
         formulaEvaluateConditionsService.evaluateConditions(this);
         this.errors = errors;
 

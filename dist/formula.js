@@ -405,6 +405,85 @@ angular.module('formula')
  * formula.js
  * Generic JSON Schema form builder
  *
+ * Norsk Polarinstutt 2015, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter inlineValues
+	 *
+	 * Filter used to inline an array of values.
+	 */
+
+	.filter('formulaInlineValues', [function() {
+		return function(input, params) {
+			var result = [];
+
+			angular.forEach(input, function(field) {
+				if(field.value instanceof Array) {
+					result.push('Array[' + field.value.length + ']');
+				} else switch(typeof field.value) {
+					case 'string':
+					case 'number':
+					case 'boolean':
+						result.push(field.value);
+						break;
+
+					default:
+				}
+			});
+
+			return result.join(', ');
+		};
+	}]);
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter replace
+	 *
+	 * Filter used to replace placeholders in a string.
+	 */
+
+	.filter('formulaReplace', [function() {
+		return function(input, params) {
+			var result = input;
+
+			(input.match(/\{[^\}]*\}/g) || [])
+			.forEach(function(val) {
+				result = result.replace(val, params[val.substr(1, val.length - 2)]);
+			});
+
+			return result;
+		};
+	}]);
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
  * Norsk Polarinstutt 2014, http://npolar.no/
  *
  */
@@ -818,7 +897,7 @@ angular.module('formula')
  */
 .factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
   'formulaEvaluateConditionsService', 'formulaCustomTemplateService',
-  function($rootScope, jsonLoader, model, Field, i18n, formulaEvaluateConditionsService, formulaCustomTemplateService) {
+  function($rootScope, jsonLoader, Model, Field, i18n, formulaEvaluateConditionsService, formulaCustomTemplateService) {
     function fieldsetFromSchema(schema, data) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
@@ -890,13 +969,13 @@ angular.module('formula')
       this.schema = schema;
       this.title = null;
       this.valid = false;
-      model.data = angular.copy(data || {});
+      this.model = new Model(data);
 
       if (formDefinition) {
         this.title = formDefinition.title;
-        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, model.data);
+        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, this.model.data);
       } else {
-        this.fieldsets = fieldsetFromSchema(schema, model.data);
+        this.fieldsets = fieldsetFromSchema(schema, this.model.data);
       }
 
       this.onsave = function(model) {
@@ -931,7 +1010,7 @@ angular.module('formula')
       },
 
       updateValues: function(data) {
-        model.data = angular.copy(data);
+        this.model.data = angular.copy(data);
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
             field.valueFromModel(data);
@@ -998,7 +1077,7 @@ angular.module('formula')
         }
 
         if (typeof this.onsave === 'function') {
-          this.onsave(model.data);
+          this.onsave(this.model.data);
         }
       },
 
@@ -1112,12 +1191,12 @@ angular.module('formula')
             fieldValidate(field);
 
             if (field.valid) {
-              model.data[field.id] = field.value;
+              this.model.data[field.id] = field.value;
             } else {
-              delete model.data[field.id];
+              delete this.model.data[field.id];
             }
-          });
-        });
+          }, this);
+        }, this);
         formulaEvaluateConditionsService.evaluateConditions(this);
         this.errors = errors;
 
@@ -1489,17 +1568,16 @@ angular.module('formula')
  *
  * Service used for data preservation.
  *
- * @returns A singleton for preserving data
+ * @returns A constructor for model data preservation.
  */
 
-.service('formulaModel',
+.factory('formulaModel',
   [function() {
-    var model = {
-      data: {}
+    function Model(data) {
+      this.data = ("object" === typeof data ? angular.copy(data) : {});
     };
 
-
-    return model;
+    return Model;
   }]);
 
 })();
@@ -1740,85 +1818,6 @@ angular.module('formula')
 		};
 
 		return Schema;
-	}]);
-
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2015, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter inlineValues
-	 *
-	 * Filter used to inline an array of values.
-	 */
-
-	.filter('formulaInlineValues', [function() {
-		return function(input, params) {
-			var result = [];
-
-			angular.forEach(input, function(field) {
-				if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-
-					default:
-				}
-			});
-
-			return result.join(', ');
-		};
-	}]);
-
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter replace
-	 *
-	 * Filter used to replace placeholders in a string.
-	 */
-
-	.filter('formulaReplace', [function() {
-		return function(input, params) {
-			var result = input;
-
-			(input.match(/\{[^\}]*\}/g) || [])
-			.forEach(function(val) {
-				result = result.replace(val, params[val.substr(1, val.length - 2)]);
-			});
-
-			return result;
-		};
 	}]);
 
 })();

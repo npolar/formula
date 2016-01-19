@@ -17,17 +17,16 @@ angular.module('formula')
  *
  * Service used for data preservation.
  *
- * @returns A singleton for preserving data
+ * @returns A constructor for model data preservation.
  */
 
-.service('formulaModel',
+.factory('formulaModel',
   [function() {
-    var model = {
-      data: {}
+    function Model(data) {
+      this.data = ("object" === typeof data ? angular.copy(data) : {});
     };
 
-
-    return model;
+    return Model;
   }]);
 
 })();
