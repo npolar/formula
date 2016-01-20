@@ -7,7 +7,6 @@ angular.module('demo', ['formula'])
       var updateModel = function() {
         $scope.formulaData.model = {
           _id: 'foobarID',
-          string: 'timeoutfoobar',
           boolean: true,
           array_object: Array(10).fill({
             string_default: 'foo',
@@ -36,9 +35,16 @@ angular.module('demo', ['formula'])
             }]
           }]
         };
-        console.log("timeout");
+        console.log("timeout 1");
 
         $scope.formulaData.language = "json/no.json";
+      };
+
+      var updateModel2 = function() {
+        $scope.formulaData.model = {
+          boolean: false,
+        };
+        console.log("timeout 2");
       };
 
       var getResource = function() {
@@ -87,7 +93,8 @@ angular.module('demo', ['formula'])
       formulaAutoCompleteService.bindSourceCallback("#/autocomplete_fn", fn);
       formulaAutoCompleteService.bindSourceCallback("#/autocomplete_url", emailCallback);
 
-      $timeout(updateModel, 1);
+      $timeout(updateModel, 1000);
+      $timeout(updateModel2, 2000);
 
 
       $scope.remove = function () {

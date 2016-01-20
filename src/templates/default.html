@@ -5,12 +5,12 @@
   </header>
 
   <nav ng-if="::form.fieldsets.length > 1">
-    <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in ::form.fieldsets track by fieldset.id">{{ fieldset.title }}</a>
+    <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in form.fieldsets track by fieldset.id">{{ fieldset.title }}</a>
   </nav>
 
-  <fieldset ng-if="fieldset.active" ng-repeat="fieldset in ::form.fieldsets track by fieldset.id">
+  <fieldset ng-if="fieldset.active" ng-repeat="fieldset in form.fieldsets track by fieldset.id">
 
-    <div formula:field-definition ng-repeat="field in ::fieldset.fields track by field.id" ng-if="field.visible">
+    <div formula:field-definition ng-repeat="field in fieldset.fields track by field.id" ng-if="field.visible">
 
       <div ng-class="{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }" ng-if="::field.typeOf('input')" title="{{ field.description }}">
         <label for="{{ ::field.uid }}">{{ field.title }}</label>

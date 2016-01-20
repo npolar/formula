@@ -90,6 +90,7 @@ angular.module('formula')
       this.errors = null;
       this.i18n = i18n(null);
       this.schema = schema;
+      this.formDefinition = formDefinition;
       this.title = null;
       this.valid = false;
       this.model = new Model(data);
@@ -130,16 +131,6 @@ angular.module('formula')
           });
         });
         return fields;
-      },
-
-      updateValues: function(data) {
-        this.model.data = angular.copy(data);
-        this.fieldsets.forEach(function(fieldset) {
-          fieldset.fields.forEach(function(field) {
-            field.valueFromModel(data);
-          });
-        });
-        this.validate(false, true);
       },
 
       updateCustomTemplates: function () {
