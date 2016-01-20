@@ -32,15 +32,19 @@ The following layout templates are bundled with Formula:
 ## Custom Templates
 Custom templates is configured like this:
 ```
-templates: [{
-  match(field) {
-      return field.id === "ref_object";
-    },
-    templateUrl: 'customObject.html',
-    //template: '<p>{{field.title}}</p>',
-    //template: '',
-    //hidden: true
-}]
+templates: [
+  {
+    match: function(field) {
+        return field.id === "ref_object";
+      },
+      templateUrl: 'customObject.html',
+      //template: '<p>{{field.title}}</p>',
+      //template: '',
+      //hidden: true
+  }, {
+    ...
+  }
+]
 ```
 
 
