@@ -21,7 +21,15 @@ Bootstrapping is done using the **formula** directive, which takes one *object* 
 * **template** - String representing the form template layout name used for form-building
 * **templates** - Object to configure custom field templates
 
-### Custom Templates
+
+## Templates
+The following layout templates are bundled with Formula:
+
+* **default** used together with the [formula](dist/formula.css) ([minified](dist/formula.min.css)) stylesheet
+* **bootstrap3** used together with the [Bootstrap (v3)](http://getbootstrap.com/) stylesheet
+
+
+## Custom Templates
 Custom templates is configured like this:
 ```
 templates: [{
@@ -34,12 +42,6 @@ templates: [{
     //hidden: true
 }]
 ```
-
-## Templates
-The following layout templates are bundled with Formula:
-
-* **default** used together with the [formula](dist/formula.css) ([minified](dist/formula.min.css)) stylesheet
-* **bootstrap3** used together with the [Bootstrap (v3)](http://getbootstrap.com/) stylesheet
 
 
 ## Supported types
@@ -76,7 +78,7 @@ The following layout templates are bundled with Formula:
 * **uri** for RFC 3986 uniform resource identifier
 
 
-### Autocomplete
+## Autocomplete
 Autocomplete is available for string fields and is configured in the form definition in any of these ways:
 
     {
