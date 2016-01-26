@@ -15,6 +15,11 @@
       <div ng-class="{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }" ng-if="::field.typeOf('input')" title="{{ field.description }}">
         <label for="{{ ::field.uid }}">{{ field.title }}</label>
         <input formula:field="field"/>
+
+        <datalist ng-if="::field.typeOf('autocomplete')" id="{{::field.id}}_list">
+          <option ng-repeat="option in field.source" value="{{option}}"></option>
+        </datalist>
+
         <span>{{ field.error.message || field.description }}</span>
       </div>
 

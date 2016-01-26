@@ -41,6 +41,11 @@
               elem.attr('type', type.sub);
 
               switch (type.sub) {
+                case 'autocomplete':
+                  var id = field.id + '_list';
+                  elem.attr('list', id);
+                  elem.attr('ng-change', 'field.querySearch(field.value)');
+                  break;
                 case 'number':
                 case 'range':
                   if (field.step !== null) {
@@ -55,23 +60,6 @@
                   elem.attr('type', 'text');
                   break;
               }
-          }
-
-          if (type.sub === 'autocomplete') {
-            var list = angular.element('<datalist>');
-            var id = field.id + '_list';
-            elem = angular.element('<input>');
-            elem.attr('list', id);
-            list.attr('id', id);
-            field.querySearch('').then(function(matches) {
-              matches.forEach(function(item) {
-                var opt = angular.element('<option>');
-                opt.attr('value', item);
-                list.append(opt);
-              });
-            });
-            list.on('change', field.onSelect);
-            elem.append(list);
           }
 
           return elem;

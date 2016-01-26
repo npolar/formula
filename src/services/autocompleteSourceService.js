@@ -84,14 +84,18 @@ angular.module('formula')
       };
 
       var initField = function (field) {
-        field.source = [];
+        getSource(field, field.autocomplete, '').then(function (source) {
+          field.source = source;
+        });
         field.onSelect = function (item) {
           if (selects[field.path]) {
             selects[field.path].call(field, item);
           }
         };
         field.querySearch = function (q) {
-          return getSource(field, field.autocomplete, q);
+          return getSource(field, field.autocomplete, q).then(function (source) {
+            return (field.source = source);
+          });
         };
       };
 
