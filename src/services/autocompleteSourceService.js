@@ -73,6 +73,8 @@ angular.module('formula')
           // source is a registred function
           if (isFn(field.path)) {
             deferred.resolve(filterSource(sources[field.path].call(field, source), q));
+          } else if (isFn(field.id)) {
+            deferred.resolve(filterSource(sources[field.id].call(field, source), q));
           } else {
             deferred.resolve(filterSource(source, q));
           }

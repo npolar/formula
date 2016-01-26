@@ -17,11 +17,11 @@
   },
   "homepage": "https://github.com/npolar/formula#readme",
   "dependencies": {
-    "angular": "^1.4.8",
+    "angular": "^1.4.9",
     "tv4": "^1.1.12"
   },
   "devDependencies": {
-    "angular-resource": "^1.4.8",
+    "angular": "^1.4.9",
     "gulp": "^3.9.0",
     "gulp-angular-templatecache": "^1.7.0",
     "gulp-concat": "^2.6.0",

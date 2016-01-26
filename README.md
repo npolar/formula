@@ -94,7 +94,7 @@ Autocomplete is available for string fields and is configured in the form defini
 
 Callback functions are defined via ```formulaAutoCompleteService``` like so:
 
-    formulaAutoCompleteService.bindSourceCallback(field.path, function (response) {
+    formulaAutoCompleteService.bindSourceCallback(field.path || field.id, function (response) {
       // return a array here
     });
 
