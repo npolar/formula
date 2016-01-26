@@ -21,26 +21,30 @@ Bootstrapping is done using the **formula** directive, which takes one *object* 
 * **template** - String representing the form template layout name used for form-building
 * **templates** - Object to configure custom field templates
 
-### Custom Templates
+
+## Templates
+The following layout templates are bundled with Formula:
+
+* **default** used together with the [formula](dist/formula.css) ([minified](dist/formula.min.css)) stylesheet
+
+## Custom Templates
 Custom templates is configured like this:
-```
-templates: [{
-  match(field) {
+
+```JavaScript
+templates: [
+  {
+    match: function(field) {
       return field.id === "ref_object";
     },
     templateUrl: 'customObject.html',
     //template: '<p>{{field.title}}</p>',
     //template: '',
     //hidden: true
-}]
+  }, {
+    ...
+  }
+]
 ```
-
-## Templates
-The following layout templates are bundled with Formula:
-
-* **default** used together with the [formula](dist/formula.css) ([minified](dist/formula.min.css)) stylesheet
-* **bootstrap3** used together with the [Bootstrap (v3)](http://getbootstrap.com/) stylesheet
-
 
 ## Supported types
 * **any** rendered as:
@@ -94,7 +98,7 @@ Autocomplete is available for string fields and is configured in the form defini
 
 Callback functions are defined via ```formulaAutoCompleteService``` like so:
 
-    formulaAutoCompleteService.bindSourceCallback(field.path || field.id, function (response) {
+    formulaAutoCompleteService.bindSourceCallback(field.path, function (response) {
       // return a array here
     });
 
