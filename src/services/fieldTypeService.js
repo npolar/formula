@@ -47,10 +47,13 @@ angular.module('formula')
        */
       var setFieldType = function(field) {
         reduceFieldTypes(field);
-        if (field.autocomplete) {
-          field.type = 'input:autocomplete';
-        } else if (field.type === 'select' || field.enum) {
+        if (field.type === 'select' || field.enum) {
           field.type = 'input:select';
+          field.values = [];
+          field.enum.forEach(function (val) {
+            field.values.push({id: val,
+            label: val});
+          });
         } else {
           if (field.format) {
             var formatNoDash = field.format.replace('-', '');

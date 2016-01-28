@@ -18,6 +18,7 @@ Bootstrapping is done using the **formula** directive, which takes one *object* 
 * **form** - URL to a JSON Schema used to customize the form layout
 * **language** - URL to a JSON translation file used for form translations
 * **model** - Object used to store form data
+* **keepFailing** - Boolean, to keep properties with failing conditions in model or not (default: true)
 * **template** - String representing the form template layout name used for form-building
 * **templates** - Object to configure custom field templates
 
@@ -36,6 +37,8 @@ templates: [
     match: function(field) {
       return field.id === "ref_object";
     },
+    // match: 'field.id'
+    // match: '#/field.path'
     templateUrl: 'customObject.html',
     //template: '<p>{{field.title}}</p>',
     //template: '',
@@ -68,7 +71,6 @@ templates: [
  * **textarea** if the *type* property is set to *textarea* (in a separate form definition)
  * **number input** if the *format* property is set to *utc-millisec*
  * **select** if the *enum* property is set
- * **autocomplete** if the *autocomplete* property in set for *string* fields (in a separate form definition)
  * **text input** otherwise
 
 
@@ -78,28 +80,3 @@ templates: [
 * **date-time** for ISO 8601 date-time combinations
 * **time** for ISO 8601 time
 * **uri** for RFC 3986 uniform resource identifier
-
-
-### Autocomplete
-Autocomplete is available for string fields and is configured in the form definition in any of these ways:
-
-    {
-      "id": "autocomplete_array",
-      "autocomplete": ["Dalene", "Allan"] <- static array
-    },
-    {
-      "id": "autocomplete_url",
-      "autocomplete": "//api.npolar.no/" <- GET returns array
-    },
-    {
-      "id": "autocomplete_fn",
-      "autocomplete": true <- function returns array
-    }
-
-Callback functions are defined via ```formulaAutoCompleteService``` like so:
-
-    formulaAutoCompleteService.bindSourceCallback(field.path, function (response) {
-      // return a array here
-    });
-
-If the source is an url new results will be fetched with ```?q=value``` for each input change.

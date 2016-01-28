@@ -107,30 +107,48 @@ angular.module('formula')
       };
 
       var self = this;
-      $rootScope.$on('revalidate', function() {
+      this.destroyWatcher = $rootScope.$on('revalidate', function() {
         self.validate();
       });
       this.validate(true, true);
     }
 
+    var collectFields = function (field) {
+      var fields = [];
+
+      var recurseField = function (field) {
+        fields.push.apply(fields, collectFields(field));
+      };
+
+      if (field.typeOf('array')) {
+        field.values.forEach(recurseField);
+      } else if (field.typeOf('object')) {
+        field.fields.forEach(recurseField);
+      }
+      fields.push(field);
+
+      return fields;
+    };
+
     Form.prototype = {
 
       fields: function () {
         var fields = [];
-        var push = function (field) {
-          fields.push(field);
-        };
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
-            if (field.typeOf('array')) {
-              field.values.forEach(push);
-            } else if (field.typeOf('object')) {
-              field.fields.forEach(push);
-            }
-            push(field);
+            fields.push.apply(fields, collectFields(field));
           });
         });
         return fields;
+      },
+
+      destroy: function () {
+        this.fields().forEach(function (field) {
+          if (typeof field.destroyWatcher === 'function') {
+            field.destroyWatcher();
+          }
+        });
+        this.destroyWatcher();
       },
 
       updateCustomTemplates: function () {
@@ -207,7 +225,7 @@ angular.module('formula')
         function fieldTranslate(field, parent) {
           var fieldTranslation = (parent && parent.fields ? (parent.fields[field.id] || null) : null);
 
-          if (field.type === 'array:fieldset' || field.type === 'object') {
+          if (field.typeOf('array') || field.typeOf('object')) {
             angular.forEach(field.fields, function(field) {
               fieldTranslate(field, fieldTranslation);
             });
@@ -311,6 +329,7 @@ angular.module('formula')
             }
           }, this);
         }, this);
+
         formulaEvaluateConditionsService.evaluateConditions(this);
         this.errors = errors;
 

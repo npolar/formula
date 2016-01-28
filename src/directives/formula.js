@@ -81,6 +81,9 @@ angular.module('formula')
 				}
 
 				var createForm = function (schema, data, formDefinition) {
+					if ($scope.form) {
+						$scope.form.destroy();
+					}
 					$scope.form = ctrl.form = $scope.data.formula = new Form(schema, data, formDefinition);
 					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
 					$scope.form.translate($scope.language.code);
@@ -125,13 +128,7 @@ angular.module('formula')
 
 				// Don't leave memory leaks
 				$scope.$on('$destroy', function () {
-
-					$scope.form.fields().forEach(function (field) {
-						if (typeof field.destroyWatcher === 'function') {
-							field.destroyWatcher();
-						}
-					});
-					$rootScope.$on('revalidate', function () {});
+					$scope.form.destroy();
 				});
 
 				this.data = $scope.data; // Others need this

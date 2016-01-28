@@ -41,11 +41,6 @@
               elem.attr('type', type.sub);
 
               switch (type.sub) {
-                case 'autocomplete':
-                  var id = field.id + '_list';
-                  elem.attr('list', id);
-                  elem.attr('ng-change', 'field.querySearch(field.value)');
-                  break;
                 case 'number':
                 case 'range':
                   if (field.step !== null) {

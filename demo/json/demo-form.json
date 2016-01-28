@@ -60,23 +60,6 @@
 			"fields": [
 				"array_hierarchy"
 			]
-		},
-		{
-	    "title": "autocomplete",
-	    "fields": [
-	      {
-	        "id": "autocomplete_array",
-	        "autocomplete": ["Dalene", "Allan", "Lecia", "Leta", "Matthew", "Marlen", "Collette", "Alfredo", "Francina", "Dorene", "Ali", "Anette", "Courtney", "Arlena", "Spring", "Suzanna", "Roseanne", "Evita", "Gaynell", "Ellena", "Lucinda", "Delisa", "Lamont", "Eloy", "Luanna", "Cyndi", "Lynn", "Clare", "Stacey", "Tameka", "Cheryll", "Jong", "Hoyt", "Marhta", "Roselia", "Gala", "Chun", "Weston", "Zola", "Luana", "Arnette", "Delorse", "Libbie", "Nenita", "Lorina", "Carolyn", "Burma", "Russell", "Beatris", "Macie"]
-	      },
-	      {
-	        "id": "autocomplete_url",
-	        "autocomplete": "http://api.npolar.no/publication/?fields=people.email&format=json&variant=array&limit=5"
-	      },
-	      {
-	        "id": "autocomplete_fn",
-	        "autocomplete": true
-	      }
-	    ]
-	    }
+		}
 	]
 }

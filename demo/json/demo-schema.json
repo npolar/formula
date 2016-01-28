@@ -160,19 +160,7 @@
 
 				}
 			}
-		},
-    "autocomplete_array": {
-      "type": "string"
-    },
-    "autocomplete_url": {
-      "type": "string"
-    },
-    "autocomplete_fn": {
-      "type": "string"
-    },
-    "autocomplete_obj": {
-      "type": "string"
-    }
+		}
 	},
 	"required": [ "string_required" ]
 }
