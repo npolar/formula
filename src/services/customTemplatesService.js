@@ -15,15 +15,18 @@ angular.module('formula')
 
       var templates;
 
-      var getMatchingTemplate = function(templates, field) {
-        if (templates) {
-          for (var i in templates) {
-            if (templates[i].match && templates[i].match.call({}, field)) {
-              return templates[i];
+      var getMatchingConfig = function(templates, field) {
+        var config;
+        templates.forEach(function (tmpl) {
+          if (tmpl.match) {
+            if ((typeof tmpl.match === 'function') && tmpl.match.call({}, field)) {
+              config = tmpl;
+            } else if ((typeof tmpl.match === 'string') && (field.path === tmpl.match || field.id === tmpl.match)) {
+              config = tmpl;
             }
           }
-        }
-        return null;
+        });
+        return config;
       };
 
       var doTemplateRequest = function (templateUrl) {
@@ -37,17 +40,17 @@ angular.module('formula')
       };
 
 
-      var getCustomTemplate = function(template, field) {
+      var getCustomTemplate = function(config, field) {
         var deferred = $q.defer();
-        if (template) {
-          if (template.hidden) {
+        if (config) {
+          if (config.hidden) {
             deferred.resolve(false);
-          } else if (template.template) {
-            deferred.resolve(template.template);
-          } else if (template.template === "") {
+          } else if (config.template) {
+            deferred.resolve(config.template);
+          } else if (config.template === "") {
             deferred.resolve(false);
-          } else if (template.templateUrl) {
-            doTemplateRequest(template.templateUrl).then(function (template) {
+          } else if (config.templateUrl) {
+            doTemplateRequest(config.templateUrl).then(function (template) {
               deferred.resolve(template);
             }, function () {
               deferred.reject();
@@ -66,11 +69,11 @@ angular.module('formula')
         if (!templates) {
           return;
         }
-        var template = getMatchingTemplate(templates, field);
-        if (!template) {
+        var config = getMatchingConfig(templates, field);
+        if (!config) {
           return;
         }
-        getCustomTemplate(template, field).then(function (template) {
+        getCustomTemplate(config, field).then(function (template) {
           if (template) {
             field.customTemplate = template;
           } else {
