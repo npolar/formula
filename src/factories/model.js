@@ -24,7 +24,7 @@ angular.module('formula')
   [function() {
     function Model(data) {
       this.data = ("object" === typeof data ? angular.copy(data) : {});
-    };
+    }
 
     return Model;
   }]);
