@@ -472,3 +472,21 @@
 .formula .formulaCustomObject {
 	font-size: 14px;
 }
+
+/* Hide array objects frames and titles */
+.formulaArray .formulaObject {
+	border: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.formulaArray .formulaObject > legend {
+	display: none;
+}
+
+/* Hide object array frames */
+.formulaObject:not(.formulaCustomObject) .formulaArray {
+	border: 0;
+	margin: 0;
+	padding: 0;
+}

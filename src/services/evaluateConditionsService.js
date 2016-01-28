@@ -13,27 +13,21 @@
 angular.module('formula')
   .service('formulaEvaluateConditionsService', ['$rootScope',
     function($rootScope) {
-      var values = {};
+      var keepFailing = true;
+
       var evaluateConditions = function (form) {
+        var model = {};
         form.fieldsets.forEach(function (fieldset) {
           fieldset.fields.forEach(function (field) {
-            values[field.id] = field.value;
-            evaluateField(field);
+            model[field.id] = field.value;
           });
+        });
+        form.fields().forEach(function (field) {
+          evaluateField(field, model);
         });
       };
 
-      var evaluateField = function (field) {
-        if (field.typeOf('array')) {
-          field.values.forEach(function (value) {
-            evaluateField(value);
-          });
-        } else if (field.typeOf('object')) {
-          field.fields.forEach(function (subfield) {
-            evaluateField(subfield);
-          });
-        }
-
+      var evaluateField = function (field, model) {
         // Evaluate condition
         if (field.condition) {
           var pass = true,
@@ -53,24 +47,28 @@ angular.module('formula')
               // Disable setters
               cond = cond.replace('=', '==').replace('===', '==');
 
-              var evaluate = $rootScope.$eval(cond, values);
-
-              if (!values || evaluate === undefined || evaluate === false) {
-                pass = false;
-              }
+              pass = $rootScope.$eval(cond, model);
             }
           });
 
-          if (field.visible !== (field.visible = field.hidden ? false : pass)) {
-            var currentValue = field.value;
-            field.value = field.backupValue;
-            field.backupValue = currentValue;
+          field.visible = field.hidden ? false : pass;
+
+          if (!keepFailing) {
+            if (pass) {
+              field.value = field.backupValue;
+            } else {
+              field.backupValue = field.value;
+              field.value = undefined;
+            }
           }
         }
       };
 
       return {
-        evaluateConditions: evaluateConditions
+        evaluateConditions: evaluateConditions,
+        keepFailing: function (val) {
+          keepFailing = val;
+        }
       };
     }
   ]);
