@@ -243,7 +243,7 @@ angular.module('formula')
           case 'array:field':
             if (this.values) {
               this.value = [];
-              angular.forEach(this.values, function(field) {
+              this.values.forEach(function (field) {
                 if (field.value !== undefined) {
                   this.value.push(field.value);
                 }
@@ -253,7 +253,7 @@ angular.module('formula')
           case 'object':
             if (this.fields) {
               this.value = {};
-              angular.forEach(this.fields, function(field, index) {
+              this.fields.forEach(function(field) {
                 if (field.value !== undefined) {
                   this.value[field.id] = field.value;
                 }

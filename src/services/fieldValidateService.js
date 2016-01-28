@@ -18,10 +18,6 @@ angular.module('formula')
           if (field.schema) {
             var result;
 
-            if (field.value === null || field.value === "") {
-              field.value = undefined;
-            }
-
             if ((field.dirty || force) && (field.required || field.value !== undefined)) {
               result = tv4.validateMultiple(field.value, field.schema);
               field.valid = result.valid;
