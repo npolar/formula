@@ -232,6 +232,7 @@
 
 .formula fieldset label + * {
   width: 70%;
+  display: inline-block;
 }
 
 .formula :disabled {

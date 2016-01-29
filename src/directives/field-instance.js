@@ -16,7 +16,7 @@ angular.module('formula')
 	function($compile) {
 		return {
 			restrict: 'AE',
-			require: '^formula',
+			require: '^^formula',
 			scope: { field: '=' },
 			link: function(scope, element, attrs, controller) {
 				scope.form = controller.form;

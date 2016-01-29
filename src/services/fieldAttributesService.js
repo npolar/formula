@@ -45,7 +45,7 @@ angular.module('formula')
               }
               $rootScope.$emit('revalidate');
             }
-          }, true);
+          });
         }
       };
 

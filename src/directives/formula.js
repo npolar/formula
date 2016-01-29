@@ -96,6 +96,9 @@ angular.module('formula')
 					});
 					$scope.data.ready = true;
 					return true;
+				}, function () {
+					$scope.data.ready = true;
+					console.error('Could not load form', arguments);
 				});
 
 				// Enable language hot-swapping
@@ -108,7 +111,7 @@ angular.module('formula')
 				});
 
 				// Enable data hot-swapping
-				$scope.$watchCollection('data.model', function(newData, oldData) {
+				$scope.$watch('data.model', function(newData, oldData) {
 					if (newData && newData !== oldData) {
 						formLoaded.then(function () {
 							createForm($scope.form.schema, newData, $scope.form.formDefinition);
