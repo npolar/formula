@@ -16,7 +16,6 @@ angular.module('formula').factory('formula',
 
 
 		return function Formula(options) {
-			console.log('new formula');
 			if(!options) {
 				throw "No formula options provided!";
 			}
@@ -26,7 +25,7 @@ angular.module('formula').factory('formula',
 			_cfg.language = options.language;
 
 			if (options.templates instanceof Array) {
-				templates.setTemplates(templates);
+				templates.setTemplates(options.templates);
 			}
 
 			this.setLanguage = function (uri) {
@@ -90,7 +89,6 @@ angular.module('formula').factory('formula',
 			}
 
 			var createForm = function (model, formDefinition) {
-				console.log('create form');
 				if (_cfg.form) {
 					_cfg.form.destroy();
 				}
@@ -103,7 +101,6 @@ angular.module('formula').factory('formula',
 			};
 
 			var formLoaded = $q.all(asyncs).then(function(responses) {
-				console.log('form loaded');
 				createForm(responses[1], responses[2]);
 				return responses;
 			}, function () {

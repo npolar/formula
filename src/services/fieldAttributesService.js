@@ -33,7 +33,6 @@ angular.module('formula')
             return field.value;
           }, function(n, o) {
             if (n !== o) {
-              console.log('input watch', field.path, n, field.value);
               if (field.value === null || field.value === "") {
                 field.value = undefined;
                 return; // triggers new watch

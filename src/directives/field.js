@@ -23,10 +23,9 @@
             if (!field.hidden && field.template) {
               var fieldScope = scope.$new();
               var elem = angular.element(field.template);
-              console.log('compile field', field.path, elem);
               fieldScope.field = field;
-              formulaClassService.addPathClass(field, elem);
-              formulaClassService.addSchemaClass(field, elem);
+              elem.addClass(formulaClassService.pathClass(field));
+              elem.addClass(formulaClassService.schemaClass(field));
               $compile(elem)(fieldScope, function(cloned, scope) {
                 iElement.append(cloned);
               });

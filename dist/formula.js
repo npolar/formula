@@ -19,6 +19,398 @@ angular.module('formula', []);
 (function() {
 "use strict";
 
+  /**
+   * formula.js
+   * Generic JSON Schema form builder
+   *
+   * Norsk Polarinstutt 2014, http://npolar.no/
+   */
+  angular.module('formula')
+    .directive('formulaField', ['$compile', 'formulaClassService',
+      function($compile, formulaClassService) {
+
+        return {
+          restrict: 'AE',
+          scope: {
+            field: '='
+          },
+          link: function (scope, iElement, iAttrs) {
+            var field = scope.field;
+            if (!field.hidden && field.template) {
+              var fieldScope = scope.$new();
+              var elem = angular.element(field.template);
+              fieldScope.field = field;
+              elem.addClass(formulaClassService.pathClass(field));
+              elem.addClass(formulaClassService.schemaClass(field));
+              $compile(elem)(fieldScope, function(cloned, scope) {
+                iElement.append(cloned);
+              });
+            }
+          },
+        };
+      }
+    ]);
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+  /**
+   * formula.js
+   * Generic JSON Schema form builder
+   *
+   * Norsk Polarinstutt 2014, http://npolar.no/
+   */
+  angular.module('formula')
+    .directive('formulaFields', ['$compile', 'formulaClassService',
+      function($compile, formulaClassService) {
+
+
+
+        return {
+          restrict: 'AE',
+          scope: {
+            fields: '='
+          },
+          compile: function (tElement, tAttrs) {
+            if (tElement.html()) {
+              var innerTemplate = tElement.html();
+              tElement.empty();
+            }
+            return function link (scope, iElement, iAttrs) {
+              scope.fields.forEach(function (field) {
+                // Only compile fields that have template
+                if (!field.hidden && field.template) {
+                  var fieldScope = scope.$new();
+                  var elem = angular.element(innerTemplate || field.template);
+                  fieldScope.field = field;
+                  fieldScope.parent = field.parents[field.parents.length - 1];
+                  elem.addClass(formulaClassService.pathClass(field));
+                  elem.addClass(formulaClassService.schemaClass(field));
+                  $compile(elem)(fieldScope, function(cloned, scope) {
+                    iElement.append(cloned);
+                  });
+                }
+              });
+            };
+          }
+        };
+      }
+    ]);
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+	.directive('formulaFieldsets',
+	['$compile', 'formulaClassService',
+	function($compile, formulaClassService) {
+		return {
+			restrict: 'AE',
+			require: '^^formula',
+			link: function(scope, iElement, iAttrs, controller) {
+				scope.form.fieldsets.forEach(function (fieldset) {
+					if (!fieldset.hidden && fieldset.template) {
+						var fieldsetScope = scope.$new();
+						var elem = angular.element(fieldset.template);
+						fieldsetScope.fieldset = fieldset;
+						elem.addClass(formulaClassService.schemaClass(fieldset));
+						$compile(elem)(fieldsetScope, function(cloned, scope) {
+							iElement.append(cloned);
+						});
+					}
+				});
+			}
+		};
+	}]);
+
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+	.directive('formula',
+	['$compile', '$timeout', 'formulaI18n', 'formulaClassService',
+	function($compile, $timeout, i18n, formulaClassService) {
+		return {
+			restrict: 'AE',
+      scope: { options: '=' },
+			controller: ['$scope', function($scope) {
+				if(!$scope.options) {
+					throw "No formula options provided!";
+				}
+				var controller = {
+					setLanguage: function (uri) {
+						var code = i18n.code(uri);
+						$scope.language = { uri: uri, code: code };
+						if(!code) {
+							i18n.add(uri).then(function (code) {
+								$scope.language.code = code;
+
+								if ($scope.form) {
+									$scope.form.translate(code);
+								}
+							});
+						}
+						$timeout();
+					},
+
+					setForm: function (form) {
+						$scope.form = this.form = form;
+					},
+
+					updateTemplates: function () {
+						this.form.updateTemplates();
+						$timeout();
+					}
+				};
+
+
+
+				controller.setForm($scope.options.form);
+
+				if ($scope.options.language) {
+					controller.setLanguage($scope.options.language);
+				}
+
+				$scope.options.controller = controller;
+			}],
+			link: function(scope, iElement, iAttrs) {
+				scope.$watch('form', function (form) {
+					if (form) {
+						iElement.addClass(formulaClassService.schemaClass(form));
+						iElement.html(form.template);
+						$compile(iElement.contents())(scope);
+					}
+				});
+			}
+		};
+	}]);
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+  /**
+   * formula.js
+   * Generic JSON Schema form builder
+   *
+   * Norsk Polarinstutt 2014, http://npolar.no/
+   */
+  angular.module('formula')
+    .directive('formulaInput', ['$compile',
+      function($compile) {
+
+        var getInputElement = function(field, type, element) {
+          var elem;
+          switch (type.sub) {
+            case 'textarea':
+              elem = angular.element('<textarea>');
+              break;
+
+            case 'select':
+              elem = angular.element('<select>');
+
+              if (element.children().length) {
+                angular.forEach(element.children(), function(child) {
+                  elem.append(child);
+                });
+              } else {
+                elem.attr('ng-options', 'value.id as value.label for value in field.values');
+              }
+
+              if (field.multiple) {
+                elem.attr('multiple', 'multiple');
+              }
+              break;
+
+            default:
+              elem = angular.element('<input>');
+              elem.attr('type', type.sub);
+
+              switch (type.sub) {
+                case 'number':
+                case 'range':
+                  if (field.step !== null) {
+                    elem.attr('step', field.step);
+                  }
+                  break;
+
+                case 'any':
+                case 'date':
+                case 'datetime':
+                case 'time':
+                  elem.attr('type', 'text');
+                  break;
+              }
+          }
+
+          return elem;
+        };
+
+
+        var getType = function(field) {
+          var type = field.type ? field.type.split(':') : null;
+          type = type ? {
+            main: type[0],
+            sub: type[1]
+          } : null;
+          return type;
+        };
+
+
+        var setAttrs = function(attrs) {
+          attrs.$set('id', '{{field.uid}}');
+          attrs.$set('ngModel', 'field.value');
+          attrs.$set('ng-disabled', 'field.disabled');
+          attrs.$set('ng-readonly', 'field.readonly');
+        };
+
+        var getElement = function(scope, element, attrs) {
+          var field = scope.field;
+          var type = getType(field);
+          var elem = getInputElement(field, type, element);
+
+          angular.forEach(attrs, function(val, key) {
+            if (attrs.$attr[key]) {
+              elem.attr(attrs.$attr[key], val);
+            }
+          });
+          return elem;
+        };
+
+        return {
+          restrict: 'AE',
+          scope: {
+            field: '='
+          },
+          compile: function (tElement, tAttrs, transclude) {
+
+            return function link(scope, iElement, iAttrs) {
+              setAttrs(iAttrs);
+              var elem = getElement(scope, iElement, iAttrs);
+              elem.removeAttr('formula:input');
+              $compile(elem)(scope, function(cloned, scope) {
+                iElement.replaceWith(cloned);
+              });
+            };
+          }
+        };
+      }
+    ]);
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2015, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter inlineValues
+	 *
+	 * Filter used to inline an array of values.
+	 */
+
+	.filter('formulaInlineValues', [function() {
+		return function(input, params) {
+			var result = [];
+
+			angular.forEach(input, function(field) {
+				if(field.value instanceof Array) {
+					result.push('Array[' + field.value.length + ']');
+				} else switch(typeof field.value) {
+					case 'string':
+					case 'number':
+					case 'boolean':
+						result.push(field.value);
+						break;
+
+					default:
+				}
+			});
+
+			return result.join(', ');
+		};
+	}]);
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter replace
+	 *
+	 * Filter used to replace placeholders in a string.
+	 */
+
+	.filter('formulaReplace', [function() {
+		return function(input, params) {
+			var result = input;
+
+			(input.match(/\{[^\}]*\}/g) || [])
+			.forEach(function(val) {
+				result = result.replace(val, params[val.substr(1, val.length - 2)]);
+			});
+
+			return result;
+		};
+	}]);
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
 /**
  * formula.js
  * Generic JSON Schema form builder
@@ -890,7 +1282,6 @@ angular.module('formula').factory('formula',
 
 
 		return function Formula(options) {
-			console.log('new formula');
 			if(!options) {
 				throw "No formula options provided!";
 			}
@@ -900,7 +1291,7 @@ angular.module('formula').factory('formula',
 			_cfg.language = options.language;
 
 			if (options.templates instanceof Array) {
-				templates.setTemplates(templates);
+				templates.setTemplates(options.templates);
 			}
 
 			this.setLanguage = function (uri) {
@@ -964,7 +1355,6 @@ angular.module('formula').factory('formula',
 			}
 
 			var createForm = function (model, formDefinition) {
-				console.log('create form');
 				if (_cfg.form) {
 					_cfg.form.destroy();
 				}
@@ -977,7 +1367,6 @@ angular.module('formula').factory('formula',
 			};
 
 			var formLoaded = $q.all(asyncs).then(function(responses) {
-				console.log('form loaded');
 				createForm(responses[1], responses[2]);
 				return responses;
 			}, function () {
@@ -1510,397 +1899,6 @@ angular.module('formula')
  * formula.js
  * Generic JSON Schema form builder
  *
- * Norsk Polarinstutt 2015, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter inlineValues
-	 *
-	 * Filter used to inline an array of values.
-	 */
-
-	.filter('formulaInlineValues', [function() {
-		return function(input, params) {
-			var result = [];
-
-			angular.forEach(input, function(field) {
-				if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-
-					default:
-				}
-			});
-
-			return result.join(', ');
-		};
-	}]);
-
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter replace
-	 *
-	 * Filter used to replace placeholders in a string.
-	 */
-
-	.filter('formulaReplace', [function() {
-		return function(input, params) {
-			var result = input;
-
-			(input.match(/\{[^\}]*\}/g) || [])
-			.forEach(function(val) {
-				result = result.replace(val, params[val.substr(1, val.length - 2)]);
-			});
-
-			return result;
-		};
-	}]);
-
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-  /**
-   * formula.js
-   * Generic JSON Schema form builder
-   *
-   * Norsk Polarinstutt 2014, http://npolar.no/
-   */
-  angular.module('formula')
-    .directive('formulaField', ['$compile', 'formulaClassService',
-      function($compile, formulaClassService) {
-
-        return {
-          restrict: 'AE',
-          scope: {
-            field: '='
-          },
-          link: function (scope, iElement, iAttrs) {
-            var field = scope.field;
-            if (!field.hidden && field.template) {
-              var fieldScope = scope.$new();
-              var elem = angular.element(field.template);
-              console.log('compile field', field.path, elem);
-              fieldScope.field = field;
-              formulaClassService.addPathClass(field, elem);
-              formulaClassService.addSchemaClass(field, elem);
-              $compile(elem)(fieldScope, function(cloned, scope) {
-                iElement.append(cloned);
-              });
-            }
-          },
-        };
-      }
-    ]);
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-  /**
-   * formula.js
-   * Generic JSON Schema form builder
-   *
-   * Norsk Polarinstutt 2014, http://npolar.no/
-   */
-  angular.module('formula')
-    .directive('formulaFields', ['$compile', 'formulaClassService',
-      function($compile, formulaClassService) {
-
-
-
-        return {
-          restrict: 'AE',
-          scope: {
-            fields: '='
-          },
-          link: function (scope, iElement, iAttrs) {
-            scope.fields.forEach(function (field) {
-              if (!field.hidden && field.template) {
-                var fieldScope = scope.$new();
-                var elem = angular.element(field.template);
-                console.log('compile fields', field.path);
-                fieldScope.field = field;
-                formulaClassService.addPathClass(field, elem);
-                formulaClassService.addSchemaClass(field, elem);
-                $compile(elem)(fieldScope, function(cloned, scope) {
-                  iElement.append(cloned);
-                });
-              }
-            });
-          },
-        };
-      }
-    ]);
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-	.directive('formulaFieldsets',
-	['$compile', 'formulaClassService',
-	function($compile, formulaClassService) {
-		return {
-			restrict: 'AE',
-			require: '^^formula',
-			link: function(scope, iElement, iAttrs, controller) {
-				scope.form.fieldsets.forEach(function (fieldset) {
-					console.log('compile fieldset');
-					if (!fieldset.hidden && fieldset.template) {
-						var fieldsetScope = scope.$new();
-						var elem = angular.element(fieldset.template);
-						fieldsetScope.fieldset = fieldset;
-						formulaClassService.addSchemaClass(fieldset, elem);
-						$compile(elem)(fieldsetScope, function(cloned, scope) {
-							iElement.append(cloned);
-						});
-					}
-				});
-			}
-		};
-	}]);
-
-
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-	.directive('formula',
-	['$compile', '$timeout', 'formulaI18n', 'formulaClassService',
-	function($compile, $timeout, i18n, formulaClassService) {
-		return {
-			restrict: 'AE',
-      scope: { options: '=' },
-			controller: ['$scope', function($scope) {
-				console.log('init controller');
-				if(!$scope.options) {
-					throw "No formula options provided!";
-				}
-				var controller = {
-					setLanguage: function (uri) {
-						var code = i18n.code(uri);
-						$scope.language = { uri: uri, code: code };
-						if(!code) {
-							i18n.add(uri).then(function (code) {
-								$scope.language.code = code;
-
-								if ($scope.form) {
-									$scope.form.translate(code);
-								}
-							});
-						}
-						$timeout();
-					},
-
-					setForm: function (form) {
-						console.log('set form');
-						$scope.form = this.form = form;
-					},
-
-					updateTemplates: function () {
-						this.form.updateTemplates();
-						$timeout();
-					}
-				};
-
-
-
-				controller.setForm($scope.options.form);
-
-				if ($scope.options.language) {
-					controller.setLanguage($scope.options.language);
-				}
-
-				$scope.options.controller = controller;
-			}],
-			link: function(scope, iElement, iAttrs) {
-				scope.$watch('form', function (form) {
-					if (form) {
-						console.log('compile form');
-						formulaClassService.addSchemaClass(form, iElement);
-						iElement.html(form.template);
-						$compile(iElement.contents())(scope);
-					}
-				});
-			}
-		};
-	}]);
-
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-  /**
-   * formula.js
-   * Generic JSON Schema form builder
-   *
-   * Norsk Polarinstutt 2014, http://npolar.no/
-   */
-  angular.module('formula')
-    .directive('formulaInput', ['$compile',
-      function($compile) {
-
-        var getInputElement = function(field, type, element) {
-          var elem;
-          switch (type.sub) {
-            case 'textarea':
-              elem = angular.element('<textarea>');
-              break;
-
-            case 'select':
-              elem = angular.element('<select>');
-
-              if (element.children().length) {
-                angular.forEach(element.children(), function(child) {
-                  elem.append(child);
-                });
-              } else {
-                elem.attr('ng-options', 'value.id as value.label for value in field.values');
-              }
-
-              if (field.multiple) {
-                elem.attr('multiple', 'multiple');
-              }
-              break;
-
-            default:
-              elem = angular.element('<input>');
-              elem.attr('type', type.sub);
-
-              switch (type.sub) {
-                case 'number':
-                case 'range':
-                  if (field.step !== null) {
-                    elem.attr('step', field.step);
-                  }
-                  break;
-
-                case 'any':
-                case 'date':
-                case 'datetime':
-                case 'time':
-                  elem.attr('type', 'text');
-                  break;
-              }
-          }
-
-          return elem;
-        };
-
-
-        var getType = function(field) {
-          var type = field.type ? field.type.split(':') : null;
-          type = type ? {
-            main: type[0],
-            sub: type[1]
-          } : null;
-          return type;
-        };
-
-
-        var setAttrs = function(attrs) {
-          attrs.$set('id', '{{field.uid}}');
-          attrs.$set('ngModel', 'field.value');
-          attrs.$set('ng-disabled', 'field.disabled');
-          attrs.$set('ng-readonly', 'field.readonly');
-        };
-
-        var getElement = function(scope, element, attrs) {
-          var field = scope.field;
-          var type = getType(field);
-          var elem = getInputElement(field, type, element);
-
-          angular.forEach(attrs, function(val, key) {
-            if (attrs.$attr[key]) {
-              elem.attr(attrs.$attr[key], val);
-            }
-          });
-          return elem;
-        };
-
-        return {
-          restrict: 'AE',
-          scope: {
-            field: '='
-          },
-          compile: function (tElement, tAttrs, transclude) {
-
-            return function link(scope, iElement, iAttrs) {
-              setAttrs(iAttrs);
-              var elem = getElement(scope, iElement, iAttrs);
-              elem.removeAttr('formula:input');
-              console.log('compile input');
-              $compile(elem)(scope, function(cloned, scope) {
-                iElement.replaceWith(cloned);
-              });
-            };
-          }
-        };
-      }
-    ]);
-
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
  * Norsk Polarinstutt 2014, http://npolar.no/
  *
  */
@@ -1908,39 +1906,25 @@ angular.module('formula')
   .service('formulaClassService', [function() {
 
 
-    // Add class based on field parents and ID
-    var addPathClass = function(node, elem) {
-      var path = 'formula-';
-
-      angular.forEach(node.parents, function(parent) {
-        path += parent.id + '/';
-      });
-
-      if (node.id) {
-        path += node.id;
-      } else if (node.parents) {
-        path = path.substr(0, path.length - 1);
-      }
-
-      elem.addClass(path);
+    // class based on field parents and ID
+    var pathClass = function(node) {
+      var path = node.path;
+      path = path.replace('#', 'formula');
+      return path;
     };
 
-    // Add css class of schema type
-    var addSchemaClass = function(node, elem) {
+    // css class of schema type
+    var schemaClass = function(node) {
       var schemaType = node.mainType;
-      if (schemaType) {
-        elem.addClass(
-          "formula" +
+      return "formula" +
           schemaType.charAt(0).toUpperCase() +
-          schemaType.slice(1)
-        );
-      }
+          schemaType.slice(1);
     };
 
 
     return {
-      addSchemaClass: addSchemaClass,
-      addPathClass: addPathClass
+      schemaClass: schemaClass,
+      pathClass: pathClass
     };
   }
 ]);
@@ -2059,7 +2043,6 @@ angular.module('formula')
             return field.value;
           }, function(n, o) {
             if (n !== o) {
-              console.log('input watch', field.path, n, field.value);
               if (field.value === null || field.value === "") {
                 field.value = undefined;
                 return; // triggers new watch
@@ -2607,8 +2590,14 @@ angular.module('formula')
         var config;
         templates.forEach(function (tmpl) {
           if (tmpl.match) {
-            if ((typeof tmpl.match === 'function') && tmpl.match.call({}, node)) {
-              config = tmpl;
+            if (typeof tmpl.match === 'function') {
+              try {
+                if (tmpl.match.call({}, node)) {
+                  config = tmpl;
+                }
+              } catch (e) {
+                // noop
+              }
             } else if (typeof tmpl.match === 'string' && [node.mainType, node.id, node.path].indexOf(tmpl.match) !== -1) {
               config = tmpl;
             }

@@ -19,12 +19,11 @@ angular.module('formula')
 			require: '^^formula',
 			link: function(scope, iElement, iAttrs, controller) {
 				scope.form.fieldsets.forEach(function (fieldset) {
-					console.log('compile fieldset');
 					if (!fieldset.hidden && fieldset.template) {
 						var fieldsetScope = scope.$new();
 						var elem = angular.element(fieldset.template);
 						fieldsetScope.fieldset = fieldset;
-						formulaClassService.addSchemaClass(fieldset, elem);
+						elem.addClass(formulaClassService.schemaClass(fieldset));
 						$compile(elem)(fieldsetScope, function(cloned, scope) {
 							iElement.append(cloned);
 						});

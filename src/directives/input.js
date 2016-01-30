@@ -102,7 +102,6 @@
               setAttrs(iAttrs);
               var elem = getElement(scope, iElement, iAttrs);
               elem.removeAttr('formula:input');
-              console.log('compile input');
               $compile(elem)(scope, function(cloned, scope) {
                 iElement.replaceWith(cloned);
               });

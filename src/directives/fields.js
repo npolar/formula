@@ -20,21 +20,28 @@
           scope: {
             fields: '='
           },
-          link: function (scope, iElement, iAttrs) {
-            scope.fields.forEach(function (field) {
-              if (!field.hidden && field.template) {
-                var fieldScope = scope.$new();
-                var elem = angular.element(field.template);
-                console.log('compile fields', field.path);
-                fieldScope.field = field;
-                formulaClassService.addPathClass(field, elem);
-                formulaClassService.addSchemaClass(field, elem);
-                $compile(elem)(fieldScope, function(cloned, scope) {
-                  iElement.append(cloned);
-                });
-              }
-            });
-          },
+          compile: function (tElement, tAttrs) {
+            if (tElement.html()) {
+              var innerTemplate = tElement.html();
+              tElement.empty();
+            }
+            return function link (scope, iElement, iAttrs) {
+              scope.fields.forEach(function (field) {
+                // Only compile fields that have template
+                if (!field.hidden && field.template) {
+                  var fieldScope = scope.$new();
+                  var elem = angular.element(innerTemplate || field.template);
+                  fieldScope.field = field;
+                  fieldScope.parent = field.parents[field.parents.length - 1];
+                  elem.addClass(formulaClassService.pathClass(field));
+                  elem.addClass(formulaClassService.schemaClass(field));
+                  $compile(elem)(fieldScope, function(cloned, scope) {
+                    iElement.append(cloned);
+                  });
+                }
+              });
+            };
+          }
         };
       }
     ]);

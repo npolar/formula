@@ -42,8 +42,14 @@ angular.module('formula')
         var config;
         templates.forEach(function (tmpl) {
           if (tmpl.match) {
-            if ((typeof tmpl.match === 'function') && tmpl.match.call({}, node)) {
-              config = tmpl;
+            if (typeof tmpl.match === 'function') {
+              try {
+                if (tmpl.match.call({}, node)) {
+                  config = tmpl;
+                }
+              } catch (e) {
+                // noop
+              }
             } else if (typeof tmpl.match === 'string' && [node.mainType, node.id, node.path].indexOf(tmpl.match) !== -1) {
               config = tmpl;
             }

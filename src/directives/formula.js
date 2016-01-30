@@ -18,7 +18,6 @@ angular.module('formula')
 			restrict: 'AE',
       scope: { options: '=' },
 			controller: ['$scope', function($scope) {
-				console.log('init controller');
 				if(!$scope.options) {
 					throw "No formula options provided!";
 				}
@@ -39,7 +38,6 @@ angular.module('formula')
 					},
 
 					setForm: function (form) {
-						console.log('set form');
 						$scope.form = this.form = form;
 					},
 
@@ -62,8 +60,7 @@ angular.module('formula')
 			link: function(scope, iElement, iAttrs) {
 				scope.$watch('form', function (form) {
 					if (form) {
-						console.log('compile form');
-						formulaClassService.addSchemaClass(form, iElement);
+						iElement.addClass(formulaClassService.schemaClass(form));
 						iElement.html(form.template);
 						$compile(iElement.contents())(scope);
 					}

@@ -14,39 +14,25 @@ angular.module('formula')
   .service('formulaClassService', [function() {
 
 
-    // Add class based on field parents and ID
-    var addPathClass = function(node, elem) {
-      var path = 'formula-';
-
-      angular.forEach(node.parents, function(parent) {
-        path += parent.id + '/';
-      });
-
-      if (node.id) {
-        path += node.id;
-      } else if (node.parents) {
-        path = path.substr(0, path.length - 1);
-      }
-
-      elem.addClass(path);
+    // class based on field parents and ID
+    var pathClass = function(node) {
+      var path = node.path;
+      path = path.replace('#', 'formula');
+      return path;
     };
 
-    // Add css class of schema type
-    var addSchemaClass = function(node, elem) {
+    // css class of schema type
+    var schemaClass = function(node) {
       var schemaType = node.mainType;
-      if (schemaType) {
-        elem.addClass(
-          "formula" +
+      return "formula" +
           schemaType.charAt(0).toUpperCase() +
-          schemaType.slice(1)
-        );
-      }
+          schemaType.slice(1);
     };
 
 
     return {
-      addSchemaClass: addSchemaClass,
-      addPathClass: addPathClass
+      schemaClass: schemaClass,
+      pathClass: pathClass
     };
   }
 ]);
