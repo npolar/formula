@@ -93,6 +93,12 @@
   width: calc(100% + 32px);
 }
 
+.formula .formulaArray,
+.formula .formulaObject,
+.formula .formulaField {
+  margin-bottom: 15px;
+}
+
 .formula fieldset :not(a):not(option):not(button) {
   transition: border 1s, box-shadow 1s, color 1s, opacity 1s;
 }
@@ -441,4 +447,8 @@
 
 .formula .formulaArray .formulaObject > legend {
   display: none;
+}
+
+.formula .formulaObject {
+  font-size: 14px;
 }

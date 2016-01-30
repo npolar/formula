@@ -64,7 +64,10 @@ angular.module('demo', ['formula'])
         language: null,
         model: getResource()
       });
-
+      $scope.formulaData.addTemplate({
+        match: "ref_object",
+        templateUrl: "customObject.html"
+      });
       $timeout(updateModel, 1000);
       //$timeout(updateModel2, 2000);
 

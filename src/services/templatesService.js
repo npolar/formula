@@ -44,7 +44,7 @@ angular.module('formula')
           if (tmpl.match) {
             if ((typeof tmpl.match === 'function') && tmpl.match.call({}, node)) {
               config = tmpl;
-            } else if (typeof tmpl.match === 'string' && tmpl.match === node.mainType) {
+            } else if (typeof tmpl.match === 'string' && [node.mainType, node.id, node.path].indexOf(tmpl.match) !== -1) {
               config = tmpl;
             }
           }
@@ -105,7 +105,12 @@ angular.module('formula')
         templates = tmpls;
       };
 
+      var addTemplate = function (template) {
+        templates.push(template);
+      };
+
       return {
+        addTemplate: addTemplate,
         setTemplates: setTemplates,
         initNode: initNode,
       };

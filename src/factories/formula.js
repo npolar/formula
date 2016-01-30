@@ -61,6 +61,13 @@ angular.module('formula').factory('formula',
 				}
 			};
 
+			this.addTemplate = function (template) {
+				templates.addTemplate(template);
+				if (_cfg.controller) {
+					_cfg.controller.updateTemplates();
+				}
+			};
+
 			this.setOnSave = function (onsave) {
 				_cfg.form.onsave = onsave;
 			};
