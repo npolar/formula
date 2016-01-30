@@ -1,0 +1,28 @@
+<form class="formula">
+  <header ng-if="::form.title">
+    {{ form.title }}
+  </header>
+
+  <nav ng-if="::form.fieldsets.length > 1">
+    <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in form.fieldsets track by fieldset.id">{{ fieldset.title }}</a>
+  </nav>
+
+  <formula:fieldsets></formula:fieldsets>
+
+  <footer>
+    <span ng-if="form.errors" title="{{ form.errors.join('\n') }}">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span>
+    <button ng-click="form.validate(true);" ng-if="!data.hideButtons" title="{{ form.i18n.validate[1] }}">
+      <strong>&#10003;</strong>
+      {{ form.i18n.validate[0] }}</button>
+    <button ng-click="form.save()" ng-disabled="!form.valid" ng-if="!data.hideButtons" title="{{ form.i18n.save[1] }}">
+      <strong>&#9921;</strong>
+      {{ form.i18n.save[0] }}</button>
+  </footer>
+</form>
+
+<div class="formula" ng-if="!form.fieldsets">
+  <div class="loading">
+    <div class="spinner"></div>
+    <span>Loading...</span>
+  </div>
+</div>

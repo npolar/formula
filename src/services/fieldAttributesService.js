@@ -10,10 +10,10 @@
  * Norsk Polarinstutt 2014, http://npolar.no/
  */
 angular.module('formula')
-  .service('formulaFieldAttributesService', ['$rootScope', 'formulaLog', 'formulaCustomTemplateService',
+  .service('formulaFieldAttributesService', ['$rootScope', 'formulaLog', 'formulaTemplateService',
           'formulaFieldTranslateDefaultsService', 'formulaFieldTypeService',
     function($rootScope, log,
-      formulaCustomTemplateService, formulaFieldTranslateDefaultsService,
+      templates, formulaFieldTranslateDefaultsService,
       formulaFieldTypeService) {
 
       var assign = function(field, data) {
@@ -135,7 +135,7 @@ angular.module('formula')
 
         watchField(field);
 
-        formulaCustomTemplateService.initField(field);
+        templates.initNode(field);
 
         field.visible = field.hidden ? false : true;
 

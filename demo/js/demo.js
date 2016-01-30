@@ -2,10 +2,10 @@
 /* globals angular */
 
 angular.module('demo', ['formula'])
-  .controller('demoController', ['$scope', '$timeout', '$q',
-    function($scope, $timeout, $q) {
+  .controller('demoController', ['$scope', '$timeout', '$q', 'formula',
+    function($scope, $timeout, $q, Formula) {
       var updateModel = function() {
-        $scope.formulaData.model = {
+        $scope.formulaData.setModel({
           _id: 'foobarID',
           string: 'timeoutfoobar',
           boolean: true,
@@ -35,16 +35,16 @@ angular.module('demo', ['formula'])
               }]
             }]
           }]
-        };
+        });
         console.log("timeout 1");
 
-        $scope.formulaData.language = "json/no.json";
+        $scope.formulaData.setLanguage("json/no.json");
       };
 
       var updateModel2 = function() {
-        $scope.formulaData.model = {
+        $scope.formulaData.setModel({
           boolean: false,
-        };
+        });
         console.log("timeout 2");
       };
 
@@ -58,24 +58,12 @@ angular.module('demo', ['formula'])
       };
 
 
-      $scope.formulaData = {
+      $scope.formulaData = new Formula({
         schema: "json/demo-schema.json",
         form: "json/demo-form.json",
-        template: null,
         language: null,
-        model: getResource(),
-
-        templates: [{
-            match: function (field) {
-              return field.id === "ref_object";
-            },
-            //match: 'id',
-            //match: '#/field/path'
-            templateUrl: 'customObject.html',
-            //template: '<p>{{field.title}}</p>'
-            //hidden: true
-          }]
-      };
+        model: getResource()
+      });
 
       $timeout(updateModel, 1000);
       //$timeout(updateModel2, 2000);

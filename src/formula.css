@@ -5,21 +5,21 @@
 	padding: 0;
 }
 
-.formula > header
+.formula header
 {
 	border-bottom: 1px solid #ddd;
 	font-size: 22px;
 	margin-bottom: 15px;
 }
 
-.formula > footer
+.formula footer
 {
 	padding: 15px 0 0 0;
 	position: relative;
 	text-align: right;
 }
 
-.formula > footer span
+.formula footer span
 {
 	color: #c00;
 	font-size: 14px;
@@ -33,7 +33,7 @@
 	font-size: 14px;
 }
 
-.formula > nav a
+.formula nav a
 {
 	background: #fcfcfc;
 	border: 1px solid #ddd;
@@ -46,18 +46,18 @@
 	transition: padding .2s;
 }
 
-.formula > nav a:not(:first-child)
+.formula nav a:not(:first-child)
 {
 	margin-left: -1px;
 }
 
-.formula > nav a:hover
+.formula nav a:hover
 {
 	color: #000;
 	padding-top: 10px;
 }
 
-.formula > nav a.active
+.formula nav a.active
 {
 	background: #fff;
 	border-bottom: 1px solid #fff !important;
@@ -67,33 +67,34 @@
 	text-shadow: 1px 1px 2px #999;
 }
 
-.formula > fieldset
+.formula .formulaFieldset
 {
 	background: #fff;
 	border: 1px solid #ddd;
 	font-size: 0;
 	margin: 0;
-	padding: 15px 15px 0 15px;
+	padding: 15px;
 }
 
-.formula > fieldset input ~ *
+.formula .formulaFieldset input ~ *
 {
 	font-size: 14px;
 }
 
-.formula > fieldset > legend
+.formula .formulaFieldset > legend
 {
 	display: none;
 }
 
-.formula > fieldset fieldset
+.formula .formulaFieldset fieldset
 {
 	border: 1px solid #ddd;
 	border-radius: 0 0 5px 5px;
 	padding: 15px 15px 0 15px;
+	margin-bottom: 15px;
 }
 
-.formula > fieldset fieldset > legend
+.formula .formulaFieldset fieldset > legend
 {
 	background: #f5f5f5;
 	border: 1px solid #ddd;
@@ -126,7 +127,7 @@
 	margin-bottom: 10px;
 }
 
-.formula ul li > fieldset
+.formula .formulaArray li > fieldset
 {
 	border: 0;
 	border-radius: 0;
@@ -134,7 +135,7 @@
 	margin: 0 -15px;
 }
 
-.formula ul > li > fieldset > legend
+.formula .formulaArray li > fieldset > legend
 {
 	background: transparent !important;
 	border: 0;
@@ -144,7 +145,7 @@
 	width: 100%;
 }
 
-.formula ul > li > fieldset > legend span
+.formula .formulaArray li > fieldset > legend span
 {
 	position: absolute;
 	left: 0;
@@ -284,7 +285,7 @@
 }
 
 .formula * + span,
-.formula ul > li > span
+.formula .formulaArray ul > li > span
 {
 	color: #aaa;
 	display: block;
@@ -293,7 +294,7 @@
 	text-align: left;
 }
 
-.formula ul > li:last-child > span
+.formula .formulaArray ul > li:last-child > span
 {
 	display: inline-block;
 	position: absolute;
@@ -375,15 +376,15 @@
 	font-weight: bold;
 }
 
-.formula fieldset ul
+.formula .formulaArray ul
 {
 	list-style: none;
 	padding: 0;
 	text-align: left;
 }
 
-.formula fieldset ul a.remove,
-.formula fieldset ul a.toggle
+.formula .formulaArray a.remove,
+.formula .formulaArray a.toggle
 {
 	border-radius: 5px;
 	box-sizing: border-box;
@@ -470,24 +471,12 @@
 	transform: scale(0.8, 0.8) rotate(-90deg);
 }
 
-.formula .formulaCustomObject {
-	font-size: 14px;
-}
-
 /* Hide array objects frames and titles */
-.formulaArray .formulaObject {
+.formula .formulaArray .formulaObject {
 	border: 0;
-	margin: 0;
 	padding: 0;
 }
 
-.formulaArray .formulaObject > legend {
+.formula .formulaArray .formulaObject > legend {
 	display: none;
-}
-
-/* Hide object array frames */
-.formulaObject:not(.formulaCustomObject) .formulaArray {
-	border: 0;
-	margin: 0;
-	padding: 0;
 }

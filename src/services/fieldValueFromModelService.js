@@ -10,8 +10,8 @@
  * Norsk Polarinstutt 2014, http://npolar.no/
  */
 angular.module('formula')
-  .service('formulaFieldValueFromModelService', ['formulaCustomTemplateService',
-    function(formulaCustomTemplateService) {
+  .service('formulaFieldValueFromModelService', ['formulaTemplateService',
+    function(templates) {
       var valueFromModel = function (field, model) {
         if (model[field.id] !== undefined) {
 
@@ -50,7 +50,7 @@ angular.module('formula')
           if (field.value !== model[field.id]) {
             field.value = model[field.id];
             field.dirty = true;
-            formulaCustomTemplateService.initField(field);
+            templates.initNode(field);
           }
         }
       };

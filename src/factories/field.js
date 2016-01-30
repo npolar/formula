@@ -20,10 +20,10 @@ angular.module('formula')
  * @returns field class constructor
  */
 
-.factory('formulaField', ['$filter', '$rootScope', 'formulaLog', 'formulaFormat',
+.factory('formulaField', ['$filter', '$rootScope', 'formulaFormat',
         'formulaFieldAttributesService', 'formulaFieldValidateService',
         'formulaFieldValueFromModelService',
-  function($filter, $rootScope, log, format, formulaFieldAttributesService,
+  function($filter, $rootScope, format, formulaFieldAttributesService,
     formulaFieldValidateService, formulaFieldValueFromModelService) {
     /**
      * @class field
@@ -174,10 +174,6 @@ angular.module('formula')
           }
           index = this.values.push(field) - 1;
           field.index = index;
-
-          if (proto.customTemplate && !field.customTemplate) {
-            field.customTemplate = proto.customTemplate;
-          }
 
           if (field.value !== undefined) {
             this.value.push(field.value);
