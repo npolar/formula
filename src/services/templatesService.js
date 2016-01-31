@@ -92,10 +92,15 @@ angular.module('formula')
         configs.addConfig(template);
       };
 
+      var evalTemplate = function (node, template) {
+        configs.isMatch(node, template);
+      };
+
       return {
         addTemplate: addTemplate,
         setTemplates: setTemplates,
         initNode: initNode,
+        evalTemplate: evalTemplate
       };
     }
   ]);

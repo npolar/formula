@@ -88,7 +88,7 @@ angular.module('formula').factory('formula',
 			this.addTemplate = function (template) {
 				templates.addTemplate(template);
 				if (_cfg.controller) {
-					_cfg.controller.updateTemplates();
+					_cfg.controller.updateTemplate(template);
 				}
 			};
 

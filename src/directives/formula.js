@@ -46,6 +46,13 @@ angular.module('formula')
 							this.form.updateTemplates();
 							$timeout();
 						}
+					},
+
+					updateTemplate: function (template) {
+						if (this.form) {
+							this.form.updateTemplate(template);
+							$timeout();
+						}
 					}
 				};
 

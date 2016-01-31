@@ -146,6 +146,16 @@ angular.module('formula')
         this.fields().forEach(templates.initNode);
       },
 
+      updateTemplate: function (template) {
+        templates.evalTemplate(this, template);
+        this.fieldsets.forEach(function (fieldset) {
+          templates.evalTemplate(fieldset, template);
+        });
+        this.fields().forEach(function (field) {
+          templates.evalTemplate(field, template);
+        });
+      },
+
       fields: function () {
         var fields = [];
         this.fieldsets.forEach(function(fieldset) {
