@@ -37,14 +37,15 @@ angular.module('formula')
      * @param parents An optional array of the field parents
      */
 
-    function Field(schema, id, parents, fieldDefinition) {
+    function Field(schema, id, parents, fieldDefinition, index) {
       if (typeof schema === 'object') {
 
         formulaFieldAttributesService.attrsSet(this, {
           schema: schema,
           id: id,
           parents: parents,
-          fieldDefinition: fieldDefinition
+          fieldDefinition: fieldDefinition,
+          index: index
         });
       }
       return this;
@@ -163,17 +164,16 @@ angular.module('formula')
        */
       itemAdd: function(preventValidation) {
         if (this.typeOf('array') && this.fields) {
-          var parents = this.parents.slice(),
-            index;
+          var parents = this.parents.slice();
           parents.push(this);
 
+          var index = this.values.length;
           var proto = this.fields[0];
-          var field = new Field(proto.schema, proto.id, parents, proto.fieldDefinition);
+          var field = new Field(proto.schema, proto.id, parents, proto.fieldDefinition, index);
           if (!field.type) {
             return null;
           }
-          index = this.values.push(field) - 1;
-          field.index = index;
+          this.values.push(field);
 
           if (field.value !== undefined) {
             this.value.push(field.value);

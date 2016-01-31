@@ -139,6 +139,7 @@ angular.module('formula')
 
     Form.prototype = {
 
+      // @FIXME only run match fn for new template
       updateTemplates: function () {
         templates.initNode(this);
         this.fieldsets.forEach(templates.initNode);

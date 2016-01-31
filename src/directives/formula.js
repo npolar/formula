@@ -42,12 +42,12 @@ angular.module('formula')
 					},
 
 					updateTemplates: function () {
-						this.form.updateTemplates();
-						$timeout();
+						if (this.form) {
+							this.form.updateTemplates();
+							$timeout();
+						}
 					}
 				};
-
-
 
 				controller.setForm($scope.options.form);
 

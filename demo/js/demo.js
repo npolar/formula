@@ -5,7 +5,7 @@ angular.module('demo', ['formula'])
   .controller('demoController', ['$scope', '$timeout', '$q', 'formula',
     function($scope, $timeout, $q, formula) {
       var updateModel = function() {
-        $scope.formulaData.setModel({
+        $scope.formula.setModel({
           _id: 'foobarID',
           string: 'timeoutfoobar',
           boolean: true,
@@ -38,11 +38,11 @@ angular.module('demo', ['formula'])
         });
         console.log("timeout 1");
 
-        $scope.formulaData.setLanguage("json/no.json");
+        $scope.formula.setLanguage("json/no.json");
       };
 
       var updateModel2 = function() {
-        $scope.formulaData.setModel({
+        $scope.formula.setModel({
           boolean: false,
         });
         console.log("timeout 2");
