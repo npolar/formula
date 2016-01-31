@@ -67,8 +67,6 @@ angular.module('formula', []);
     .directive('formulaFields', ['$compile', 'formulaClassService',
       function($compile, formulaClassService) {
 
-
-
         return {
           restrict: 'AE',
           scope: {
@@ -324,85 +322,6 @@ angular.module('formula')
         };
       }
     ]);
-
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2015, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter inlineValues
-	 *
-	 * Filter used to inline an array of values.
-	 */
-
-	.filter('formulaInlineValues', [function() {
-		return function(input, params) {
-			var result = [];
-
-			angular.forEach(input, function(field) {
-				if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-
-					default:
-				}
-			});
-
-			return result.join(', ');
-		};
-	}]);
-
-})();
-
-/* globals angular */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-
-angular.module('formula')
-
-	/**
-	 * @filter replace
-	 *
-	 * Filter used to replace placeholders in a string.
-	 */
-
-	.filter('formulaReplace', [function() {
-		return function(input, params) {
-			var result = input;
-
-			(input.match(/\{[^\}]*\}/g) || [])
-			.forEach(function(val) {
-				result = result.replace(val, params[val.substr(1, val.length - 2)]);
-			});
-
-			return result;
-		};
-	}]);
 
 })();
 
@@ -799,6 +718,62 @@ angular.module('formula')
     return Field;
   }
 ]);
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula').factory('formulaFieldConfig',
+	[function() {
+
+		var Config = function (cfgs) {
+			var configs = cfgs || [];
+
+			this.getMatchingConfig = function(node) {
+				var config;
+				configs.forEach(function (cfg) {
+					if (cfg.match) {
+						if (typeof cfg.match === 'function') {
+							try {
+								if (cfg.match.call({}, node)) {
+									config = cfg;
+								}
+							} catch (e) {
+								// noop
+							}
+						} else if (typeof cfg.match === 'string' && [node.mainType, node.id, node.path].indexOf(cfg.match) !== -1) {
+							config = cfg;
+						}
+					}
+				});
+				return config;
+			};
+
+			this.addConfig = function (config) {
+				configs.push(config);
+			};
+
+			this.setConfigs = function (cfgs) {
+				configs = cfgs;
+			};
+		};
+
+		return {
+			getInstance: function (configs) {
+				return new Config(configs);
+			}
+		};
+	}]);
 
 })();
 
@@ -1279,20 +1254,45 @@ angular.module('formula')
 angular.module('formula').factory('formula',
 	['$q', 'formulaTemplateService', 'formulaSchema', 'formulaJsonLoader', 'formulaForm', function($q, templates, Schema, jsonLoader, Form) {
 
-
-
-		return function Formula(options) {
+		var Formula = function (options) {
 			if(!options) {
 				throw "No formula options provided!";
 			}
-
 			var _cfg = {};
 			var schema = new Schema();
+			var asyncs = [schema.deref(options.schema), Promise.resolve(options.model)];
+
+			if (options.form) {
+				if (typeof options.form === 'string') {
+					asyncs.push(jsonLoader(options.form));
+				} else {
+					asyncs.push(Promise.resolve(options.form));
+				}
+			}
 			_cfg.language = options.language;
 
 			if (options.templates instanceof Array) {
 				templates.setTemplates(options.templates);
 			}
+
+			var formLoaded = $q.all(asyncs).then(function(responses) {
+				createForm(responses[1], responses[2]);
+				return responses;
+			}, function () {
+				console.error('Could not load form', arguments);
+			});
+
+			var createForm = function (model, formDefinition) {
+				if (_cfg.form) {
+					_cfg.form.destroy();
+				}
+				_cfg.form = new Form(schema.json, model, formDefinition);
+				if (_cfg.controller) {
+					_cfg.controller.setForm(_cfg.form);
+					_cfg.controller.setLanguage(_cfg.language);
+				}
+				_cfg.form.onsave = options.onsave || _cfg.form.onsave;
+			};
 
 			this.setLanguage = function (uri) {
 				_cfg.language = uri;
@@ -1344,37 +1344,15 @@ angular.module('formula').factory('formula',
 				});
 			};
 
-			var asyncs = [schema.deref(options.schema), Promise.resolve(options.model)];
-
-			if (options.form) {
-				if (typeof options.form === 'string') {
-					asyncs.push(jsonLoader(options.form));
-				} else {
-					asyncs.push(Promise.resolve(options.form));
-				}
-			}
-
-			var createForm = function (model, formDefinition) {
-				if (_cfg.form) {
-					_cfg.form.destroy();
-				}
-				_cfg.form = new Form(schema.json, model, formDefinition);
-				if (_cfg.controller) {
-					_cfg.controller.setForm(_cfg.form);
-					_cfg.controller.setLanguage(_cfg.language);
-				}
-				_cfg.form.onsave = options.onsave || _cfg.form.onsave;
-			};
-
-			var formLoaded = $q.all(asyncs).then(function(responses) {
-				createForm(responses[1], responses[2]);
-				return responses;
-			}, function () {
-				console.error('Could not load form', arguments);
-			});
-
 			this._cfg = _cfg;
-    };
+			return this;
+		};
+
+		return {
+			getInstance: function (options) {
+				return new Formula(options);
+			}
+		};
 	}]);
 
 })();
@@ -1886,6 +1864,85 @@ angular.module('formula')
 		};
 
 		return Schema;
+	}]);
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2015, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter inlineValues
+	 *
+	 * Filter used to inline an array of values.
+	 */
+
+	.filter('formulaInlineValues', [function() {
+		return function(input, params) {
+			var result = [];
+
+			angular.forEach(input, function(field) {
+				if(field.value instanceof Array) {
+					result.push('Array[' + field.value.length + ']');
+				} else switch(typeof field.value) {
+					case 'string':
+					case 'number':
+					case 'boolean':
+						result.push(field.value);
+						break;
+
+					default:
+				}
+			});
+
+			return result.join(', ');
+		};
+	}]);
+
+})();
+
+/* globals angular */
+
+(function() {
+"use strict";
+
+/**
+ * formula.js
+ * Generic JSON Schema form builder
+ *
+ * Norsk Polarinstutt 2014, http://npolar.no/
+ */
+
+angular.module('formula')
+
+	/**
+	 * @filter replace
+	 *
+	 * Filter used to replace placeholders in a string.
+	 */
+
+	.filter('formulaReplace', [function() {
+		return function(input, params) {
+			var result = input;
+
+			(input.match(/\{[^\}]*\}/g) || [])
+			.forEach(function(val) {
+				result = result.replace(val, params[val.substr(1, val.length - 2)]);
+			});
+
+			return result;
+		};
 	}]);
 
 })();
@@ -2559,7 +2616,8 @@ angular.module('formula')
  */
 angular.module('formula')
   .service('formulaTemplateService', ['$templateCache', '$templateRequest', '$q', 'formulaLog',
-    function($templateCache, $templateRequest, $q, log) {
+    'formulaFieldConfig',
+    function($templateCache, $templateRequest, $q, log, fieldConfig) {
 
       var DEFAULT_TEMPLATES = [
         {
@@ -2584,27 +2642,7 @@ angular.module('formula')
         }
       ];
 
-      var templates = DEFAULT_TEMPLATES;
-
-      var getMatchingConfig = function(templates, node) {
-        var config;
-        templates.forEach(function (tmpl) {
-          if (tmpl.match) {
-            if (typeof tmpl.match === 'function') {
-              try {
-                if (tmpl.match.call({}, node)) {
-                  config = tmpl;
-                }
-              } catch (e) {
-                // noop
-              }
-            } else if (typeof tmpl.match === 'string' && [node.mainType, node.id, node.path].indexOf(tmpl.match) !== -1) {
-              config = tmpl;
-            }
-          }
-        });
-        return config;
-      };
+      var configs = fieldConfig.getInstance(DEFAULT_TEMPLATES);
 
       var doTemplateRequest = function (templateUrl) {
         var templateElement = $templateCache.get(templateUrl);
@@ -2616,17 +2654,14 @@ angular.module('formula')
         return deferred.promise;
       };
 
-
       var getTemplate = function(field) {
-        var config = getMatchingConfig(templates, field);
+        var config = configs.getMatchingConfig(field);
         var deferred = $q.defer();
         if (config) {
-          if (config.hidden) {
+          if (config.hidden || config.template === "") {
             deferred.resolve(false);
           } else if (config.template) {
             deferred.resolve(config.template);
-          } else if (config.template === "") {
-            deferred.resolve(false);
           } else if (config.templateUrl) {
             doTemplateRequest(config.templateUrl).then(function (template) {
               deferred.resolve(template);
@@ -2634,12 +2669,11 @@ angular.module('formula')
               deferred.reject(config.templateUrl);
             });
           } else {
-            deferred.resolve(false);
+            deferred.reject(field.path);
           }
         } else {
           deferred.reject(field.mainType);
         }
-
         return deferred.promise;
       };
 
@@ -2655,12 +2689,12 @@ angular.module('formula')
         });
       };
 
-      var setTemplates = function (tmpls) {
-        templates = tmpls;
+      var setTemplates = function (templates) {
+        configs.setConfigs(templates);
       };
 
       var addTemplate = function (template) {
-        templates.push(template);
+        configs.addConfig(template);
       };
 
       return {

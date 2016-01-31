@@ -13,8 +13,6 @@
     .directive('formulaFields', ['$compile', 'formulaClassService',
       function($compile, formulaClassService) {
 
-
-
         return {
           restrict: 'AE',
           scope: {

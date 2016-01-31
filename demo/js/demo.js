@@ -3,7 +3,7 @@
 
 angular.module('demo', ['formula'])
   .controller('demoController', ['$scope', '$timeout', '$q', 'formula',
-    function($scope, $timeout, $q, Formula) {
+    function($scope, $timeout, $q, formula) {
       var updateModel = function() {
         $scope.formulaData.setModel({
           _id: 'foobarID',
@@ -58,13 +58,13 @@ angular.module('demo', ['formula'])
       };
 
 
-      $scope.formulaData = new Formula({
+      $scope.formula = formula.getInstance({
         schema: "json/demo-schema.json",
         form: "json/demo-form.json",
         language: null,
         model: getResource()
       });
-      $scope.formulaData.addTemplate({
+      $scope.formula.addTemplate({
         match: "ref_object",
         templateUrl: "customObject.html"
       });

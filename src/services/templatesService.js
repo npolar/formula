@@ -11,7 +11,8 @@
  */
 angular.module('formula')
   .service('formulaTemplateService', ['$templateCache', '$templateRequest', '$q', 'formulaLog',
-    function($templateCache, $templateRequest, $q, log) {
+    'formulaFieldConfig',
+    function($templateCache, $templateRequest, $q, log, fieldConfig) {
 
       var DEFAULT_TEMPLATES = [
         {
@@ -36,27 +37,7 @@ angular.module('formula')
         }
       ];
 
-      var templates = DEFAULT_TEMPLATES;
-
-      var getMatchingConfig = function(templates, node) {
-        var config;
-        templates.forEach(function (tmpl) {
-          if (tmpl.match) {
-            if (typeof tmpl.match === 'function') {
-              try {
-                if (tmpl.match.call({}, node)) {
-                  config = tmpl;
-                }
-              } catch (e) {
-                // noop
-              }
-            } else if (typeof tmpl.match === 'string' && [node.mainType, node.id, node.path].indexOf(tmpl.match) !== -1) {
-              config = tmpl;
-            }
-          }
-        });
-        return config;
-      };
+      var configs = fieldConfig.getInstance(DEFAULT_TEMPLATES);
 
       var doTemplateRequest = function (templateUrl) {
         var templateElement = $templateCache.get(templateUrl);
@@ -68,17 +49,14 @@ angular.module('formula')
         return deferred.promise;
       };
 
-
       var getTemplate = function(field) {
-        var config = getMatchingConfig(templates, field);
+        var config = configs.getMatchingConfig(field);
         var deferred = $q.defer();
         if (config) {
-          if (config.hidden) {
+          if (config.hidden || config.template === "") {
             deferred.resolve(false);
           } else if (config.template) {
             deferred.resolve(config.template);
-          } else if (config.template === "") {
-            deferred.resolve(false);
           } else if (config.templateUrl) {
             doTemplateRequest(config.templateUrl).then(function (template) {
               deferred.resolve(template);
@@ -86,12 +64,11 @@ angular.module('formula')
               deferred.reject(config.templateUrl);
             });
           } else {
-            deferred.resolve(false);
+            deferred.reject(field.path);
           }
         } else {
           deferred.reject(field.mainType);
         }
-
         return deferred.promise;
       };
 
@@ -107,12 +84,12 @@ angular.module('formula')
         });
       };
 
-      var setTemplates = function (tmpls) {
-        templates = tmpls;
+      var setTemplates = function (templates) {
+        configs.setConfigs(templates);
       };
 
       var addTemplate = function (template) {
-        templates.push(template);
+        configs.addConfig(template);
       };
 
       return {

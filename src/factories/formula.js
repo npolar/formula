@@ -13,20 +13,45 @@
 angular.module('formula').factory('formula',
 	['$q', 'formulaTemplateService', 'formulaSchema', 'formulaJsonLoader', 'formulaForm', function($q, templates, Schema, jsonLoader, Form) {
 
-
-
-		return function Formula(options) {
+		var Formula = function (options) {
 			if(!options) {
 				throw "No formula options provided!";
 			}
-
 			var _cfg = {};
 			var schema = new Schema();
+			var asyncs = [schema.deref(options.schema), Promise.resolve(options.model)];
+
+			if (options.form) {
+				if (typeof options.form === 'string') {
+					asyncs.push(jsonLoader(options.form));
+				} else {
+					asyncs.push(Promise.resolve(options.form));
+				}
+			}
 			_cfg.language = options.language;
 
 			if (options.templates instanceof Array) {
 				templates.setTemplates(options.templates);
 			}
+
+			var formLoaded = $q.all(asyncs).then(function(responses) {
+				createForm(responses[1], responses[2]);
+				return responses;
+			}, function () {
+				console.error('Could not load form', arguments);
+			});
+
+			var createForm = function (model, formDefinition) {
+				if (_cfg.form) {
+					_cfg.form.destroy();
+				}
+				_cfg.form = new Form(schema.json, model, formDefinition);
+				if (_cfg.controller) {
+					_cfg.controller.setForm(_cfg.form);
+					_cfg.controller.setLanguage(_cfg.language);
+				}
+				_cfg.form.onsave = options.onsave || _cfg.form.onsave;
+			};
 
 			this.setLanguage = function (uri) {
 				_cfg.language = uri;
@@ -78,37 +103,15 @@ angular.module('formula').factory('formula',
 				});
 			};
 
-			var asyncs = [schema.deref(options.schema), Promise.resolve(options.model)];
-
-			if (options.form) {
-				if (typeof options.form === 'string') {
-					asyncs.push(jsonLoader(options.form));
-				} else {
-					asyncs.push(Promise.resolve(options.form));
-				}
-			}
-
-			var createForm = function (model, formDefinition) {
-				if (_cfg.form) {
-					_cfg.form.destroy();
-				}
-				_cfg.form = new Form(schema.json, model, formDefinition);
-				if (_cfg.controller) {
-					_cfg.controller.setForm(_cfg.form);
-					_cfg.controller.setLanguage(_cfg.language);
-				}
-				_cfg.form.onsave = options.onsave || _cfg.form.onsave;
-			};
-
-			var formLoaded = $q.all(asyncs).then(function(responses) {
-				createForm(responses[1], responses[2]);
-				return responses;
-			}, function () {
-				console.error('Could not load form', arguments);
-			});
-
 			this._cfg = _cfg;
-    };
+			return this;
+		};
+
+		return {
+			getInstance: function (options) {
+				return new Formula(options);
+			}
+		};
 	}]);
 
 })();
