@@ -1,4 +1,11 @@
-<form class="formula">
+<div class="formula" ng-if="!form.ready">
+  <div class="loading">
+    <div class="spinner"></div>
+    <span>Loading...</span>
+  </div>
+</div>
+
+<form class="formula" ng-show="form.ready">
   <header ng-if="::form.title">
     {{ form.title }}
   </header>
@@ -19,10 +26,3 @@
       {{ form.i18n.save[0] }}</button>
   </footer>
 </form>
-
-<div class="formula" ng-if="!form.fieldsets">
-  <div class="loading">
-    <div class="spinner"></div>
-    <span>Loading...</span>
-  </div>
-</div>

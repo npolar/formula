@@ -1,79 +1,97 @@
 /* globals angular */
 
 (function() {
-"use strict";
+  "use strict";
 
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
+  /**
+   * formula.js
+   * Generic JSON Schema form builder
+   *
+   * Norsk Polarinstutt 2014, http://npolar.no/
+   */
 
-angular.module('formula')
-	.directive('formula',
-	['$compile', '$timeout', 'formulaI18n', 'formulaClassService',
-	function($compile, $timeout, i18n, formulaClassService) {
-		return {
-			restrict: 'AE',
-      scope: { options: '=' },
-			controller: ['$scope', function($scope) {
-				if(!$scope.options) {
-					throw "No formula options provided!";
-				}
-				var controller = {
-					setLanguage: function (uri) {
-						var code = i18n.code(uri);
-						$scope.language = { uri: uri, code: code };
-						if(!code) {
-							i18n.add(uri).then(function (code) {
-								$scope.language.code = code;
+  angular.module('formula')
+    .directive('formula', ['$compile', '$timeout', 'formulaI18n', 'formulaClassService',
+      function($compile, $timeout, i18n, formulaClassService) {
+        return {
+          restrict: 'AE',
+          scope: {
+            options: '='
+          },
+          controller: ['$scope', function($scope) {
+            if (!$scope.options) {
+              throw "No formula options provided!";
+            }
 
-								if ($scope.form) {
-									$scope.form.translate(code);
-								}
-							});
-						}
-						$timeout();
-					},
+            var controller = {
+              setLanguage: function(uri) {
+                var code = i18n.code(uri);
+                $scope.language = {
+                  uri: uri,
+                  code: code
+                };
+                if (!code) {
+                  i18n.add(uri).then(function(code) {
+                    $scope.language.code = code;
 
-					setForm: function (form) {
-						$scope.form = this.form = form;
-					},
+                    if ($scope.form) {
+                      $scope.form.translate(code);
+                    }
+                  });
+                }
+                $timeout();
+              },
 
-					updateTemplates: function () {
-						if (this.form) {
-							this.form.updateTemplates();
-							$timeout();
-						}
-					},
+              setForm: function(form) {
+                $scope.form = this.form = form;
+              },
 
-					updateTemplate: function (template) {
-						if (this.form) {
-							this.form.updateTemplate(template);
-							$timeout();
-						}
-					}
-				};
+              updateTemplates: function() {
+                if (this.form) {
+                  this.form.updateTemplates();
+                  $timeout();
+                }
+              },
 
-				controller.setForm($scope.options.form);
+              updateTemplate: function(template) {
+                if (this.form) {
+                  this.form.updateTemplate(template);
+                  $timeout();
+                }
+              }
+            };
 
-				if ($scope.options.language) {
-					controller.setLanguage($scope.options.language);
-				}
+            controller.setForm($scope.options.form);
 
-				$scope.options.controller = controller;
-			}],
-			link: function(scope, iElement, iAttrs) {
-				scope.$watch('form', function (form) {
-					if (form) {
-						iElement.addClass(formulaClassService.schemaClass(form));
-						iElement.html(form.template);
-						$compile(iElement.contents())(scope);
-					}
-				});
-			}
-		};
-	}]);
+            if ($scope.options.language) {
+              controller.setLanguage($scope.options.language);
+            }
+
+            $scope.options.controller = controller;
+          }],
+          link: function(scope, iElement, iAttrs) {
+            scope.$watch('form', function(form) {
+              if (form) {
+                iElement.addClass(formulaClassService.schemaClass(form));
+                iElement.html(form.template);
+                $compile(iElement.contents())(scope);
+
+								// http://stackoverflow.com/a/19686824/1357822
+                var to;
+                var listener = scope.$watch(function() {
+                  clearTimeout(to);
+                  to = setTimeout(function() {
+                    listener();
+                    $timeout(function() {
+                      scope.form.ready = true;
+                    }, 100);
+                  }, 50);
+                });
+              }
+            });
+          }
+        };
+      }
+    ]);
 
 })();

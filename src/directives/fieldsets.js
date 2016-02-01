@@ -16,8 +16,7 @@ angular.module('formula')
 	function($compile, formulaClassService) {
 		return {
 			restrict: 'AE',
-			require: '^^formula',
-			link: function(scope, iElement, iAttrs, controller) {
+			link: function(scope, iElement, iAttrs) {
 				scope.form.fieldsets.forEach(function (fieldset) {
 					if (!fieldset.hidden && fieldset.template) {
 						var fieldsetScope = scope.$new();

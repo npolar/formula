@@ -18,6 +18,7 @@
           switch (type.sub) {
             case 'textarea':
               elem = angular.element('<textarea>');
+              elem.attr('md-detect-hidden', true); // FIXME move to template in common
               break;
 
             case 'select':
