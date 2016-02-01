@@ -45,7 +45,7 @@ angular.module('formula').factory('formula',
 				if (_cfg.form) {
 					_cfg.form.destroy();
 				}
-				_cfg.form = new Form(schema.json, model, formDefinition);
+				_cfg.form = new Form(schema.json, model, formDefinition, options.keepFailing);
 				if (_cfg.controller) {
 					_cfg.controller.setForm(_cfg.form);
 					_cfg.controller.setLanguage(_cfg.language);

@@ -1,5 +1,4 @@
-formula
-=======
+# formula
 
 Generic JSON Schema form builder using Angular
 
@@ -12,24 +11,56 @@ For useage examples, check out the [Formula demo](http://npolar.github.io/formul
 
 
 ## Bootstrapping
-Bootstrapping is done using the **formula** directive, which takes one *object* as a parameter, currently supporting the following properties:
+Bootstrapping is done by using the **'formula'** service to create a instance. This is then passed into to **&lt;formula&gt;** directive as configuration.
 
-* **schema** - URL to a JSON Schema used for form-building and validation *(mandatory)*
-* **form** - URL to a JSON Schema used to customize the form layout
-* **language** - URL to a JSON translation file used for form translations
-* **model** - Object used to store form data
-* **keepFailing** - Boolean, to keep properties with failing conditions in model or not (default: true)
-* **template** - String representing the form template layout name used for form-building
-* **templates** - Object to configure custom field templates
+```JavaScript
+  $scope.formula = formula.getInstance(options);
+```
+
+```html
+  <formula options="formula"></formula>
+```
+
+### Options
+* **schema**\* - [url, Object] JSON schema
+* **form** - [url, Object], form layout config
+* **language** - [url] JSON translation file
+* **model** - [Promise, Object] JSON document
+* **keepFailing** - [Boolean], to keep properties with failing conditions in model or not (default: true)
+* **templates** - [Object] templates
+
+#### options.form
+Config to set form title, group properties into fieldsets, override schema type, set formats and visibility conditions.
 
 
-## Templates
-The following layout templates are bundled with Formula:
+```json
+{
+	"title": "Form title",
+	"fieldsets": [
+		{
+			"title": "First fieldset",
+			"fields": [
+				"schemaPropertyX",
+				{
+					"id": "schemaPropertyY",
+					"type": "textarea",
+					"condition": ["schemaPropertyX!='something'"]
+				}
+			]
+		},
+		{
+			"title": "Second fieldset",
+			"fields": [
+				...
+			]
+		}
+	]
+}
 
-* **default** used together with the [formula](dist/formula.css) ([minified](dist/formula.min.css)) stylesheet
+```
 
-## Custom Templates
-Custom templates is configured like this:
+#### options.templates####
+Templates is configured like this:
 
 ```JavaScript
 templates: [
@@ -37,6 +68,7 @@ templates: [
     match: function(field) {
       return field.id === "ref_object";
     },
+    // match: 'form|fieldset|field'
     // match: 'field.id'
     // match: '#/field.path'
     templateUrl: 'customObject.html',
@@ -48,6 +80,11 @@ templates: [
   }
 ]
 ```
+
+If you are defining your own template you need to provide at least one with ```match: 'form'```, one with ```'fieldset'``` and one with ```'field'```.
+
+### The service instance
+The instance you get from bootstrapping (```formula.getInstance()```) has setters for all the available options, and add-functions for array options. E.g. ```formula.setTemplates```, ```formula.addTemplate```, ```formula.setModel``` ...
 
 ## Supported types
 * **any** rendered as:
@@ -80,3 +117,23 @@ templates: [
 * **date-time** for ISO 8601 date-time combinations
 * **time** for ISO 8601 time
 * **uri** for RFC 3986 uniform resource identifier
+
+## Config service
+If you need to configure something on a per-field basis you can use **'formulaFieldConfig'** in a similar way as in ```options.templates```.
+
+```js
+  var configs = formulaFieldConfig.getInstance([
+    {
+      match: [String/Function],
+      options ...
+    }
+  ])
+```
+
+You can then use this configset like so:
+```js
+  configs.getMatchingConfig(field);
+  configs.isMatch(field, config);
+  configs.setConfigs(configs);
+  configs.addConfig(config);
+```

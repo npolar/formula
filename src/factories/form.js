@@ -89,7 +89,7 @@ angular.module('formula')
      * @param data
      * @param formDefinition Optional form definition object
      */
-    function Form(schema, data, formDefinition) {
+    function Form(schema, data, formDefinition, keepFailing) {
       this.errors = null;
       this.i18n = i18n(null);
       this.schema = schema;
@@ -100,6 +100,7 @@ angular.module('formula')
       this.mainType = 'form';
 
       templates.initNode(this);
+      formulaEvaluateConditionsService.keepFailing(!!keepFailing);
 
       if (formDefinition) {
         this.title = formDefinition.title;
