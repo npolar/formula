@@ -14,6 +14,8 @@ angular.module('formula')
     'formulaFieldConfig',
     function($templateCache, $templateRequest, $q, log, fieldConfig) {
 
+
+      // LIFO prio
       var DEFAULT_TEMPLATES = [
         {
           match: 'field',

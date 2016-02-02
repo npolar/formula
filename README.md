@@ -83,6 +83,8 @@ templates: [
 
 If you are defining your own template you need to provide at least one with ```match: 'form'```, one with ```'fieldset'``` and one with ```'field'```.
 
+Templates are evaluated in LIFO order!
+
 ### The service instance
 The instance you get from bootstrapping (```formula.getInstance()```) has setters for all the available options, and add-functions for array options. E.g. ```formula.setTemplates```, ```formula.addTemplate```, ```formula.setModel``` ...
 
