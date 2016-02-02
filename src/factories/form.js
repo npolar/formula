@@ -19,13 +19,14 @@ angular.module('formula')
  * @returns form class constructor
  */
 .factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
-  'formulaEvaluateConditionsService', 'formulaCustomTemplateService',
-  function($rootScope, jsonLoader, Model, Field, i18n, formulaEvaluateConditionsService, formulaCustomTemplateService) {
+  'formulaEvaluateConditionsService', 'formulaTemplateService',
+  function($rootScope, jsonLoader, Model, Field, i18n, formulaEvaluateConditionsService, templates) {
     function fieldsetFromSchema(schema, data) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
           fields: [],
-          id: 'the-fieldset'
+          id: 'the-fieldset',
+          mainType: 'fieldset'
         }];
 
         Object.keys(schema.properties).forEach(function(key) {
@@ -37,7 +38,7 @@ angular.module('formula')
             fieldsets[0].fields.push(newField);
           }
         });
-
+        templates.initNode(fieldsets[0]);
         return fieldsets;
       }
 
@@ -53,7 +54,8 @@ angular.module('formula')
             title: fs.title,
             active: (i ? false : true),
             fields: [],
-            id: fs.title + i
+            id: fs.title + i,
+            mainType: 'fieldset'
           };
           fs.fields.forEach(function(f, j) {
             var key;
@@ -70,6 +72,7 @@ angular.module('formula')
               fieldset.fields.push(newField);
             }
           });
+          templates.initNode(fieldset);
           fieldsets.push(fieldset);
         });
         return fieldsets;
@@ -86,7 +89,7 @@ angular.module('formula')
      * @param data
      * @param formDefinition Optional form definition object
      */
-    function Form(schema, data, formDefinition) {
+    function Form(schema, data, formDefinition, keepFailing) {
       this.errors = null;
       this.i18n = i18n(null);
       this.schema = schema;
@@ -94,6 +97,10 @@ angular.module('formula')
       this.title = null;
       this.valid = false;
       this.model = new Model(data);
+      this.mainType = 'form';
+
+      templates.initNode(this);
+      formulaEvaluateConditionsService.keepFailing(!!keepFailing);
 
       if (formDefinition) {
         this.title = formDefinition.title;
@@ -121,6 +128,7 @@ angular.module('formula')
       };
 
       if (field.typeOf('array')) {
+        field.fields.forEach(recurseField);
         field.values.forEach(recurseField);
       } else if (field.typeOf('object')) {
         field.fields.forEach(recurseField);
@@ -131,6 +139,23 @@ angular.module('formula')
     };
 
     Form.prototype = {
+
+      // @FIXME only run match fn for new template
+      updateTemplates: function () {
+        templates.initNode(this);
+        this.fieldsets.forEach(templates.initNode);
+        this.fields().forEach(templates.initNode);
+      },
+
+      updateTemplate: function (template) {
+        templates.evalTemplate(this, template);
+        this.fieldsets.forEach(function (fieldset) {
+          templates.evalTemplate(fieldset, template);
+        });
+        this.fields().forEach(function (field) {
+          templates.evalTemplate(field, template);
+        });
+      },
 
       fields: function () {
         var fields = [];
@@ -149,12 +174,6 @@ angular.module('formula')
           }
         });
         this.destroyWatcher();
-      },
-
-      updateCustomTemplates: function () {
-        this.fields().forEach(function (field) {
-          formulaCustomTemplateService.initField(field);
-        });
       },
 
       /**

@@ -35,7 +35,8 @@ angular.module('formula')
 			JSON_LOAD_ERROR: 'could not load JSON document: {uri}',
 			SCHEMA_INVALID_URI: 'invalid URI for schema deref: {uri}',
 			SCHEMA_MISSING_PROPERTY: 'missing required schema property: {property} ({schema})',
-			SCHEMA_MISSING_REFERENCE: 'missing schema reference: {schema}'
+			SCHEMA_MISSING_REFERENCE: 'missing schema reference: {schema}',
+			MISSING_TEMPLATE: 'missing template for {missing}'
 		};
 
 		function codeTranslate(code, params) {

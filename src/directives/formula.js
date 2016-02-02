@@ -1,139 +1,97 @@
 /* globals angular */
 
 (function() {
-"use strict";
+  "use strict";
 
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
+  /**
+   * formula.js
+   * Generic JSON Schema form builder
+   *
+   * Norsk Polarinstutt 2014, http://npolar.no/
+   */
 
-angular.module('formula')
-	.directive('formula',
-	['formulaJsonLoader', 'formulaSchema', 'formulaForm', 'formulaI18n',
-		'formulaCustomTemplateService', '$http', '$compile', '$templateCache', '$templateRequest', '$q', '$rootScope',
-	function(jsonLoader, Schema, Form, i18n, formulaCustomTemplateService, $http, $compile, $templateCache, $templateRequest, $q, $rootScope) {
-		return {
-			restrict: 'A',
-      scope: { data: '=formula' },
-			controller: ['$scope', '$attrs', '$element', function($scope, $attrs, $element) {
-				var ctrl = this;
-				if(!$scope.data) {
-					throw "No formula options provided!";
-				}
+  angular.module('formula')
+    .directive('formula', ['$compile', '$timeout', 'formulaI18n', 'formulaClassService',
+      function($compile, $timeout, i18n, formulaClassService) {
+        return {
+          restrict: 'AE',
+          scope: {
+            options: '='
+          },
+          controller: ['$scope', function($scope) {
+            if (!$scope.options) {
+              throw "No formula options provided!";
+            }
 
-				var setLanguage = function (uri) {
-					var code = i18n.code(uri);
-					$scope.language = { uri: uri, code: code };
-					if(!code) {
-						i18n.add(uri).then(function (code) {
-							$scope.language.code = code;
+            var controller = {
+              setLanguage: function(uri) {
+                var code = i18n.code(uri);
+                $scope.language = {
+                  uri: uri,
+                  code: code
+                };
+                if (!code) {
+                  i18n.add(uri).then(function(code) {
+                    $scope.language.code = code;
 
-							if ($scope.form) {
-								$scope.form.translate(code);
-							}
-						});
-					}
-				};
+                    if ($scope.form) {
+                      $scope.form.translate(code);
+                    }
+                  });
+                }
+                $timeout();
+              },
 
-				var loadTemplate = function (templateId) {
-					return $q(function(resolve, reject) {
-						var prefix = 'formula/';
-						var defaultTemplate = 'default.html';
-						var templateCahceKey, templateElement;
+              setForm: function(form) {
+                $scope.form = this.form = form;
+              },
 
-						templateId = templateId || defaultTemplate;
+              updateTemplates: function() {
+                if (this.form) {
+                  this.form.updateTemplates();
+                  $timeout();
+                }
+              },
 
-						if (templateId.substr(-5) !== '.html') {
-							templateId += '.html';
-						}
+              updateTemplate: function(template) {
+                if (this.form) {
+                  this.form.updateTemplate(template);
+                  $timeout();
+                }
+              }
+            };
 
-						templateCahceKey = prefix + templateId;
+            controller.setForm($scope.options.form);
 
-						if(!(templateElement = $templateCache.get(templateCahceKey))) {
-							$templateRequest(templateId, false /* ingoreErrors */).then(function (tmpl) {
-								templateElement = tmpl;
-								resolve(templateElement);
-							},
-							function () {
-								templateElement = $templateCache.get(prefix + defaultTemplate);
-								resolve(templateElement);
-							});
-						} else {
-							resolve(templateElement);
-						}
-					});
-				};
+            if ($scope.options.language) {
+              controller.setLanguage($scope.options.language);
+            }
 
-				$scope.schema = new Schema();
+            $scope.options.controller = controller;
+          }],
+          link: function(scope, iElement, iAttrs) {
+            scope.$watch('form', function(form) {
+              if (form) {
+                iElement.addClass(formulaClassService.schemaClass(form));
+                iElement.html(form.template);
+                $compile(iElement.contents())(scope);
 
-				formulaCustomTemplateService.setTemplates($scope.data.templates);
-
-				$scope.template = $scope.data.template || 'default';
-				setLanguage($scope.data.language);
-
-				var asyncs = [loadTemplate($scope.data.template),
-					$scope.schema.deref($scope.data.schema), Promise.resolve($scope.data.model)];
-				if ($scope.data.form) {
-					asyncs.push(jsonLoader($scope.data.form));
-				}
-
-				var createForm = function (schema, data, formDefinition) {
-					if ($scope.form) {
-						$scope.form.destroy();
-					}
-					$scope.form = ctrl.form = $scope.data.formula = new Form(schema, data, formDefinition);
-					$scope.form.onsave = $scope.data.onsave || $scope.form.onsave;
-					$scope.form.translate($scope.language.code);
-				};
-
-				var formLoaded = $q.all(asyncs).then(function(responses) {
-					createForm(responses[1], responses[2], responses[3]);
-					$compile(angular.element(responses[0]))($scope, function (cloned, scope) {
-						$element.prepend(cloned);
-					});
-					$scope.data.ready = true;
-					return true;
-				});
-
-				// Enable language hot-swapping
-				$scope.$watch('data.language', function(newUri, oldUri) {
-					if (newUri && newUri !== oldUri) {
-						formLoaded.then(function () {
-							setLanguage(newUri);
-						});
-					}
-				});
-
-				// Enable data hot-swapping
-				$scope.$watchCollection('data.model', function(newData, oldData) {
-					if (newData && newData !== oldData) {
-						formLoaded.then(function () {
-							createForm($scope.form.schema, newData, $scope.form.formDefinition);
-						});
-					}
-				});
-
-				// Enable template hot-swapping
-				$scope.$watchCollection('data.templates', function(newData, oldData) {
-					if (newData && newData !== oldData) {
-						formulaCustomTemplateService.setTemplates(newData);
-						if ($scope.form) {
-							$scope.form.updateCustomTemplates();
-						}
-					}
-				});
-
-				// Don't leave memory leaks
-				$scope.$on('$destroy', function () {
-					$scope.form.destroy();
-				});
-
-				this.data = $scope.data; // Others need this
-			}]
-		};
-	}]);
+								// http://stackoverflow.com/a/19686824/1357822
+                var to;
+                var listener = scope.$watch(function() {
+                  clearTimeout(to);
+                  to = setTimeout(function() {
+                    listener();
+                    $timeout(function() {
+                      scope.form.ready = true;
+                    }, 100);
+                  }, 50);
+                });
+              }
+            });
+          }
+        };
+      }
+    ]);
 
 })();

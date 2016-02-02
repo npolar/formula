@@ -31,9 +31,6 @@ angular.module('formula')
             field.type = 'any';
             // @TODO support any
           }
-          field.mainType = field.type;
-        } else {
-          field.mainType = field.schema.type;
         }
       };
 
@@ -47,6 +44,7 @@ angular.module('formula')
        */
       var setFieldType = function(field) {
         reduceFieldTypes(field);
+        field.mainType = 'field';
         if (field.type === 'select' || field.enum) {
           field.type = 'input:select';
           field.values = [];
@@ -83,6 +81,7 @@ angular.module('formula')
                 field.type = 'input:any';
                 break;
               case 'array':
+                field.mainType = 'array';
                 field.values = [];
                 if (field.schema.items) {
                   var items = field.schema.items;
@@ -95,6 +94,7 @@ angular.module('formula')
                     field.enum = items.enum;
                     field.multiple = true;
                     field.type = 'input:select';
+                    field.mainType = 'field';
                   } else if (items.allOf) {
                     // @TODO
                     log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {
@@ -144,6 +144,7 @@ angular.module('formula')
                 break;
 
               case 'object':
+                field.mainType = 'object';
                 if (!field.schema.properties) {
                   log.warning(log.codes.FIELD_MISSING_PROPERTY, {
                     property: 'properties',

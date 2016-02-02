@@ -1,0 +1,5 @@
+<div ng-class="{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }" ng-if="field.visible" title="{{ field.description }}">
+  <label for="{{ ::field.uid }}">{{ field.title }} {{field.visibility}}</label>
+  <formula:input field="field"></formula:input>
+  <span>{{ field.error.message || field.description }}</span>
+</div>

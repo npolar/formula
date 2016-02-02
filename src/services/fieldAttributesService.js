@@ -10,10 +10,10 @@
  * Norsk Polarinstutt 2014, http://npolar.no/
  */
 angular.module('formula')
-  .service('formulaFieldAttributesService', ['$rootScope', 'formulaLog', 'formulaCustomTemplateService',
+  .service('formulaFieldAttributesService', ['$rootScope', 'formulaLog', 'formulaTemplateService',
           'formulaFieldTranslateDefaultsService', 'formulaFieldTypeService',
     function($rootScope, log,
-      formulaCustomTemplateService, formulaFieldTranslateDefaultsService,
+      templates, formulaFieldTranslateDefaultsService,
       formulaFieldTypeService) {
 
       var assign = function(field, data) {
@@ -33,7 +33,6 @@ angular.module('formula')
             return field.value;
           }, function(n, o) {
             if (n !== o) {
-              console.log('input watch', field.path, n, field.value);
               if (field.value === null || field.value === "") {
                 field.value = undefined;
                 return; // triggers new watch
@@ -45,7 +44,7 @@ angular.module('formula')
               }
               $rootScope.$emit('revalidate');
             }
-          }, true);
+          });
         }
       };
 
@@ -92,6 +91,7 @@ angular.module('formula')
       var attrsSet = function(field, options) {
         field.parents = options.parents || [];
         field.id = field.title = options.id;
+        field.index = options.index;
 
         assign(field, (field.schema = options.schema));
         assign(field, (field.fieldDefinition = options.fieldDefinition || {}));
@@ -135,7 +135,7 @@ angular.module('formula')
 
         watchField(field);
 
-        formulaCustomTemplateService.initField(field);
+        templates.initNode(field);
 
         field.visible = field.hidden ? false : true;
 
