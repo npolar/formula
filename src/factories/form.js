@@ -91,7 +91,8 @@ angular.module('formula')
      */
     function Form(schema, data, formDefinition, keepFailing) {
       this.errors = null;
-      this.i18n = i18n(null);
+      this.i18n = i18n;
+
       this.schema = schema;
       this.formDefinition = formDefinition;
       this.title = null;
@@ -117,6 +118,8 @@ angular.module('formula')
       this.destroyWatcher = $rootScope.$on('revalidate', function() {
         self.validate();
       });
+      this.translate();
+      console.log(this);
       this.validate(true, true);
     }
 
@@ -140,7 +143,6 @@ angular.module('formula')
 
     Form.prototype = {
 
-      // @FIXME only run match fn for new template
       updateTemplates: function () {
         templates.initNode(this);
         this.fieldsets.forEach(templates.initNode);
@@ -235,11 +237,10 @@ angular.module('formula')
       /**
        * @method translate
        *
-       * Function used to translate the form using a specific language.
+       * Function used to translate the form to language set in i18n service.
        *
-       * @param code ISO 639-3 code to language used for translation
        */
-      translate: function(code) {
+      translate: function() {
 
         function fieldTranslate(field, parent) {
           var fieldTranslation = (parent && parent.fields ? (parent.fields[field.id] || null) : null);
@@ -285,17 +286,15 @@ angular.module('formula')
           }
         }
 
-        this.i18n = i18n(code);
-
-        angular.forEach(this.fieldsets, function(fs, i) {
-          if (this.i18n.fieldsets) {
-            fs.title = this.i18n.fieldsets[i] || fs.title;
+        this.fieldsets.forEach(function(fs, i) {
+          if (i18n.fieldsets) {
+            fs.title = i18n.fieldsets[i] || fs.title;
           }
 
-          angular.forEach(fs.fields, function(field) {
-            fieldTranslate(field, this.i18n);
-          }, this);
-        }, this);
+          fs.fields.forEach(function(field) {
+            fieldTranslate(field, i18n);
+          });
+        });
       },
 
       /**

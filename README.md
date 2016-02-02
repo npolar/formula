@@ -22,9 +22,9 @@ Bootstrapping is done by using the **'formula'** service to create a instance. T
 ```
 
 ### Options
-* **schema**\* - [url, Object] JSON schema
+* **schema**\* - [url] JSON schema
 * **form** - [url, Object], form layout config
-* **language** - [url] JSON translation file
+* **languages** - [Array] languages
 * **model** - [Promise, Object] JSON document
 * **keepFailing** - [Boolean], to keep properties with failing conditions in model or not (default: true)
 * **templates** - [Object] templates
@@ -59,6 +59,21 @@ Config to set form title, group properties into fieldsets, override schema type,
 
 ```
 
+#### options.languages
+Languages is configured like this:
+
+```js
+languages: [{
+  code: 'en',
+  aliases: ['en_GB'],
+  uri: 'uri to translation file',
+  //map: translation object
+}]
+
+```
+
+See demo/json/no.json for example translation file
+
 #### options.templates####
 Templates is configured like this:
 
@@ -84,6 +99,7 @@ templates: [
 If you are defining your own template you need to provide at least one with ```match: 'form'```, one with ```'fieldset'``` and one with ```'field'```.
 
 Templates are evaluated in LIFO order!
+All templates can have one root element only.
 
 ### The service instance
 The instance you get from bootstrapping (```formula.getInstance()```) has setters for all the available options, and add-functions for array options. E.g. ```formula.setTemplates```, ```formula.addTemplate```, ```formula.setModel``` ...

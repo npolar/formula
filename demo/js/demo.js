@@ -1,5 +1,5 @@
 "use strict";
-/* globals angular */
+/* globals angular, tv4 */
 
 angular.module('demo', ['formula'])
   .controller('demoController', ['$scope', '$timeout', '$q', 'formula',
@@ -37,8 +37,8 @@ angular.module('demo', ['formula'])
           }]
         });
         console.log("timeout 1");
-
-        $scope.formula.setLanguage("json/no.json");
+        $scope.formula.i18n.add('json/no.json', 'nb_NO', ['nb', 'no']);
+        $scope.formula.i18n.set('no');
       };
 
       var updateModel2 = function() {
@@ -57,11 +57,14 @@ angular.module('demo', ['formula'])
         return deferred.promise;
       };
 
-
       $scope.formula = formula.getInstance({
         schema: "json/demo-schema.json",
         form: "json/demo-form.json",
-        language: null,
+        // languages: [{
+        //   code: 'nb_NO',
+        //   aliases: ['nb', 'no'],
+        //   uri: 'json/no.json'
+        // }],
         model: getResource()
       });
       $scope.formula.addTemplate({

@@ -1,29 +1,28 @@
 {
-  "iso639-3": "nob",
   "title": "Norsk (Bokmål)",
   "updated": "1337-01-02",
   "authors": [
     "batman@batcave.org"
   ],
-  "labels": {
-    "add": [
-      "Legg til",
-      "Klikk for å legge til et nytt element"
-    ],
+  "text": {
+    "add": {
+      "label": "Legg til",
+      "tooltip": "Klikk for å legge til et nytt element"
+    },
     "invalid": "{count} ugyldige felt",
-    "remove": [
-      "Fjern",
-      "Klikk for å fjerne elementet"
-    ],
+    "remove": {
+      "label": "Fjern",
+      "tooltip": "Klikk for å fjerne elementet"
+    },
     "required": "Påkrevd felt",
-    "save": [
-      "Lagre",
-      "Klikk for å lagre dokumentet"
-    ],
-    "validate": [
-      "Validér",
-      "Klikk for å validere dokumentet"
-    ]
+    "save": {
+      "label": "Lagre",
+      "tooltip": "Klikk for å lagre dokumentet"
+    },
+    "validate": {
+      "label": "Validér",
+      "tooltip": "Klikk for å validere dokumentet"
+    }
   },
   "fieldsets": [
     "Strenger",
@@ -38,7 +37,7 @@
       "description": "ÜberStringBeskrivelse"
     },
     "string_enum_default": {
-      "values": [ "Første", "Andre", "Tredje", "Fjerde" ]
+      "values": ["Første", "Andre", "Tredje", "Fjerde"]
     },
     "array_object": {
       "title": "Objektliste",
@@ -50,7 +49,7 @@
       }
     },
     "array_string_enum": {
-      "values": [ "Flodhest", "Elefant", "Blåhval", "Erna Solberg" ]
+      "values": ["Flodhest", "Elefant", "Blåhval", "Erna Solberg"]
     },
     "array_hierarchy": {
       "title": "I",
@@ -70,7 +69,7 @@
                 },
                 "obj_1_1_3": {
                   "title": "Velg side",
-                  "values": [ "Den MØRKE siden", "Den LYSE siden" ]
+                  "values": ["Den MØRKE siden", "Den LYSE siden"]
                 }
               }
             }

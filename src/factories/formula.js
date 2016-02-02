@@ -11,7 +11,8 @@
  */
 
 angular.module('formula').factory('formula',
-	['$q', 'formulaTemplateService', 'formulaSchema', 'formulaJsonLoader', 'formulaForm', function($q, templates, Schema, jsonLoader, Form) {
+	['$q', 'formulaI18n', 'formulaTemplateService', 'formulaSchema', 'formulaJsonLoader', 'formulaForm',
+	function($q, i18n, templates, Schema, jsonLoader, Form) {
 
 		var Formula = function (options) {
 			if(!options) {
@@ -19,20 +20,19 @@ angular.module('formula').factory('formula',
 			}
 			var _cfg = {};
 			var schema = new Schema();
-			var asyncs = [schema.deref(options.schema), Promise.resolve(options.model)];
-
-			if (options.form) {
-				if (typeof options.form === 'string') {
-					asyncs.push(jsonLoader(options.form));
-				} else {
-					asyncs.push(Promise.resolve(options.form));
-				}
-			}
-			_cfg.language = options.language;
+			var asyncs = [schema.deref(options.schema), jsonLoader(options.model), jsonLoader(options.form)];
 
 			if (options.templates instanceof Array) {
 				templates.setTemplates(options.templates);
 			}
+
+			(options.languages instanceof Array ? options.languages : []).forEach(function (language, index) {
+					i18n.add(language.uri || language.map, language.code, language.aliases).then(function () {
+						if (index === 0) {
+							setLanguage(language.code);
+						}
+					});
+			});
 
 			var formLoaded = $q.all(asyncs).then(function(responses) {
 				createForm(responses[1], responses[2]);
@@ -41,6 +41,14 @@ angular.module('formula').factory('formula',
 				console.error('Could not load form', arguments);
 			});
 
+			var setLanguage = function (code) {
+				i18n.set(code).then(function () {
+					if (_cfg.controller) {
+						_cfg.controller.setLanguage(code);
+					}
+				});
+			};
+
 			var createForm = function (model, formDefinition) {
 				if (_cfg.form) {
 					_cfg.form.destroy();
@@ -48,16 +56,9 @@ angular.module('formula').factory('formula',
 				_cfg.form = new Form(schema.json, model, formDefinition, options.keepFailing);
 				if (_cfg.controller) {
 					_cfg.controller.setForm(_cfg.form);
-					_cfg.controller.setLanguage(_cfg.language);
+					_cfg.form.translate();
 				}
 				_cfg.form.onsave = options.onsave || _cfg.form.onsave;
-			};
-
-			this.setLanguage = function (uri) {
-				_cfg.language = uri;
-				if (_cfg.controller) {
-					_cfg.controller.setLanguage(uri);
-				}
 			};
 
 			this.setModel = function (model) {
@@ -101,6 +102,14 @@ angular.module('formula').factory('formula',
 				formLoaded.then(function (responses) {
 					createForm(responses[1], responses[2]);
 				});
+			};
+
+			this.i18n = {
+				add: i18n.add,
+				set: setLanguage,
+				get code() {
+					return i18n.code;
+				}
 			};
 
 			this._cfg = _cfg;

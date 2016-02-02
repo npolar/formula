@@ -20,10 +20,10 @@ angular.module('formula')
  * @returns field class constructor
  */
 
-.factory('formulaField', ['$filter', '$rootScope', 'formulaFormat',
+.factory('formulaField', ['$filter', '$rootScope', 'formulaI18n', 'formulaFormat',
         'formulaFieldAttributesService', 'formulaFieldValidateService',
         'formulaFieldValueFromModelService',
-  function($filter, $rootScope, format, formulaFieldAttributesService,
+  function($filter, $rootScope, i18n, format, formulaFieldAttributesService,
     formulaFieldValidateService, formulaFieldValueFromModelService) {
     /**
      * @class field
@@ -385,6 +385,17 @@ angular.module('formula')
 
       setRequired: function(required) {
         this.required = (required === true) || (required instanceof Array && required.indexOf(this.id) !== -1);
+      },
+
+      getErrorText: function (error) {
+        var text = '';
+        if (error.dataPath) {
+          var line = Number(error.dataPath.replace(/^\/(\d+).*$/,'$1')) + 1;
+          text += $filter('formulaReplace')(i18n.line, {line: line, error: error.message});
+        } else {
+          text += error.message;
+        }
+        return text;
       }
     };
 

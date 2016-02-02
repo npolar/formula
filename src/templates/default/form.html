@@ -1,28 +1,30 @@
-<div class="formula" ng-if="!form.ready">
-  <div class="loading">
-    <div class="spinner"></div>
-    <span>Loading...</span>
+<div>
+  <div class="formula" ng-if="!form.ready">
+    <div class="loading">
+      <div class="spinner"></div>
+      <span>Loading...</span>
+    </div>
   </div>
+
+  <form class="formula" ng-show="form.ready">
+    <header ng-if="::form.title">
+      {{ form.title }}
+    </header>
+
+    <nav ng-if="::form.fieldsets.length > 1">
+      <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in ::form.fieldsets track by fieldset.id">{{ fieldset.title }}</a>
+    </nav>
+
+    <formula:fieldsets></formula:fieldsets>
+
+    <footer>
+      <span ng-if="form.errors" title="{{ form.errors.join('\n') }}">{{ form.i18n.text.invalid | formulaReplace : { count: form.errors.length } }}</span>
+      <button ng-click="form.validate(true);" ng-if="!data.hideButtons" title="{{ form.i18n.text.validate.tooltip }}">
+        <strong>&#10003;</strong>
+        {{ form.i18n.text.validate.label }}</button>
+      <button ng-click="form.save()" ng-disabled="!form.valid" ng-if="!data.hideButtons" title="{{ form.i18n.text.save.tooltip }}">
+        <strong>&#9921;</strong>
+        {{ form.i18n.text.save.label }}</button>
+    </footer>
+  </form>
 </div>
-
-<form class="formula" ng-show="form.ready">
-  <header ng-if="::form.title">
-    {{ form.title }}
-  </header>
-
-  <nav ng-if="::form.fieldsets.length > 1">
-    <a href="" ng-class="{ active: fieldset.active }" ng-click="form.activate(fieldset)" ng-repeat="fieldset in ::form.fieldsets track by fieldset.id">{{ fieldset.title }}</a>
-  </nav>
-
-  <formula:fieldsets></formula:fieldsets>
-
-  <footer>
-    <span ng-if="form.errors" title="{{ form.errors.join('\n') }}">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span>
-    <button ng-click="form.validate(true);" ng-if="!data.hideButtons" title="{{ form.i18n.validate[1] }}">
-      <strong>&#10003;</strong>
-      {{ form.i18n.validate[0] }}</button>
-    <button ng-click="form.save()" ng-disabled="!form.valid" ng-if="!data.hideButtons" title="{{ form.i18n.save[1] }}">
-      <strong>&#9921;</strong>
-      {{ form.i18n.save[0] }}</button>
-  </footer>
-</form>

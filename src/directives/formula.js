@@ -24,22 +24,11 @@
             }
 
             var controller = {
-              setLanguage: function(uri) {
-                var code = i18n.code(uri);
-                $scope.language = {
-                  uri: uri,
-                  code: code
-                };
-                if (!code) {
-                  i18n.add(uri).then(function(code) {
-                    $scope.language.code = code;
-
-                    if ($scope.form) {
-                      $scope.form.translate(code);
-                    }
-                  });
+              setLanguage: function(code) {
+                $scope.language = code;
+                if (this.form) {
+                  this.form.translate();
                 }
-                $timeout();
               },
 
               setForm: function(form) {
@@ -62,10 +51,7 @@
             };
 
             controller.setForm($scope.options.form);
-
-            if ($scope.options.language) {
-              controller.setLanguage($scope.options.language);
-            }
+            controller.setLanguage(i18n.code);
 
             $scope.options.controller = controller;
           }],

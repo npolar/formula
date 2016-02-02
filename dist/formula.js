@@ -162,22 +162,11 @@ angular.module('formula')
             }
 
             var controller = {
-              setLanguage: function(uri) {
-                var code = i18n.code(uri);
-                $scope.language = {
-                  uri: uri,
-                  code: code
-                };
-                if (!code) {
-                  i18n.add(uri).then(function(code) {
-                    $scope.language.code = code;
-
-                    if ($scope.form) {
-                      $scope.form.translate(code);
-                    }
-                  });
+              setLanguage: function(code) {
+                $scope.language = code;
+                if (this.form) {
+                  this.form.translate();
                 }
-                $timeout();
               },
 
               setForm: function(form) {
@@ -200,10 +189,7 @@ angular.module('formula')
             };
 
             controller.setForm($scope.options.form);
-
-            if ($scope.options.language) {
-              controller.setLanguage($scope.options.language);
-            }
+            controller.setLanguage(i18n.code);
 
             $scope.options.controller = controller;
           }],
@@ -372,10 +358,10 @@ angular.module('formula')
  * @returns field class constructor
  */
 
-.factory('formulaField', ['$filter', '$rootScope', 'formulaFormat',
+.factory('formulaField', ['$filter', '$rootScope', 'formulaI18n', 'formulaFormat',
         'formulaFieldAttributesService', 'formulaFieldValidateService',
         'formulaFieldValueFromModelService',
-  function($filter, $rootScope, format, formulaFieldAttributesService,
+  function($filter, $rootScope, i18n, format, formulaFieldAttributesService,
     formulaFieldValidateService, formulaFieldValueFromModelService) {
     /**
      * @class field
@@ -737,6 +723,17 @@ angular.module('formula')
 
       setRequired: function(required) {
         this.required = (required === true) || (required instanceof Array && required.indexOf(this.id) !== -1);
+      },
+
+      getErrorText: function (error) {
+        var text = '';
+        if (error.dataPath) {
+          var line = Number(error.dataPath.replace(/^\/(\d+).*$/,'$1')) + 1;
+          text += $filter('formulaReplace')(i18n.line, {line: line, error: error.message});
+        } else {
+          text += error.message;
+        }
+        return text;
       }
     };
 
@@ -909,7 +906,8 @@ angular.module('formula')
      */
     function Form(schema, data, formDefinition, keepFailing) {
       this.errors = null;
-      this.i18n = i18n(null);
+      this.i18n = i18n;
+
       this.schema = schema;
       this.formDefinition = formDefinition;
       this.title = null;
@@ -935,6 +933,8 @@ angular.module('formula')
       this.destroyWatcher = $rootScope.$on('revalidate', function() {
         self.validate();
       });
+      this.translate();
+      console.log(this);
       this.validate(true, true);
     }
 
@@ -958,7 +958,6 @@ angular.module('formula')
 
     Form.prototype = {
 
-      // @FIXME only run match fn for new template
       updateTemplates: function () {
         templates.initNode(this);
         this.fieldsets.forEach(templates.initNode);
@@ -1053,11 +1052,10 @@ angular.module('formula')
       /**
        * @method translate
        *
-       * Function used to translate the form using a specific language.
+       * Function used to translate the form to language set in i18n service.
        *
-       * @param code ISO 639-3 code to language used for translation
        */
-      translate: function(code) {
+      translate: function() {
 
         function fieldTranslate(field, parent) {
           var fieldTranslation = (parent && parent.fields ? (parent.fields[field.id] || null) : null);
@@ -1103,17 +1101,15 @@ angular.module('formula')
           }
         }
 
-        this.i18n = i18n(code);
-
-        angular.forEach(this.fieldsets, function(fs, i) {
-          if (this.i18n.fieldsets) {
-            fs.title = this.i18n.fieldsets[i] || fs.title;
+        this.fieldsets.forEach(function(fs, i) {
+          if (i18n.fieldsets) {
+            fs.title = i18n.fieldsets[i] || fs.title;
           }
 
-          angular.forEach(fs.fields, function(field) {
-            fieldTranslate(field, this.i18n);
-          }, this);
-        }, this);
+          fs.fields.forEach(function(field) {
+            fieldTranslate(field, i18n);
+          });
+        });
       },
 
       /**
@@ -1303,7 +1299,8 @@ angular.module('formula')
  */
 
 angular.module('formula').factory('formula',
-	['$q', 'formulaTemplateService', 'formulaSchema', 'formulaJsonLoader', 'formulaForm', function($q, templates, Schema, jsonLoader, Form) {
+	['$q', 'formulaI18n', 'formulaTemplateService', 'formulaSchema', 'formulaJsonLoader', 'formulaForm',
+	function($q, i18n, templates, Schema, jsonLoader, Form) {
 
 		var Formula = function (options) {
 			if(!options) {
@@ -1311,20 +1308,19 @@ angular.module('formula').factory('formula',
 			}
 			var _cfg = {};
 			var schema = new Schema();
-			var asyncs = [schema.deref(options.schema), Promise.resolve(options.model)];
-
-			if (options.form) {
-				if (typeof options.form === 'string') {
-					asyncs.push(jsonLoader(options.form));
-				} else {
-					asyncs.push(Promise.resolve(options.form));
-				}
-			}
-			_cfg.language = options.language;
+			var asyncs = [schema.deref(options.schema), jsonLoader(options.model), jsonLoader(options.form)];
 
 			if (options.templates instanceof Array) {
 				templates.setTemplates(options.templates);
 			}
+
+			(options.languages instanceof Array ? options.languages : []).forEach(function (language, index) {
+					i18n.add(language.uri || language.map, language.code, language.aliases).then(function () {
+						if (index === 0) {
+							setLanguage(language.code);
+						}
+					});
+			});
 
 			var formLoaded = $q.all(asyncs).then(function(responses) {
 				createForm(responses[1], responses[2]);
@@ -1333,6 +1329,14 @@ angular.module('formula').factory('formula',
 				console.error('Could not load form', arguments);
 			});
 
+			var setLanguage = function (code) {
+				i18n.set(code).then(function () {
+					if (_cfg.controller) {
+						_cfg.controller.setLanguage(code);
+					}
+				});
+			};
+
 			var createForm = function (model, formDefinition) {
 				if (_cfg.form) {
 					_cfg.form.destroy();
@@ -1340,16 +1344,9 @@ angular.module('formula').factory('formula',
 				_cfg.form = new Form(schema.json, model, formDefinition, options.keepFailing);
 				if (_cfg.controller) {
 					_cfg.controller.setForm(_cfg.form);
-					_cfg.controller.setLanguage(_cfg.language);
+					_cfg.form.translate();
 				}
 				_cfg.form.onsave = options.onsave || _cfg.form.onsave;
-			};
-
-			this.setLanguage = function (uri) {
-				_cfg.language = uri;
-				if (_cfg.controller) {
-					_cfg.controller.setLanguage(uri);
-				}
 			};
 
 			this.setModel = function (model) {
@@ -1395,6 +1392,14 @@ angular.module('formula').factory('formula',
 				});
 			};
 
+			this.i18n = {
+				add: i18n.add,
+				set: setLanguage,
+				get code() {
+					return i18n.code;
+				}
+			};
+
 			this._cfg = _cfg;
 			return this;
 		};
@@ -1408,121 +1413,144 @@ angular.module('formula').factory('formula',
 
 })();
 
-/* globals angular */
+/* globals angular, tv4 */
 
 (function() {
-"use strict";
+  "use strict";
 
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
+  /**
+   * formula.js
+   * Generic JSON Schema form builder
+   *
+   * Norsk Polarinstutt 2014, http://npolar.no/
+   */
 
-angular.module('formula')
+  angular.module('formula')
 
-	/**
-	 * @factory i18n
-	 *
-	 * Service used for handling Internationalization and Localization.
-	 * This service is based on the ISO 639-3 standard for language codes.
-	 *
-	 * @returns A singleton for i18n handling
-	 */
+  /**
+   * @factory i18n
+   *
+   * Service used for handling Internationalization and Localization.
+   * This service is based on the ISO 639-3 standard for language codes.
+   *
+   * @returns A singleton for i18n handling
+   */
 
-	.factory('formulaI18n',
-	['formulaJsonLoader', 'formulaLog', '$q',
-	function(jsonLoader, log, $q) {
-		function i18n(code) {
-			if(code && i18n.cache[code]) {
-				return i18n.cache[code];
-			}
+  .factory('formulaI18n', ['formulaJsonLoader', 'formulaLog', '$q',
+    function(jsonLoader, log, $q) {
 
-			// Fallback translation
-			return {
-				add: 		[ 'Add', 'Click to add a new item' ],
-				invalid: 	'{count} invalid fields',
-				maximize: 	[ 'Maximize', 'Click to maximize item' ],
-				minimize:	[ 'Minimize', 'Click to minimize item' ],
-				remove:		[ 'Remove', 'Click to remove item' ],
-				required:	'Required field',
-				save:		[ 'Save', 'Click to save document' ],
-				validate:	[ 'Validate', 'Click to validate form' ],
+      var DEFAULT_TEXTS = {
+				code: 'en',
+        text: {
+          add: {
+            label: 'Add',
+            tooltip: 'Click to add a new item'
+          },
+          invalid: '{count} invalid fields',
+          maximize: {
+            label: 'Maximize',
+            tooltip: 'Click to maximize item'
+          },
+          minimize: {
+            label: 'Minimize',
+            tooltip: 'Click to minimize item'
+          },
+          remove: {
+            label: 'Remove',
+            tooltip: 'Click to remove item'
+          },
+          required: 'Required field',
+          save: {
+            label: 'Save',
+            tooltip: 'Click to save document'
+          },
+          validate: {
+            label: 'Validate',
+            tooltip: 'Click to validate form'
+          },
+          line: 'Line {line}: {error}',
+        },
 
-				code: null,
-				fields: {},
-				fieldsets: [],
-				uri: null
+        fields: {},
+        fieldsets: []
+      };
+
+      var currentLocale = DEFAULT_TEXTS;
+      var cache = {};
+      var codeAliases = {};
+
+      var set = function(code) {
+        var cacheKey = codeAliases[code];
+        tv4.language(cacheKey.replace(/_.*/, ''));
+        if (cache[cacheKey]) {
+          return Promise.resolve(cache[cacheKey]).then(function (locale) {
+            currentLocale = locale;
+            currentLocale.code = cacheKey;
+          });
+        }
+
+      };
+
+      /**
+       * @method add
+       *
+       * Function used to add a new translation from JSON URI.
+       *
+       * @param lang URI to JSON containing translation or translation object
+       * @param code for this translation
+       * @param code aliases. eg. no => nb => nb_NO
+       * @returns $q promise object resolving to ISO 639-3 code
+       */
+
+      var add = function(lang, code, aliases) {
+        if (!lang) {
+          log.warning(log.codes.I18N_MISSING_URI);
+          return;
+        }
+        if (!code) {
+          log.warning(log.codes.I18N_MISSING_CODE, {
+            uri: lang
+          });
+          return;
+        }
+
+        var deferred = $q.defer();
+        (aliases instanceof Array ? aliases : [aliases])
+        .forEach(function(alias) {
+          codeAliases[alias] = code;
+        });
+        codeAliases[code] = code;
+        var cacheKey = codeAliases[code];
+				cache[cacheKey] = deferred.promise;
+
+        if (typeof lang === 'string') { // lang is uri
+          jsonLoader(lang).then(function(data) {
+            cache[cacheKey] = {
+              fields: data.fields,
+              fieldsets: data.fieldsets,
+              text: data.text
+            };
+
+            deferred.resolve(cache[cacheKey]);
+          });
+        } else { // lang is map
+          cache[cacheKey] = lang;
+          deferred.resolve(lang);
+        }
+
+        return deferred.promise;
+      };
+
+      return {
+				add: add,
+				set: set,
+				get fields() { return currentLocale.fields; },
+        get fieldsets() { return currentLocale.fieldsets; },
+        get text() { return currentLocale.text; },
+				get code() { return currentLocale.code; }
 			};
-		}
-
-		i18n.cache = {};
-
-		/**
-		 * @method add
-		 *
-		 * Function used to add a new translation from JSON URI.
-		 *
-		 * @param uri URI to JSON containing translation
-		 * @returns $q promise object resolving to ISO 639-3 code
-		 */
-
-		i18n.add = function(uri) {
-			var deferred = $q.defer();
-
-			if(uri) {
-				jsonLoader(uri).then(function(data) {
-					var code = data['iso639-3'];
-
-					if(code) {
-						i18n.cache[code] = {
-							code: code,
-							fields: data.fields,
-							fieldsets: data.fieldsets,
-							uri: uri
-						};
-
-						angular.forEach(data.labels, function(val, key) {
-							i18n.cache[code][key] = val;
-						});
-
-						deferred.resolve(code);
-					} else {
-						log.warning(log.codes.I18N_MISSING_CODE, { uri: uri });
-					}
-				});
-			} else {
-				deferred.reject('not a valid translation JSON URI: ' + uri);
-			}
-
-			return deferred.promise;
-		};
-
-		/**
-		 * @method code
-		 *
-		 * Function used to get ISO 639-3 code for a added language from URI.
-		 * This function can also be used to simply check if a language is added.
-		 *
-		 * @param uri URI used for language code look-up
-		 * @returns ISO 639-3 code for the language if added, otherwise null
-		 */
-
-		i18n.code = function(uri) {
-			var retCode = null;
-
-			angular.forEach(i18n.cache, function(data, code) {
-				if(!retCode && data.uri === uri) {
-					retCode = code;
-				}
-			});
-
-			return retCode;
-		};
-
-		return i18n;
-	}]);
+    }
+  ]);
 
 })();
 
@@ -1555,22 +1583,23 @@ angular.module('formula')
 		var jsonLoader;
 
 		return (jsonLoader = function(uri, jsonp, rerun) {
-			if (typeof uri !== "string") {
-				return uri;
-			}
 			var deferred = $q.defer();
+			if (typeof uri !== "string") { // uri is not uri but schema object
+				deferred.resolve(uri);
+			} else {
+				(jsonp ? $http.jsonp(uri + '?callback=JSON_CALLBACK') : $http.get(uri))
+					.success(function(data, status, headers, config) {
+						deferred.resolve(data);
+					}).error(function(data, status, headers, config) {
+						if(!jsonp) {
+							return jsonLoader(uri, true);
+						}
 
-			(jsonp ? $http.jsonp(uri + '?callback=JSON_CALLBACK') : $http.get(uri))
-				.success(function(data, status, headers, config) {
-					deferred.resolve(data);
-				}).error(function(data, status, headers, config) {
-					if(!jsonp) {
-						return jsonLoader(uri, true);
-					}
+						log.error(log.codes.JSON_LOAD_ERROR, { uri: uri });
+						deferred.reject(uri);
+					});
+			}
 
-					log.error(log.codes.JSON_LOAD_ERROR, { uri: uri });
-					deferred.reject(uri);
-				});
 			return deferred.promise;
 		});
 	}]);
@@ -1610,7 +1639,8 @@ angular.module('formula')
 			FIELD_UNSUPPORTED_TOKEN: 'unsupported default token: {token} ({field})',
 			FIELD_UNSUPPORTED_TYPE: 'unsupported field type: {type} ({field})',
 			FIELD_HIDDEN_DEFAULT: 'field hidden by default: {field}',
-			I18N_MISSING_CODE: 'missing ISO 639-3 language code: {uri}',
+			I18N_MISSING_CODE: 'missing language code: {uri}',
+			I18N_MISSING_URI: 'missing i18n uri',
 			JSON_LOAD_ERROR: 'could not load JSON document: {uri}',
 			SCHEMA_INVALID_URI: 'invalid URI for schema deref: {uri}',
 			SCHEMA_MISSING_PROPERTY: 'missing required schema property: {property} ({schema})',
@@ -2671,6 +2701,8 @@ angular.module('formula')
     'formulaFieldConfig',
     function($templateCache, $templateRequest, $q, log, fieldConfig) {
 
+
+      // LIFO prio
       var DEFAULT_TEMPLATES = [
         {
           match: 'field',
@@ -2764,8 +2796,8 @@ angular.module('formula')
 
 })();
 
-angular.module("formula").run(["$templateCache", function($templateCache) {$templateCache.put("formula/default/array.html","<fieldset ng-class=\"{ valid: field.valid, error: field.errors }\"><legend>{{ field.title }} ({{ field.nrArrayValues() || 0 }})</legend><ul ng-if=\"::field.typeOf(\'fieldset\')\"><li ng-repeat=\"value in field.values track by value.path\" ng-if=\"!value.hidden\"><fieldset ng-class=\"{ valid: value.valid }\"><legend><span ng-if=\"!value.visible\">{{ value.fields | formulaInlineValues }}</span> <a class=\"toggle\" href=\"\" ng-click=\"field.itemToggle($index)\" title=\"{{ value.visible ? form.i18n.minimize[1] : form.i18n.maximize[1] }}\">{{ value.visible ? \'_\' : \'‾\' }}</a> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.remove[1] }}\">X</a></legend><formula:field field=\"value\" ng-if=\"value.visible\"></formula:field></fieldset></li><li><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ form.i18n.add[1] }}\" type=\"button\"><strong>+</strong> {{ form.i18n.add[0] }}</button></li></ul><ul ng-if=\"::field.typeOf(\'field\')\"><li ng-class=\"{ valid: value.valid, error: value.error }\" ng-repeat=\"value in field.values track by value.path\"><input formula:input=\"\" field=\"value\"> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.remove[1] }}\">X</a></li><li><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ form.i18n.add[1] }}\" type=\"button\"><strong>+</strong> {{ form.i18n.add[0] }}</button></li></ul></fieldset>");
-$templateCache.put("formula/default/field.html","<div ng-class=\"{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }\" ng-if=\"field.visible\" title=\"{{ field.description }}\"><label for=\"{{ ::field.uid }}\">{{ field.title }} {{field.visibility}}</label><formula:input field=\"field\"></formula:input><span>{{ field.error.message || field.description }}</span></div>");
+angular.module("formula").run(["$templateCache", function($templateCache) {$templateCache.put("formula/default/array.html","<fieldset ng-class=\"{ valid: field.valid, error: field.errors }\"><legend>{{ field.title }} ({{ field.nrArrayValues() || 0 }})</legend><ul ng-if=\"::field.typeOf(\'fieldset\')\"><li ng-repeat=\"value in field.values track by value.path\" ng-if=\"!value.hidden\"><fieldset ng-class=\"{ valid: value.valid }\"><legend><span ng-if=\"!value.visible\">{{ value.fields | formulaInlineValues }}</span> <a class=\"toggle\" href=\"\" ng-click=\"field.itemToggle($index)\" title=\"{{ value.visible ? form.i18n.text.minimize.tooltip : form.i18n.text.maximize.tooltip }}\">{{ value.visible ? \'_\' : \'‾\' }}</a> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.text.remove.tooltip }}\">&times;</a></legend><formula:field field=\"value\" ng-if=\"value.visible\"></formula:field></fieldset></li><li><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ form.i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ form.i18n.text.add.tooltip }}\" type=\"button\"><strong>&plus;</strong> {{ form.i18n.text.add[0] }}</button></li></ul><ul ng-if=\"::field.typeOf(\'field\')\"><li ng-class=\"{ valid: value.valid, error: value.error }\" ng-repeat=\"value in field.values track by value.path\"><input formula:input=\"\" field=\"value\"> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ form.i18n.text.remove.tooltip }}\">&times;</a></li><li><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ form.i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ form.i18n.text.add.tooltip }}\" type=\"button\"><strong>&plus;</strong> {{ form.i18n.text.add.label }}</button></li></ul></fieldset>");
+$templateCache.put("formula/default/field.html","<div ng-class=\"{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }\" ng-if=\"field.visible\" title=\"{{ field.description }}\"><label for=\"{{ ::field.uid }}\">{{ field.title }} {{field.visibility}}</label><formula:input field=\"field\"></formula:input><span ng-if=\"field.error\">{{ field.getErrorText(field.error) }}</span> <span ng-if=\"field.description\">{{ field.description }}</span></div>");
 $templateCache.put("formula/default/fieldset.html","<fieldset ng-show=\"fieldset.active\"><formula:fields fields=\"::fieldset.fields\"></formula:fields></fieldset>");
-$templateCache.put("formula/default/form.html","<div class=\"formula\" ng-if=\"!form.ready\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div><form class=\"formula\" ng-show=\"form.ready\"><header ng-if=\"::form.title\">{{ form.title }}</header><nav ng-if=\"::form.fieldsets.length > 1\"><a href=\"\" ng-class=\"{ active: fieldset.active }\" ng-click=\"form.activate(fieldset)\" ng-repeat=\"fieldset in ::form.fieldsets track by fieldset.id\">{{ fieldset.title }}</a></nav><formula:fieldsets></formula:fieldsets><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ form.i18n.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-click=\"form.validate(true);\" ng-if=\"!data.hideButtons\" title=\"{{ form.i18n.validate[1] }}\"><strong>&#10003;</strong> {{ form.i18n.validate[0] }}</button> <button ng-click=\"form.save()\" ng-disabled=\"!form.valid\" ng-if=\"!data.hideButtons\" title=\"{{ form.i18n.save[1] }}\"><strong>&#9921;</strong> {{ form.i18n.save[0] }}</button></footer></form>");
+$templateCache.put("formula/default/form.html","<div><div class=\"formula\" ng-if=\"!form.ready\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div><form class=\"formula\" ng-show=\"form.ready\"><header ng-if=\"::form.title\">{{ form.title }}</header><nav ng-if=\"::form.fieldsets.length > 1\"><a href=\"\" ng-class=\"{ active: fieldset.active }\" ng-click=\"form.activate(fieldset)\" ng-repeat=\"fieldset in ::form.fieldsets track by fieldset.id\">{{ fieldset.title }}</a></nav><formula:fieldsets></formula:fieldsets><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ form.i18n.text.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-click=\"form.validate(true);\" ng-if=\"!data.hideButtons\" title=\"{{ form.i18n.text.validate.tooltip }}\"><strong>&#10003;</strong> {{ form.i18n.text.validate.label }}</button> <button ng-click=\"form.save()\" ng-disabled=\"!form.valid\" ng-if=\"!data.hideButtons\" title=\"{{ form.i18n.text.save.tooltip }}\"><strong>&#9921;</strong> {{ form.i18n.text.save.label }}</button></footer></form></div>");
 $templateCache.put("formula/default/object.html","<fieldset><legend ng-if=\"::field.title\">{{ field.title }}</legend><formula:fields fields=\"::field.fields\"></formula:fields></fieldset>");}]);
