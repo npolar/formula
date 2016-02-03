@@ -78,11 +78,14 @@ angular.module('formula')
         getTemplate(node).then(function (template) {
           if (template) {
             node.template = template;
+          } else {
+            node.hidden = true;
           }
         }, function (missing) {
           log.warning(log.codes.MISSING_TEMPLATE, {
             missing: missing
           });
+          node.hidden = true;
         });
       };
 
