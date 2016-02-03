@@ -91,7 +91,6 @@ angular.module('formula')
      */
     function Form(schema, data, formDefinition, keepFailing) {
       this.errors = null;
-      this.i18n = i18n;
 
       this.schema = schema;
       this.formDefinition = formDefinition;

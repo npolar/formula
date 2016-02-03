@@ -10,8 +10,8 @@
    * Norsk Polarinstutt 2014, http://npolar.no/
    */
   angular.module('formula')
-    .directive('formulaField', ['$compile', 'formulaClassService',
-      function($compile, formulaClassService) {
+    .directive('formulaField', ['$compile', 'formulaClassService', 'formulaI18n',
+      function($compile, formulaClassService, i18n) {
 
         return {
           restrict: 'AE',
@@ -20,6 +20,7 @@
           },
           link: function (scope, iElement, iAttrs) {
             var field = scope.field;
+            scope.i18n = i18n;
             if (!field.hidden && field.template) {
               var fieldScope = scope.$new();
               var elem = angular.element(field.template);

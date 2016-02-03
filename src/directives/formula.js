@@ -54,6 +54,7 @@
             controller.setLanguage(i18n.code);
 
             $scope.options.controller = controller;
+            $scope.i18n = i18n;
           }],
           link: function(scope, iElement, iAttrs) {
             scope.$watch('form', function(form) {

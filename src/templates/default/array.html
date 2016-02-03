@@ -7,35 +7,35 @@
       <fieldset ng-class="{ valid: value.valid }">
         <legend>
           <span ng-if="!value.visible">{{ value.fields | formulaInlineValues }}</span>
-          <a class="toggle" href="" ng-click="field.itemToggle($index)" title="{{ value.visible ? form.i18n.text.minimize.tooltip : form.i18n.text.maximize.tooltip }}">{{ value.visible ? '_' : '‾' }}</a>
-          <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ form.i18n.text.remove.tooltip }}">&times;</a>
+          <a class="toggle" href="" ng-click="field.itemToggle($index)" title="{{ value.visible ? i18n.text.minimize.tooltip : i18n.text.maximize.tooltip }}">{{ value.visible ? '_' : '‾' }}</a>
+          <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ i18n.text.remove.tooltip }}">&times;</a>
         </legend>
 
         <formula:field field="value" ng-if="value.visible"></formula:field>
       </fieldset>
     </li>
     <li>
-      <span ng-if="field.errors" title="{{ field.errors.join('\n') }}">{{ form.i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</span>
+      <span ng-if="field.errors" title="{{ field.errors.join('\n') }}">{{ i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</span>
       <span ng-if="!field.errors">{{ field.description  }}</span>
 
-      <button class="add" ng-click="field.itemAdd()" title="{{ form.i18n.text.add.tooltip }}" type="button">
+      <button class="add" ng-click="field.itemAdd()" title="{{ i18n.text.add.tooltip }}" type="button">
         <strong>&plus;</strong>
-        {{ form.i18n.text.add[0] }}</button>
+        {{ i18n.text.add.label }}</button>
     </li>
   </ul>
 
   <ul ng-if="::field.typeOf('field')">
     <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values track by value.path">
       <input formula:input field="value" />
-      <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ form.i18n.text.remove.tooltip }}">&times;</a>
+      <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ i18n.text.remove.tooltip }}">&times;</a>
     </li>
     <li>
-      <span ng-if="field.errors" title="{{ field.errors.join('\n') }}">{{ form.i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</span>
+      <span ng-if="field.errors" title="{{ field.errors.join('\n') }}">{{ i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</span>
       <span ng-if="!field.errors">{{ field.description  }}</span>
 
-      <button class="add" ng-click="field.itemAdd()" title="{{ form.i18n.text.add.tooltip }}" type="button">
+      <button class="add" ng-click="field.itemAdd()" title="{{ i18n.text.add.tooltip }}" type="button">
         <strong>&plus;</strong>
-        {{ form.i18n.text.add.label }}</button>
+        {{ i18n.text.add.label }}</button>
     </li>
   </ul>
 </fieldset>

@@ -18,13 +18,13 @@
     <formula:fieldsets></formula:fieldsets>
 
     <footer>
-      <span ng-if="form.errors" title="{{ form.errors.join('\n') }}">{{ form.i18n.text.invalid | formulaReplace : { count: form.errors.length } }}</span>
-      <button ng-click="form.validate(true);" ng-if="!data.hideButtons" title="{{ form.i18n.text.validate.tooltip }}">
+      <span ng-if="form.errors" title="{{ form.errors.join('\n') }}">{{ i18n.text.invalid | formulaReplace : { count: form.errors.length } }}</span>
+      <button ng-click="form.validate(true);" ng-if="!data.hideButtons" title="{{ i18n.text.validate.tooltip }}">
         <strong>&#10003;</strong>
-        {{ form.i18n.text.validate.label }}</button>
-      <button ng-click="form.save()" ng-disabled="!form.valid" ng-if="!data.hideButtons" title="{{ form.i18n.text.save.tooltip }}">
+        {{ i18n.text.validate.label }}</button>
+      <button ng-click="form.save()" ng-disabled="!form.valid" ng-if="!data.hideButtons" title="{{ i18n.text.save.tooltip }}">
         <strong>&#9921;</strong>
-        {{ form.i18n.text.save.label }}</button>
+        {{ i18n.text.save.label }}</button>
     </footer>
   </form>
 </div>

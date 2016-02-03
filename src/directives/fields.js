@@ -10,8 +10,8 @@
    * Norsk Polarinstutt 2014, http://npolar.no/
    */
   angular.module('formula')
-    .directive('formulaFields', ['$compile', 'formulaClassService',
-      function($compile, formulaClassService) {
+    .directive('formulaFields', ['$compile', 'formulaClassService', 'formulaI18n',
+      function($compile, formulaClassService, i18n) {
 
         return {
           restrict: 'AE',
@@ -24,6 +24,7 @@
               tElement.empty();
             }
             return function link (scope, iElement, iAttrs) {
+              scope.i18n = i18n;
               scope.fields.forEach(function (field) {
                 // Only compile fields that have template
                 if (!field.hidden && field.template) {
