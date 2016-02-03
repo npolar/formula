@@ -88,7 +88,7 @@ angular.module('formula')
         }
 
         if (this.typeOf('array')) {
-          var id = /\/([^\/]*?)$/.exec(this.path)[1] + '_' + (this.schema.items.type || 'any');
+          var id = /\/([^\/]*?)$/.exec(this.path)[1] + '_item';
           var fieldDefinition = { id: id };
           fieldDefinition.fields = this.fieldDefinition.fields || null;
           var schema = this.schema.items;

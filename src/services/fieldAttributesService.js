@@ -90,7 +90,8 @@ angular.module('formula')
 
       var attrsSet = function(field, options) {
         field.parents = options.parents || [];
-        field.id = field.title = options.id;
+        field.id = options.id;
+        field.title = options.id.replace(/_/g, ' ');
         field.index = options.index;
 
         assign(field, (field.schema = options.schema));
