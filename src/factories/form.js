@@ -119,7 +119,6 @@ angular.module('formula')
         self.validate();
       });
       this.translate();
-      console.log(this);
       this.validate(true, true);
     }
 
@@ -220,17 +219,17 @@ angular.module('formula')
        * This function automatically injects the current form model object as a parameter.
        * If the callback parameter is not set, the model is displayed in a new window.
        *
-       * @param callback Function with one object parameter called if the form is valid
        * @param validate Prevent form validation if this parameter is set to false
        */
-      save: function(callback, validate) {
+      save: function(validate) {
+        this.ready = false;
         if ((validate !== false) && !this.validate(true)) {
           console.warn('Document not vaild', this.errors);
           throw this.errors;
         }
 
         if (typeof this.onsave === 'function') {
-          this.onsave(this.model.data);
+          return this.onsave(this.model.data);
         }
       },
 

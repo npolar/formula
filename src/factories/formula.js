@@ -97,6 +97,10 @@ angular.module('formula').factory('formula',
 				_cfg.form.onsave = onsave;
 			};
 
+			this.save = function() {
+				return _cfg.form.save();
+			};
+
 			this.setSchema = function (schema) {
 				schema = new Schema();
 				formLoaded.then(function (responses) {
