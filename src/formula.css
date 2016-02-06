@@ -168,7 +168,7 @@
 	position: relative;
 }
 
-.formula ul > li:last-child
+.formula .formulaArrayCtrls
 {
 	text-align: right;
 }

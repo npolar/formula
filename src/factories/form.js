@@ -18,9 +18,9 @@ angular.module('formula')
  *
  * @returns form class constructor
  */
-.factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
+.factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaFieldBuilder', 'formulaI18n',
   'formulaEvaluateConditionsService', 'formulaTemplateService',
-  function($rootScope, jsonLoader, Model, Field, i18n, formulaEvaluateConditionsService, templates) {
+  function($rootScope, jsonLoader, Model, fieldBuiler, i18n, formulaEvaluateConditionsService, templates) {
     function fieldsetFromSchema(schema, data) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
@@ -31,8 +31,8 @@ angular.module('formula')
 
         Object.keys(schema.properties).forEach(function(key) {
           var val = schema.properties[key];
-          var newField = new Field(val, key);
-          if (newField.type) {
+          var newField = fieldBuiler.build({schema: val, id: key});
+          if (newField) {
             newField.setRequired(schema.required);
             newField.valueFromModel(data);
             fieldsets[0].fields.push(newField);
@@ -65,8 +65,11 @@ angular.module('formula')
               key = f.id;
             }
             var fieldSchema = schema.properties[key] || { id: key };
-            var newField = new Field(fieldSchema, key, null, f);
-            if (newField.type) {
+            var newField = fieldBuiler.build({
+              schema: fieldSchema,
+              id: key,
+              fieldDefinition: f});
+            if (newField) {
               newField.setRequired(schema.required);
               newField.valueFromModel(data);
               fieldset.fields.push(newField);
