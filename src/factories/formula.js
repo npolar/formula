@@ -128,3 +128,12 @@ angular.module('formula').factory('formula',
 	}]);
 
 })();
+
+
+/*
+ @TODO override template ( matched template in separate property?)
+ @TODO Remove iif-wrappers
+ @TODO errors per fieldset
+ @FIXME evaluateConditions not working on valueFromModel ? (see array_object)
+ @FIXME Recalc index on drag and drop
+ */
