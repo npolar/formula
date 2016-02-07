@@ -117,7 +117,3 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
     };
   }
 ]);
-
-/*
- @FIXME Recalc index on drag and drop
- */

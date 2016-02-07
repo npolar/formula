@@ -851,10 +851,6 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
   }
 ]);
 
-/*
- @FIXME Recalc index on drag and drop
- */
-
 /* globals angular, tv4 */
 angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaLog', '$q',
   function(jsonLoader, log, $q) {
