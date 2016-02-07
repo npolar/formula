@@ -104,6 +104,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
       this.onsave = function(model) {
         window.open("data:application/json," + JSON.stringify(model));
+        this.ready = true;
       };
 
       var self = this;

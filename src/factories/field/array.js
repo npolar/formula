@@ -37,6 +37,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
           onEnd: function (e) {
             field.values = e.models;
             field.recalcIndex();
+            field.itemChange();
           }
         };
         field.visible = field.hidden ? false : true;

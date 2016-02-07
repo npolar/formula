@@ -392,6 +392,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
       this.onsave = function(model) {
         window.open("data:application/json," + JSON.stringify(model));
+        this.ready = true;
       };
 
       var self = this;
@@ -1570,6 +1571,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
           onEnd: function (e) {
             field.values = e.models;
             field.recalcIndex();
+            field.itemChange();
           }
         };
         field.visible = field.hidden ? false : true;
