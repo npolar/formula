@@ -2,7 +2,7 @@
   <legend>{{ field.title }}
     ({{ field.nrArrayValues() || 0 }})</legend>
 
-  <ul ng-if="::field.typeOf('fieldset')" ng-sortable>
+  <ul ng-if="::field.typeOf('fieldset')" ng-sortable="field.sortable">
     <li ng-repeat="value in field.values track by value.path" ng-if="!value.hidden">
       <fieldset ng-class="{ valid: value.valid }">
         <legend>
@@ -16,7 +16,7 @@
     </li>
   </ul>
 
-  <ul ng-if="::field.typeOf('field')" ng-sortable>
+  <ul ng-if="::field.typeOf('field')" ng-sortable="field.sortable">
     <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values track by value.path">
       <input formula:input field="value" />
       <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ i18n.text.remove.tooltip }}">&times;</a>

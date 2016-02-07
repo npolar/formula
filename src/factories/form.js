@@ -312,6 +312,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
           if (field.dirty || force) {
             var index;
+            fieldset.dirty = true;
             if (field.validate(force, silent)) {
               if ((index = fieldset.errors.indexOf(field.path)) !== -1) {
                 fieldset.errors.splice(index, 1);
@@ -339,7 +340,8 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             }
           }, this);
           this.errors = this.errors.concat(fieldset.errors);
-          fieldset.valid = silent || !(fieldset.errors.length);
+          fieldset.valid = !fieldset.dirty || (silent || !(fieldset.errors.length));
+          fieldset.dirty = false;
         }, this);
 
         formulaEvaluateConditionsService.evaluateConditions(this);

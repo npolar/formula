@@ -33,7 +33,12 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
 
         formulaTemplateService.initNode(field);
-
+        field.sortable = {
+          onEnd: function (e) {
+            field.values = e.models;
+            field.recalcIndex();
+          }
+        };
         field.visible = field.hidden ? false : true;
 
         return field;
@@ -137,10 +142,6 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
           this.value.splice(item, 1);
         }
 
-        this.values.forEach(function(fs, i) {
-          fs.index = i;
-        });
-
         if (typeof item.destroyWatcher === 'function') {
           item.destroyWatcher();
         }
@@ -148,6 +149,12 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         this.dirty = true;
         this.dirtyParents();
         $rootScope.$emit('revalidate');
+      },
+
+      recalcIndex: function() {
+        this.values.forEach(function(fs, i) {
+          fs.index = i;
+        });
       },
 
       itemChange: function(item) {
