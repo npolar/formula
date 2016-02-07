@@ -1,34 +1,15 @@
 /* globals angular */
+angular.module('formula').filter('formulaReplace', [function() {
+  "use strict";
 
-(function() {
-"use strict";
+  return function(input, params) {
+    var result = input;
 
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
+    (input.match(/\{[^\}]*\}/g) || [])
+    .forEach(function(val) {
+      result = result.replace(val, params[val.substr(1, val.length - 2)]);
+    });
 
-angular.module('formula')
-
-	/**
-	 * @filter replace
-	 *
-	 * Filter used to replace placeholders in a string.
-	 */
-
-	.filter('formulaReplace', [function() {
-		return function(input, params) {
-			var result = input;
-
-			(input.match(/\{[^\}]*\}/g) || [])
-			.forEach(function(val) {
-				result = result.replace(val, params[val.substr(1, val.length - 2)]);
-			});
-
-			return result;
-		};
-	}]);
-
-})();
+    return result;
+  };
+}]);

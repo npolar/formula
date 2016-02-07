@@ -1,239 +1,223 @@
 /* globals angular */
+angular.module('formula').factory('formulaSchema', ['$q', 'formulaJsonLoader', 'formulaLog',
+  function($q, jsonLoader, log) {
+    "use strict";
 
-(function() {
-"use strict";
+    /**
+     * @class schema
+     *
+     * JSON Schema wrapper class.
+     */
 
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
+    function Schema(uri) {
+      this.deferred = null;
+      this.json = null;
+      this.uri = uri || null;
+    }
 
-angular.module('formula')
+    Schema.cache = {};
 
-	/**
-	 * @factory schema
-	 *
-	 * Service used to create JSON Schema wrapper class instances.
-	 *
-	 * @returns schema class constructor
-	 */
+    Schema.prototype = {
+      /**
+       * @method compile
+       *
+       * Function used to compile $ref's, effectively replacing the json contents.
+       *
+       * @returns true if all references were successfully solved, otherwise false
+       */
 
-	.factory('formulaSchema',
-	['$q', 'formulaJsonLoader', 'formulaLog',
-	function($q, jsonLoader, log) {
-		/**
-		 * @class schema
-		 *
-		 * JSON Schema wrapper class.
-		 */
+      compile: function() {
+        var self = this;
 
-		function Schema(uri) {
-			this.deferred = null;
-			this.json = null;
-			this.uri = uri || null;
-		}
+        function selfDeref(path) {
+          if (path[0] === '#') {
+            path = path.substr(path[1] === '/' ? 2 : 1).split('/');
+            var schemaJson = self.json;
 
-		Schema.cache = {};
+            angular.forEach(path, function(subpath) {
+              if (schemaJson) {
+                schemaJson = (schemaJson[subpath]);
+              }
+            });
 
-		Schema.prototype = {
-			/**
-			 * @method compile
-			 *
-			 * Function used to compile $ref's, effectively replacing the json contents.
-			 *
-			 * @returns true if all references were successfully solved, otherwise false
-			 */
+            return schemaJson;
+          }
 
-			compile: function() {
-				var self = this;
+          return null;
+        }
 
-				function selfDeref(path) {
-					if(path[0] === '#') {
-						path = path.substr(path[1] === '/' ? 2 : 1).split('/');
-						var schemaJson = self.json;
+        // TODO: Prevent circular refs
+        function refCompile(schemaJson, parentJson, parentKey) {
+          var missing = [],
+            deref;
 
-						angular.forEach(path, function(subpath) {
-							if(schemaJson) {
-								schemaJson = (schemaJson[subpath]);
-							}
-						});
+          angular.forEach(schemaJson, function(data, key) {
+            if (typeof data === 'object') {
+              missing = missing.concat(refCompile(data, schemaJson, key));
+            } else if (key === '$ref' && parentJson) {
+              if (data[0] === '#') {
+                if ((deref = selfDeref(data))) {
+                  parentJson[parentKey] = deref;
+                } else {
+                  missing.push(data);
+                  delete parentJson[parentKey];
+                }
+              } else {
+                if (Schema.cache[data] && Schema.cache[data].json) {
+                  parentJson[parentKey] = Schema.cache[data].json;
+                } else {
+                  missing.push(data);
+                  delete parentJson[parentKey];
+                }
+              }
+            }
+          });
 
-						return schemaJson;
-					}
+          return missing;
+        }
 
-					return null;
-				}
+        var missing = (this.json ? refCompile(this.json) : [this.uri]);
 
-				// TODO: Prevent circular refs
-				function refCompile(schemaJson, parentJson, parentKey) {
-					var missing = [], deref;
+        if (missing.length) {
+          angular.forEach(missing, function(uri) {
+            log.warning(log.codes.SCHEMA_MISSING_REFERENCE, {
+              schema: uri
+            });
+          });
 
-					angular.forEach(schemaJson, function(data, key) {
-						if(typeof data === 'object') {
-							missing = missing.concat(refCompile(data, schemaJson, key));
-						} else if(key === '$ref' && parentJson) {
-							if(data[0] === '#') {
-								if((deref = selfDeref(data))) {
-									parentJson[parentKey] = deref;
-								} else {
-									missing.push(data);
-									delete parentJson[parentKey];
-								}
-							} else {
-								if(Schema.cache[data] && Schema.cache[data].json) {
-									parentJson[parentKey] = Schema.cache[data].json;
-								} else {
-									missing.push(data);
-									delete parentJson[parentKey];
-								}
-							}
-						}
-					});
+          return false;
+        }
 
-					return missing;
-				}
+        return true;
+      },
 
-				var missing = (this.json ? refCompile(this.json) : [ this.uri ]);
+      /**
+       * @method deref
+       *
+       * Function used to retrieve and deref JSON Schema from URI.
+       *
+       * @param uri URI to JSON Schema as string
+       * @returns $q promise object to loaded JSON Schema
+       */
 
-				if(missing.length) {
-					angular.forEach(missing, function(uri) {
-						log.warning(log.codes.SCHEMA_MISSING_REFERENCE, { schema: uri });
-					});
+      deref: function(uri) {
+        var self = this;
+        this.deferred = $q.defer();
 
-					return false;
-				}
+        if (uri && typeof uri === 'string') {
+          if (!Schema.cache[uri]) {
+            var root = {
+              schema: Schema.cache[uri] = new Schema(uri),
+              missing: null,
+              resolve: function(uri) {
+                if (uri && this.missing instanceof Array) {
+                  var index = this.missing.indexOf(uri);
+                  if (index !== -1) {
+                    this.missing.splice(index, 1);
+                  }
+                }
 
-				return true;
-			},
+                if (!this.missing || !this.missing.length) {
+                  this.schema.compile();
+                  self.json = this.schema.json;
+                  self.deferred.resolve(self.json);
+                }
+              }
+            };
 
-			/**
-			 * @method deref
-			 *
-			 * Function used to retrieve and deref JSON Schema from URI.
-			 *
-			 * @param uri URI to JSON Schema as string
-			 * @returns $q promise object to loaded JSON Schema
-			 */
+            jsonLoader(uri).then(function(data) {
+              root.schema.json = data;
+              var missing = root.schema.missing(false);
 
-			deref: function(uri) {
-				var self = this;
-				this.deferred = $q.defer();
+              if (missing) {
+                root.missing = angular.copy(missing);
+                angular.forEach(missing, function(uri) {
+                  if (!Schema.cache[uri]) {
+                    var ref = new Schema();
+                    ref.deref(uri).then(function() {
+                      root.resolve(uri);
+                    });
+                  } else {
+                    Schema.cache[uri].then(function() {
+                      root.resolve(uri);
+                    });
+                  }
+                });
+              } else {
+                root.resolve();
+              }
+            }, function(error) {
+              self.deferred.reject(error);
+            });
+          } else {
+            Schema.cache[uri].then(function(data) {
+              self.json = data;
+              self.deferred.resolve(data);
+            });
+          }
+        } else {
+          log.warning(log.codes.SCHEMA_INVALID_URI, {
+            uri: uri
+          });
+          this.deferred.reject('Invalid schema URI: ' + uri);
+        }
 
-				if(uri && typeof uri === 'string') {
-					if(!Schema.cache[uri]) {
-						var root = {
-							schema: Schema.cache[uri] = new Schema(uri),
-							missing: null,
-							resolve: function(uri) {
-								if(uri && this.missing instanceof Array) {
-									var index = this.missing.indexOf(uri);
-									if(index !== -1) {
-										this.missing.splice(index, 1);
-									}
-								}
+        return this;
+      },
 
-								if(!this.missing || !this.missing.length) {
-									this.schema.compile();
-									self.json = this.schema.json;
-									self.deferred.resolve(self.json);
-								}
-							}
-						};
+      /**
+       * @method missing
+       *
+       * Function used to find all $ref URIs in schema.
+       * Optionally only return non-cached $ref URIs.
+       *
+       * @param ignoreCached Only return non-chached $ref URIs if true
+       * @returns An array of uncompiled $ref URIs or null if empty
+       */
 
-						jsonLoader(uri).then(function(data) {
-							root.schema.json = data;
-							var missing = root.schema.missing(false);
+      missing: function(ignoreCached) {
+        function refArray(json) {
+          var refs = [];
+          angular.forEach(json, function(data, key) {
+            if (typeof data === 'object') {
+              var subRefs = refArray(data);
+              angular.forEach(subRefs, function(ref) {
+                refs.push(ref);
+              });
+            } else if (key === '$ref' && data[0] !== '#') {
+              if (!ignoreCached || !Schema.cache[data]) {
+                refs.push(data);
+              }
+            }
+          });
+          return refs;
+        }
 
-							if(missing) {
-								root.missing = angular.copy(missing);
-								angular.forEach(missing, function(uri) {
-									if(!Schema.cache[uri]) {
-										var ref = new Schema();
-										ref.deref(uri).then(function() {
-											root.resolve(uri);
-										});
-									} else {
-										Schema.cache[uri].then(function() {
-											root.resolve(uri);
-										});
-									}
-								});
-							} else {
-								root.resolve();
-							}
-						}, function(error) {
-							self.deferred.reject(error);
-						});
-					} else {
-						Schema.cache[uri].then(function(data) {
-							self.json = data;
-							self.deferred.resolve(data);
-						});
-					}
-				} else {
-					log.warning(log.codes.SCHEMA_INVALID_URI, { uri: uri });
-					this.deferred.reject('Invalid schema URI: ' + uri);
-				}
+        var refs = refArray(this.json);
+        return refs.length ? refs : null;
+      },
 
-				return this;
-			},
+      /**
+       * @method then
+       *
+       * Function running a callback-function when schema is successfully compiled.
+       *
+       * @param callback Callback function with one parameter for JSON data
+       */
 
-			/**
-			 * @method missing
-			 *
-			 * Function used to find all $ref URIs in schema.
-			 * Optionally only return non-cached $ref URIs.
-			 *
-			 * @param ignoreCached Only return non-chached $ref URIs if true
-			 * @returns An array of uncompiled $ref URIs or null if empty
-			 */
+      then: function(callback) {
+        if (this.deferred) {
+          this.deferred.promise.then(function(data) {
+            callback(data);
+          }, function(error) {
+            // TODO: Failed schema promise
+          });
+        } else {
+          callback(this.json);
+        }
+      }
+    };
 
-			missing: function(ignoreCached) {
-				function refArray(json) {
-					var refs = [];
-					angular.forEach(json, function(data, key) {
-						if(typeof data === 'object') {
-							var subRefs = refArray(data);
-							angular.forEach(subRefs, function(ref) {
-								refs.push(ref);
-							});
-						} else if(key === '$ref' && data[0] !== '#') {
-							if(!ignoreCached || !Schema.cache[data]) {
-								refs.push(data);
-							}
-						}
-					});
-					return refs;
-				}
-
-				var refs = refArray(this.json);
-				return refs.length ? refs : null;
-			},
-
-			/**
-			 * @method then
-			 *
-			 * Function running a callback-function when schema is successfully compiled.
-			 *
-			 * @param callback Callback function with one parameter for JSON data
-			 */
-
-			then: function(callback) {
-				if(this.deferred) {
-					this.deferred.promise.then(function(data) {
-						callback(data);
-					}, function(error) {
-						// TODO: Failed schema promise
-					});
-				} else {
-					callback(this.json);
-				}
-			}
-		};
-
-		return Schema;
-	}]);
-
-})();
+    return Schema;
+  }
+]);

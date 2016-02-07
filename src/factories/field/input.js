@@ -1,7 +1,6 @@
 /* globals angular */
-angular.module('formula').factory('formulaInputField',
-['$rootScope', 'formulaLog', 'formulaField', 'formulaFieldTranslateDefaultsService',
-'formulaInputFieldTypeService', 'formulaTemplateService',
+angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLog', 'formulaField', 'formulaFieldTranslateDefaultsService',
+  'formulaInputFieldTypeService', 'formulaTemplateService',
   function($rootScope, log, formulaField, formulaFieldTranslateDefaultsService,
     formulaInputFieldTypeService, formulaTemplateService) {
     "use strict";

@@ -1,6 +1,5 @@
 /* globals angular */
-angular.module('formula').factory('formulaObjectField',
-['formulaLog', 'formulaField', 'formulaTemplateService',
+angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaField', 'formulaTemplateService',
   function(log, formulaField, formulaTemplateService) {
     "use strict";
 
@@ -87,7 +86,8 @@ angular.module('formula').factory('formulaObjectField',
               schema: schema,
               id: key,
               parents: parents,
-              fieldDefinition: fieldDefinition});
+              fieldDefinition: fieldDefinition
+            });
             if (newField) {
               newField.setRequired(this.schema.required);
               this.fields.push(newField);
@@ -108,7 +108,7 @@ angular.module('formula').factory('formulaObjectField',
         }
       },
 
-      valueFromModel: function (model) {
+      valueFromModel: function(model) {
         if (model[this.id] !== undefined) {
           this.fields.forEach(function(fc, index) {
             if (model[this.id][fc.id] !== undefined) {

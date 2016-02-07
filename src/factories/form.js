@@ -1,26 +1,10 @@
 /* globals angular,window,console */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-angular.module('formula')
-
-/**
- * @factory form
- *
- * Service used to create HTML form handler class instances.
- *
- * @returns form class constructor
- */
-.factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaFieldBuilder', 'formulaI18n',
+angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaFieldBuilder', 'formulaI18n',
   'formulaEvaluateConditionsService', 'formulaTemplateService',
   function($rootScope, jsonLoader, Model, fieldBuiler, i18n, formulaEvaluateConditionsService, templates) {
+    "use strict";
+
+
     function fieldsetFromSchema(schema, data) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
@@ -31,7 +15,10 @@ angular.module('formula')
 
         Object.keys(schema.properties).forEach(function(key) {
           var val = schema.properties[key];
-          var newField = fieldBuiler.build({schema: val, id: key});
+          var newField = fieldBuiler.build({
+            schema: val,
+            id: key
+          });
           if (newField) {
             newField.setRequired(schema.required);
             newField.valueFromModel(data);
@@ -64,11 +51,14 @@ angular.module('formula')
             } else {
               key = f.id;
             }
-            var fieldSchema = schema.properties[key] || { id: key };
+            var fieldSchema = schema.properties[key] || {
+              id: key
+            };
             var newField = fieldBuiler.build({
               schema: fieldSchema,
               id: key,
-              fieldDefinition: f});
+              fieldDefinition: f
+            });
             if (newField) {
               newField.setRequired(schema.required);
               newField.valueFromModel(data);
@@ -124,10 +114,10 @@ angular.module('formula')
       this.validate(true, true);
     }
 
-    var collectFields = function (field) {
+    var collectFields = function(field) {
       var fields = [];
 
-      var recurseField = function (field) {
+      var recurseField = function(field) {
         fields.push.apply(fields, collectFields(field));
       };
 
@@ -144,23 +134,23 @@ angular.module('formula')
 
     Form.prototype = {
 
-      updateTemplates: function () {
+      updateTemplates: function() {
         templates.initNode(this);
         this.fieldsets.forEach(templates.initNode);
         this.fields().forEach(templates.initNode);
       },
 
-      updateTemplate: function (template) {
+      updateTemplate: function(template) {
         templates.evalTemplate(this, template);
-        this.fieldsets.forEach(function (fieldset) {
+        this.fieldsets.forEach(function(fieldset) {
           templates.evalTemplate(fieldset, template);
         });
-        this.fields().forEach(function (field) {
+        this.fields().forEach(function(field) {
           templates.evalTemplate(field, template);
         });
       },
 
-      fields: function () {
+      fields: function() {
         var fields = [];
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
@@ -170,8 +160,8 @@ angular.module('formula')
         return fields;
       },
 
-      destroy: function () {
-        this.fields().forEach(function (field) {
+      destroy: function() {
+        this.fields().forEach(function(field) {
           if (typeof field.destroyWatcher === 'function') {
             field.destroyWatcher();
           }
@@ -362,5 +352,3 @@ angular.module('formula')
     return Form;
   }
 ]);
-
-})();

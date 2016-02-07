@@ -1,6 +1,5 @@
 /* globals angular */
-angular.module('formula').factory('formulaArrayField',
-['$rootScope', 'formulaField', 'formulaArrayFieldTypeService', 'formulaTemplateService',
+angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaField', 'formulaArrayFieldTypeService', 'formulaTemplateService',
   function($rootScope, formulaField, formulaArrayFieldTypeService, formulaTemplateService) {
     "use strict";
 
@@ -74,7 +73,8 @@ angular.module('formula').factory('formulaArrayField',
           schema: schema,
           id: id,
           parents: parents,
-          fieldDefinition: fieldDefinition});
+          fieldDefinition: fieldDefinition
+        });
         if (newField) {
           newField.setRequired(this.schema.required);
           newField.index = this.fields.length;
@@ -103,7 +103,8 @@ angular.module('formula').factory('formulaArrayField',
             id: proto.id,
             parents: parents,
             fieldDefinition: proto.fieldDefinition,
-            index: index});
+            index: index
+          });
           if (!field.type) {
             return null;
           }
