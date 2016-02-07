@@ -286,6 +286,239 @@ angular.module('formula').directive('formulaInput', ['$compile',
   }
 ]);
 
+/* globals angular */
+angular.module('formula').filter('formulaInlineValues', [function() {
+  "use strict";
+
+  return function(input, params) {
+
+    var result = [];
+
+    angular.forEach(input, function(field) {
+      if (field.value instanceof Array) {
+        result.push('Array[' + field.value.length + ']');
+      } else switch (typeof field.value) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+          result.push(field.value);
+          break;
+
+        default:
+      }
+    });
+
+    return result.join(', ');
+  };
+}]);
+
+/* globals angular */
+angular.module('formula').filter('formulaReplace', [function() {
+  "use strict";
+
+  return function(input, params) {
+    var result = input;
+
+    (input.match(/\{[^\}]*\}/g) || [])
+    .forEach(function(val) {
+      result = result.replace(val, params[val.substr(1, val.length - 2)]);
+    });
+
+    return result;
+  };
+}]);
+
+/* globals angular */
+angular.module('formula').service('formulaClassService', [function() {
+  "use strict";
+
+  // class based on field parents and ID
+  var pathClass = function(node) {
+    var path = node.path;
+    path = path.replace('#', 'formula');
+    return path;
+  };
+
+  // css class of schema type
+  var schemaClass = function(node) {
+    var schemaType = node.mainType;
+    return "formula" +
+      schemaType.charAt(0).toUpperCase() +
+      schemaType.slice(1);
+  };
+
+
+  return {
+    schemaClass: schemaClass,
+    pathClass: pathClass
+  };
+}]);
+
+/* globals angular */
+angular.module('formula').service('formulaEvaluateConditionsService', ['$rootScope',
+  function($rootScope) {
+    "use strict";
+
+    var keepFailing = true;
+
+    var evaluateConditions = function(form) {
+      var model = {};
+      form.fieldsets.forEach(function(fieldset) {
+        fieldset.fields.forEach(function(field) {
+          model[field.id] = field.value;
+        });
+      });
+      form.fields().forEach(function(field) {
+        evaluateField(field, model);
+      });
+    };
+
+    var evaluateField = function(field, model) {
+      // Evaluate condition
+      if (field.condition) {
+        var pass = true,
+          condition = (field.condition instanceof Array ? field.condition : [field.condition]);
+
+        // jshint -W116
+        condition.forEach(function(cond) {
+          if (pass) {
+            // Relative path
+            if (cond[0] !== '#') {
+              cond = field.path.substr(0, field.path.lastIndexOf('/') + 1) + cond;
+            }
+            // Absolute JSON path
+            cond = cond.substr(2);
+            cond = cond.replace(/\/(\d+)/g, '[$1]');
+            cond = cond.replace(/\//g, '.');
+            // Disable setters
+            cond = cond.replace('=', '==').replace('===', '==');
+
+            pass = $rootScope.$eval(cond, model);
+          }
+        });
+
+        field.visible = field.hidden ? false : pass;
+
+        if (!keepFailing) {
+          if (pass) {
+            field.value = field.backupValue || field.value;
+          } else {
+            field.backupValue = field.value;
+            field.value = undefined;
+          }
+        }
+      }
+    };
+
+    return {
+      evaluateConditions: evaluateConditions,
+      setKeepFailing: function(val) {
+        keepFailing = val;
+      }
+    };
+  }
+]);
+
+/* globals angular */
+angular.module('formula').service('formulaTemplateService', ['$templateCache', '$templateRequest', '$q', 'formulaLog',
+  'formulaFieldConfig',
+  function($templateCache, $templateRequest, $q, log, fieldConfig) {
+    "use strict";
+
+    // LIFO prio
+    var DEFAULT_TEMPLATES = [{
+      match: 'field',
+      templateUrl: 'formula/default/field.html'
+    }, {
+      match: 'object',
+      templateUrl: 'formula/default/object.html'
+    }, {
+      match: 'array',
+      templateUrl: 'formula/default/array.html'
+    }, {
+      match: 'fieldset',
+      templateUrl: 'formula/default/fieldset.html'
+    }, {
+      match: 'form',
+      templateUrl: 'formula/default/form.html'
+    }];
+
+    var configs = fieldConfig.getInstance(DEFAULT_TEMPLATES);
+
+    var doTemplateRequest = function(templateUrl) {
+      var templateElement = $templateCache.get(templateUrl);
+      if (!templateElement) {
+        return $templateRequest(templateUrl, false);
+      }
+      var deferred = $q.defer();
+      deferred.resolve(templateElement);
+      return deferred.promise;
+    };
+
+    var getTemplate = function(field) {
+      var config = configs.getMatchingConfig(field);
+      var deferred = $q.defer();
+      if (config) {
+        if (config.hidden || config.template === "") {
+          deferred.resolve(false);
+        } else if (config.template) {
+          deferred.resolve(config.template);
+        } else if (config.templateUrl) {
+          doTemplateRequest(config.templateUrl).then(function(template) {
+            deferred.resolve(template);
+          }, function() {
+            deferred.reject(config.templateUrl);
+          });
+        } else {
+          deferred.reject(field.path);
+        }
+      } else {
+        deferred.reject(field.mainType);
+      }
+      return deferred.promise;
+    };
+
+    var initNode = function(node) {
+      getTemplate(node).then(function(template) {
+        if (template) {
+          node.matchedTemplate = template;
+        } else {
+          node.hidden = true;
+        }
+      }, function(missing) {
+        log.warning(log.codes.MISSING_TEMPLATE, {
+          missing: missing
+        });
+        node.hidden = true;
+      });
+    };
+
+    var setTemplates = function(templates) {
+      configs.setConfigs(templates);
+    };
+
+    var addTemplate = function(template) {
+      configs.addConfig(template);
+    };
+
+    var evalTemplate = function(node, template) {
+      configs.isMatch(node, template);
+    };
+
+    return {
+      addTemplate: addTemplate,
+      setTemplates: setTemplates,
+      initNode: initNode,
+      evalTemplate: evalTemplate
+    };
+  }
+]);
+
+angular.module("formula").run(["$templateCache", function($templateCache) {$templateCache.put("formula/default/array.html","<fieldset ng-class=\"{ valid: field.valid, error: field.errors }\"><legend>{{ field.title }} ({{ field.nrArrayValues() || 0 }})</legend><ul ng-if=\"::field.typeOf(\'fieldset\')\" ng-sortable=\"\"><li ng-repeat=\"value in field.values track by value.path\" ng-if=\"!value.hidden\"><fieldset ng-class=\"{ valid: value.valid }\"><legend><span ng-if=\"!value.visible\">{{ value.fields | formulaInlineValues }}</span> <a class=\"toggle\" href=\"\" ng-click=\"field.itemToggle($index)\" title=\"{{ value.visible ? i18n.text.minimize.tooltip : i18n.text.maximize.tooltip }}\">{{ value.visible ? \'_\' : \'‾\' }}</a> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ i18n.text.remove.tooltip }}\">&times;</a></legend><formula:field field=\"value\" ng-if=\"value.visible\"></formula:field></fieldset></li></ul><ul ng-if=\"::field.typeOf(\'field\')\" ng-sortable=\"\"><li ng-class=\"{ valid: value.valid, error: value.error }\" ng-repeat=\"value in field.values track by value.path\"><input formula:input=\"\" field=\"value\"> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ i18n.text.remove.tooltip }}\">&times;</a></li></ul><div class=\"formulaArrayCtrls\"><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ i18n.text.add.tooltip }}\" type=\"button\"><strong>&plus;</strong> {{ i18n.text.add.label }}</button></div></fieldset>");
+$templateCache.put("formula/default/field.html","<div ng-class=\"{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }\" ng-if=\"field.visible\" title=\"{{ field.description }}\"><label for=\"{{ ::field.uid }}\">{{ field.title }} {{field.visibility}}</label><formula:input field=\"field\"></formula:input><span ng-if=\"field.error\">{{ field.getErrorText(field.error) }}</span> <span ng-if=\"field.description\">{{ field.description }}</span></div>");
+$templateCache.put("formula/default/fieldset.html","<fieldset ng-show=\"fieldset.active\"><formula:fields fields=\"::fieldset.fields\"></formula:fields></fieldset>");
+$templateCache.put("formula/default/form.html","<div><div class=\"formula\" ng-if=\"!form.ready\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div><form class=\"formula\" ng-show=\"form.ready\"><header ng-if=\"::form.title\">{{ form.title }}</header><nav ng-if=\"::form.fieldsets.length > 1\"><a href=\"\" ng-class=\"{ active: fieldset.active }\" ng-click=\"form.activate(fieldset)\" ng-repeat=\"fieldset in ::form.fieldsets track by fieldset.id\">{{ fieldset.title }}</a></nav><formula:fieldsets></formula:fieldsets><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ i18n.text.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-click=\"form.validate(true);\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.validate.tooltip }}\"><strong>&#10003;</strong> {{ i18n.text.validate.label }}</button> <button ng-click=\"form.save()\" ng-disabled=\"!form.valid\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.save.tooltip }}\"><strong>&#9921;</strong> {{ i18n.text.save.label }}</button></footer></form></div>");
+$templateCache.put("formula/default/object.html","<fieldset><legend ng-if=\"::field.title\">{{ field.title }}</legend><formula:fields fields=\"::field.fields\"></formula:fields></fieldset>");}]);
 /* globals angular,window,console */
 angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaFieldBuilder', 'formulaI18n',
   'formulaEvaluateConditionsService', 'formulaTemplateService',
@@ -381,7 +614,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.mainType = 'form';
 
       templates.initNode(this);
-      formulaEvaluateConditionsService.keepFailing(!!keepFailing);
+      formulaEvaluateConditionsService.setKeepFailing(!!keepFailing);
 
       if (formDefinition) {
         this.title = formDefinition.title;
@@ -847,9 +1080,8 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
 ]);
 
 /*
- @TODO Remove iif-wrappers
+@FIXME evaluateConditions not working on valueFromModel ? (see array_object)
  @TODO errors per fieldset
- @FIXME evaluateConditions not working on valueFromModel ? (see array_object)
  @FIXME Recalc index on drag and drop
  */
 
@@ -1298,924 +1530,6 @@ angular.module('formula').factory('formulaSchema', ['$q', 'formulaJsonLoader', '
 ]);
 
 /* globals angular */
-angular.module('formula').filter('formulaInlineValues', [function() {
-  "use strict";
-
-  return function(input, params) {
-
-    var result = [];
-
-    angular.forEach(input, function(field) {
-      if (field.value instanceof Array) {
-        result.push('Array[' + field.value.length + ']');
-      } else switch (typeof field.value) {
-        case 'string':
-        case 'number':
-        case 'boolean':
-          result.push(field.value);
-          break;
-
-        default:
-      }
-    });
-
-    return result.join(', ');
-  };
-}]);
-
-/* globals angular */
-angular.module('formula').filter('formulaReplace', [function() {
-  "use strict";
-
-  return function(input, params) {
-    var result = input;
-
-    (input.match(/\{[^\}]*\}/g) || [])
-    .forEach(function(val) {
-      result = result.replace(val, params[val.substr(1, val.length - 2)]);
-    });
-
-    return result;
-  };
-}]);
-
-/* globals angular */
-angular.module('formula').service('formulaClassService', [function() {
-  "use strict";
-
-  // class based on field parents and ID
-  var pathClass = function(node) {
-    var path = node.path;
-    path = path.replace('#', 'formula');
-    return path;
-  };
-
-  // css class of schema type
-  var schemaClass = function(node) {
-    var schemaType = node.mainType;
-    return "formula" +
-      schemaType.charAt(0).toUpperCase() +
-      schemaType.slice(1);
-  };
-
-
-  return {
-    schemaClass: schemaClass,
-    pathClass: pathClass
-  };
-}]);
-
-/* globals angular */
-angular.module('formula').service('formulaEvaluateConditionsService', ['$rootScope',
-  function($rootScope) {
-    "use strict";
-
-    var keepFailing = true;
-
-    var evaluateConditions = function(form) {
-      var model = {};
-      form.fieldsets.forEach(function(fieldset) {
-        fieldset.fields.forEach(function(field) {
-          model[field.id] = field.value;
-        });
-      });
-      form.fields().forEach(function(field) {
-        evaluateField(field, model);
-      });
-    };
-
-    var evaluateField = function(field, model) {
-      // Evaluate condition
-      if (field.condition) {
-        var pass = true,
-          condition = (field.condition instanceof Array ? field.condition : [field.condition]);
-
-        // jshint -W116
-        condition.forEach(function(cond) {
-          if (pass) {
-            // Relative path
-            if (cond[0] !== '#') {
-              cond = field.path.substr(0, field.path.lastIndexOf('/') + 1) + cond;
-            }
-            // Absolute JSON path
-            cond = cond.substr(2);
-            cond = cond.replace(/\/(\d+)/g, '[$1]');
-            cond = cond.replace(/\//g, '.');
-            // Disable setters
-            cond = cond.replace('=', '==').replace('===', '==');
-
-            pass = $rootScope.$eval(cond, model);
-          }
-        });
-
-        field.visible = field.hidden ? false : pass;
-
-        if (!keepFailing) {
-          if (pass) {
-            field.value = field.backupValue;
-          } else {
-            field.backupValue = field.value;
-            field.value = undefined;
-          }
-        }
-      }
-    };
-
-    return {
-      evaluateConditions: evaluateConditions,
-      keepFailing: function(val) {
-        keepFailing = val;
-      }
-    };
-  }
-]);
-
-/* globals angular */
-angular.module('formula').service('formulaTemplateService', ['$templateCache', '$templateRequest', '$q', 'formulaLog',
-  'formulaFieldConfig',
-  function($templateCache, $templateRequest, $q, log, fieldConfig) {
-    "use strict";
-
-    // LIFO prio
-    var DEFAULT_TEMPLATES = [{
-      match: 'field',
-      templateUrl: 'formula/default/field.html'
-    }, {
-      match: 'object',
-      templateUrl: 'formula/default/object.html'
-    }, {
-      match: 'array',
-      templateUrl: 'formula/default/array.html'
-    }, {
-      match: 'fieldset',
-      templateUrl: 'formula/default/fieldset.html'
-    }, {
-      match: 'form',
-      templateUrl: 'formula/default/form.html'
-    }];
-
-    var configs = fieldConfig.getInstance(DEFAULT_TEMPLATES);
-
-    var doTemplateRequest = function(templateUrl) {
-      var templateElement = $templateCache.get(templateUrl);
-      if (!templateElement) {
-        return $templateRequest(templateUrl, false);
-      }
-      var deferred = $q.defer();
-      deferred.resolve(templateElement);
-      return deferred.promise;
-    };
-
-    var getTemplate = function(field) {
-      var config = configs.getMatchingConfig(field);
-      var deferred = $q.defer();
-      if (config) {
-        if (config.hidden || config.template === "") {
-          deferred.resolve(false);
-        } else if (config.template) {
-          deferred.resolve(config.template);
-        } else if (config.templateUrl) {
-          doTemplateRequest(config.templateUrl).then(function(template) {
-            deferred.resolve(template);
-          }, function() {
-            deferred.reject(config.templateUrl);
-          });
-        } else {
-          deferred.reject(field.path);
-        }
-      } else {
-        deferred.reject(field.mainType);
-      }
-      return deferred.promise;
-    };
-
-    var initNode = function(node) {
-      getTemplate(node).then(function(template) {
-        if (template) {
-          node.matchedTemplate = template;
-        } else {
-          node.hidden = true;
-        }
-      }, function(missing) {
-        log.warning(log.codes.MISSING_TEMPLATE, {
-          missing: missing
-        });
-        node.hidden = true;
-      });
-    };
-
-    var setTemplates = function(templates) {
-      configs.setConfigs(templates);
-    };
-
-    var addTemplate = function(template) {
-      configs.addConfig(template);
-    };
-
-    var evalTemplate = function(node, template) {
-      configs.isMatch(node, template);
-    };
-
-    return {
-      addTemplate: addTemplate,
-      setTemplates: setTemplates,
-      initNode: initNode,
-      evalTemplate: evalTemplate
-    };
-  }
-]);
-
-angular.module("formula").run(["$templateCache", function($templateCache) {$templateCache.put("formula/default/array.html","<fieldset ng-class=\"{ valid: field.valid, error: field.errors }\"><legend>{{ field.title }} ({{ field.nrArrayValues() || 0 }})</legend><ul ng-if=\"::field.typeOf(\'fieldset\')\" ng-sortable=\"\"><li ng-repeat=\"value in field.values track by value.path\" ng-if=\"!value.hidden\"><fieldset ng-class=\"{ valid: value.valid }\"><legend><span ng-if=\"!value.visible\">{{ value.fields | formulaInlineValues }}</span> <a class=\"toggle\" href=\"\" ng-click=\"field.itemToggle($index)\" title=\"{{ value.visible ? i18n.text.minimize.tooltip : i18n.text.maximize.tooltip }}\">{{ value.visible ? \'_\' : \'‾\' }}</a> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ i18n.text.remove.tooltip }}\">&times;</a></legend><formula:field field=\"value\" ng-if=\"value.visible\"></formula:field></fieldset></li></ul><ul ng-if=\"::field.typeOf(\'field\')\" ng-sortable=\"\"><li ng-class=\"{ valid: value.valid, error: value.error }\" ng-repeat=\"value in field.values track by value.path\"><input formula:input=\"\" field=\"value\"> <a class=\"remove\" href=\"\" ng-click=\"field.itemRemove($index)\" title=\"{{ i18n.text.remove.tooltip }}\">&times;</a></li></ul><div class=\"formulaArrayCtrls\"><span ng-if=\"field.errors\" title=\"{{ field.errors.join(\'\\n\') }}\">{{ i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</span> <span ng-if=\"!field.errors\">{{ field.description }}</span> <button class=\"add\" ng-click=\"field.itemAdd()\" title=\"{{ i18n.text.add.tooltip }}\" type=\"button\"><strong>&plus;</strong> {{ i18n.text.add.label }}</button></div></fieldset>");
-$templateCache.put("formula/default/field.html","<div ng-class=\"{ valid: field.valid, error: field.error, required: (field.required && field.value == null) }\" ng-if=\"field.visible\" title=\"{{ field.description }}\"><label for=\"{{ ::field.uid }}\">{{ field.title }} {{field.visibility}}</label><formula:input field=\"field\"></formula:input><span ng-if=\"field.error\">{{ field.getErrorText(field.error) }}</span> <span ng-if=\"field.description\">{{ field.description }}</span></div>");
-$templateCache.put("formula/default/fieldset.html","<fieldset ng-show=\"fieldset.active\"><formula:fields fields=\"::fieldset.fields\"></formula:fields></fieldset>");
-$templateCache.put("formula/default/form.html","<div><div class=\"formula\" ng-if=\"!form.ready\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div><form class=\"formula\" ng-show=\"form.ready\"><header ng-if=\"::form.title\">{{ form.title }}</header><nav ng-if=\"::form.fieldsets.length > 1\"><a href=\"\" ng-class=\"{ active: fieldset.active }\" ng-click=\"form.activate(fieldset)\" ng-repeat=\"fieldset in ::form.fieldsets track by fieldset.id\">{{ fieldset.title }}</a></nav><formula:fieldsets></formula:fieldsets><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ i18n.text.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-click=\"form.validate(true);\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.validate.tooltip }}\"><strong>&#10003;</strong> {{ i18n.text.validate.label }}</button> <button ng-click=\"form.save()\" ng-disabled=\"!form.valid\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.save.tooltip }}\"><strong>&#9921;</strong> {{ i18n.text.save.label }}</button></footer></form></div>");
-$templateCache.put("formula/default/object.html","<fieldset><legend ng-if=\"::field.title\">{{ field.title }}</legend><formula:fields fields=\"::field.fields\"></formula:fields></fieldset>");}]);
-/* globals angular */
-angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaField', 'formulaArrayFieldTypeService', 'formulaTemplateService',
-  function($rootScope, formulaField, formulaArrayFieldTypeService, formulaTemplateService) {
-    "use strict";
-
-    var applyDefaultValue = function(field) {
-      if (field.default !== undefined) {
-        // Ensure array typed default if required
-        if (!(field.default instanceof Array)) {
-          field.default = [field.default];
-        }
-        field.value = field.default;
-      } else {
-        field.value = [];
-      }
-    };
-
-    var ArrayField = {
-      create: function(options) {
-        var field = Object.create(formulaField.create(options));
-        angular.extend(field, ArrayField.prototype);
-        formulaArrayFieldTypeService.applyType(field);
-        if (!field.type) {
-          return;
-        }
-        applyDefaultValue(field);
-
-        field.fieldAdd();
-
-        // Add one element to arrays which requires at least one element
-        if (field.typeOf('array') && field.schema.minItems) {
-          field.itemAdd();
-        }
-
-        formulaTemplateService.initNode(field);
-
-        field.visible = field.hidden ? false : true;
-
-        return field;
-      },
-    };
-
-    var countHidden = function(memo, value) {
-      return memo + (value.hidden ? 0 : 1);
-    };
-
-    ArrayField.prototype = {
-
-      /**
-       * @method fieldAdd
-       *
-       * Function used to add subfields to object and array-typed field.
-       *
-       * @param schema JSON Schema defining the field being added
-       * @returns true if the field was successfully added, otherwise false
-       */
-      fieldAdd: function() {
-        var newField;
-        var parents = this.parents.slice();
-        parents.push(this);
-
-        if (!this.fields) {
-          this.fields = [];
-        }
-
-        var id = /\/([^\/]*?)$/.exec(this.path)[1] + '_item';
-        var fieldDefinition = {
-          id: id
-        };
-        fieldDefinition.fields = this.fieldDefinition.fields || null;
-        var schema = this.schema.items;
-        newField = formulaField.builder.build({
-          schema: schema,
-          id: id,
-          parents: parents,
-          fieldDefinition: fieldDefinition
-        });
-        if (newField) {
-          newField.setRequired(this.schema.required);
-          newField.index = this.fields.length;
-          this.fields.push(newField);
-        }
-      },
-
-      /**
-       * @method itemAdd
-       *
-       * Function used to add a copy of the subfields for validating.
-       * The values of each fieldset are automatically monitored.
-       *
-       * @param preventValidation bool
-       * @returns Reference to the item just added
-       */
-      itemAdd: function(preventValidation) {
-        if (this.fields) {
-          var parents = this.parents.slice();
-          parents.push(this);
-
-          var index = this.values.length;
-          var proto = this.fields[0];
-          var field = formulaField.builder.build({
-            schema: proto.schema,
-            id: proto.id,
-            parents: parents,
-            fieldDefinition: proto.fieldDefinition,
-            index: index
-          });
-          if (!field.type) {
-            return null;
-          }
-          this.values.push(field);
-
-          if (field.value !== undefined) {
-            this.value.push(field.value);
-          }
-          this.dirty = true;
-          this.dirtyParents();
-          if (preventValidation !== true) {
-            $rootScope.$emit('revalidate');
-          }
-          return field;
-        }
-
-        return null;
-      },
-
-      /**
-       * @method itemRemove
-       *
-       * Function used to remove a fieldset from an array-typed field.
-       *
-       * @param item Index number of the fieldset which should be removed
-       */
-      itemRemove: function(item) {
-        if (this.values.length > item) {
-          this.values.splice(item, 1);
-          this.value.splice(item, 1);
-        }
-
-        this.values.forEach(function(fs, i) {
-          fs.index = i;
-        });
-
-        if (typeof item.destroyWatcher === 'function') {
-          item.destroyWatcher();
-        }
-
-        this.dirty = true;
-        this.dirtyParents();
-        $rootScope.$emit('revalidate');
-      },
-
-      itemChange: function(item) {
-        if (this.values) {
-          this.value = [];
-          this.values.forEach(function(field) {
-            if (field.value !== undefined) {
-              this.value.push(field.value);
-            }
-          }, this);
-        }
-      },
-
-      /**
-       * @method itemToggle
-       *
-       * Function used to toggle visibility of a fieldset item.
-       *
-       * @param item Index number of the fieldset which should be toggled
-       */
-      itemToggle: function(item) {
-        if (this.values.length > item) {
-          this.values[item].visible = !this.values[item].visible;
-        }
-      },
-
-      valueFromModel: function(model) {
-        if (model[this.id] !== undefined) {
-          this.values = [];
-          model[this.id].forEach(function(item, index) {
-            var newField;
-            if (this.typeOf('fieldset')) {
-              newField = this.itemAdd(true /* preventValidation */ );
-              if (newField.index !== 0) {
-                newField.visible = false;
-              }
-              if (newField) {
-                var valueModel = {};
-                valueModel[this.values[index].id] = item;
-                this.values[index].valueFromModel(valueModel);
-              }
-            } else if (this.typeOf('field')) {
-              newField = this.itemAdd(true /* preventValidation */ );
-              if (newField) {
-                this.values[index].value = item;
-              }
-            } else {
-              // @TODO Support array:array
-              // jshint -W035
-            }
-          }, this);
-
-          formulaField.prototype.valueFromModel.call(this);
-        }
-      },
-
-      nrArrayValues: function() {
-        if (this.values) {
-          return this.values.reduce(countHidden, 0);
-        }
-        return 0;
-      }
-    };
-
-    return ArrayField;
-  }
-]);
-
-/* globals angular */
-angular.module('formula').factory('formulaField', ['$filter', '$injector', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
-  function($filter, $injector, log, i18n, formulaTemplateService, formulaFieldValidateService) {
-    "use strict";
-
-    var fieldBuilder;
-
-    var validateFieldId = function(field) {
-      ['.', '/', '#'].forEach(function(invalidChar) {
-        if (this.id && this.id.indexOf(invalidChar) >= 0) {
-          log.warning(log.codes.FIELD_INVALID_ID, {
-            character: invalidChar,
-            field: this.path
-          });
-        }
-      }, field);
-    };
-
-    var assign = function(field, data) {
-      if (typeof field === 'object') {
-        var attribs = 'condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,nullable,pattern,readonly,required,step,title,type,values'.split(',');
-        angular.forEach(data, function(v, k) {
-          if (attribs.indexOf(k) !== -1) {
-            this[k] = v;
-          }
-        }, field);
-      }
-    };
-
-    var reduceFieldTypes = function(field) {
-      if (field.type instanceof Array) {
-        field.nullable = field.type.some(function(type) {
-          return type === 'null';
-        });
-        if (field.type.length === 1) {
-          field.type = field.type[0];
-        } else if (field.type.length === 2) {
-          if (field.type[0] === 'null') {
-            field.type = field.type[1];
-          } else if (field.type[1] === 'null') {
-            field.type = field.type[0];
-          }
-        } else {
-          field.types = field.type;
-          field.type = 'any';
-          // @TODO support any
-        }
-      }
-    };
-
-    var Field = {
-      create: function(options) {
-        var field = Object.create(Field.prototype);
-        field.parents = options.parents || [];
-        field.id = options.id;
-        field.title = options.id.replace(/_/g, ' ');
-        field.index = options.index;
-
-        assign(field, (field.schema = options.schema));
-        assign(field, (field.fieldDefinition = options.fieldDefinition || {}));
-        if (field.schema.items && field.fieldDefinition.fields) {
-          assign(field.items, field.fieldDefinition.fields[0]);
-        }
-        validateFieldId(field);
-
-        field.uidGen();
-
-        reduceFieldTypes(field);
-
-        return field;
-      },
-      fieldBuilder: fieldBuilder
-    };
-
-    Field.uids = [];
-
-    Field.prototype = {
-      dirtyParents: function() {
-        for (var i = this.parents.length - 1; i >= 0; i--) {
-          this.parents[i].dirty = true;
-          this.parents[i].itemChange(this);
-        }
-      },
-
-      /**
-       * @method pathGen
-       *
-       * Function used to generate full JSON path for fields
-       */
-      get path() {
-        var path = '#';
-
-        // jshint -W116
-        var genFieldPath = function(field) {
-          var path = '/';
-
-          // (null || undefined)
-          if (field.index != null) {
-            path += field.index;
-          } else {
-            path += field.id;
-          }
-          return path;
-        };
-
-        this.parents.forEach(function(parent) {
-          path += genFieldPath(parent);
-        });
-
-        path += genFieldPath(this);
-        return path;
-      },
-
-      /**
-       * @method typeOf
-       *
-       * Function used to check if field in a specific type.
-       *
-       * @param type Type to check
-       * @returns true if field type matches with specified type, otherwise false
-       */
-      typeOf: function(type) {
-        if (!(this.type && typeof this.type === 'string')) {
-          return false;
-        }
-        var types;
-        return (type === this.type || type === (types = this.type.split(':'))[0] || type === types[1]);
-      },
-
-      /**
-       * @method uidGen
-       *
-       * Function used to generate a new Unique field ID.
-       *
-       * @param len Optional number parameter to specify the UID-length
-       * @returns The newly generated UID
-       */
-      uidGen: function(len) {
-        var uid = 'formula-',
-          chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-        for (var i = 0; i < (len ? len : 8); ++i) {
-          uid += chars[Math.floor(Math.random() * chars.length)];
-        }
-
-        if (Field.uids.indexOf(uid) !== -1) {
-          return this.uidGen(len);
-        } else {
-          this.uid = uid;
-        }
-
-        return uid;
-      },
-
-      isEmpty: function() {
-        // intentional == (null || undefined)
-        // jshint -W116
-        return (this.value == null || this.value.length === 0);
-      },
-      /**
-       * @method validate
-       *
-       * Function used to validate the field based on its schema.
-       * This function also sets the field error memeber value if the validation fails,
-       * and additionally sets the form valid state if a parent form is specified.
-       *
-       * @returns true if the field is valid, otherwise false
-       */
-      validate: function(force, silent) {
-        return formulaFieldValidateService.validate(this, {
-          force: force,
-          silent: silent
-        });
-      },
-
-      valueFromModel: function(model) {
-        if (model && model[this.id] !== undefined && this.value !== model[this.id]) {
-          this.value = model[this.id];
-          this.dirty = true;
-          formulaTemplateService.initNode(this);
-        }
-      },
-
-      setRequired: function(required) {
-        this.required = (required === true) || (required instanceof Array && required.indexOf(this.id) !== -1);
-      },
-
-      getErrorText: function(error) {
-        var text = '';
-        if (error.dataPath) {
-          var line = Number(error.dataPath.replace(/^\/(\d+).*$/, '$1')) + 1;
-          text += $filter('formulaReplace')(i18n.line, {
-            line: line,
-            error: error.message
-          });
-        } else {
-          text += error.message;
-        }
-        return text;
-      }
-    };
-
-    return Field;
-  }
-]);
-
-/* globals angular */
-angular.module('formula').factory('formulaFieldConfig', [function() {
-  "use strict";
-
-  var Config = function(cfgs) {
-    var configs = cfgs || [];
-
-    var isMatch = function(node, cfg) {
-      var match = false;
-      if (cfg.match) {
-        if (typeof cfg.match === 'function') {
-          try {
-            if (cfg.match.call({}, node)) {
-              match = true;
-            }
-          } catch (e) {
-            // noop
-          }
-        } else if (typeof cfg.match === 'string' && [node.mainType, node.id, node.path].indexOf(cfg.match) !== -1) {
-          match = true;
-        }
-      }
-      return match;
-    };
-
-    this.getMatchingConfig = function(node) {
-      var config;
-      var last = configs.length - 1;
-      for (var i = last; i >= 0; i--) {
-        if (isMatch(node, configs[i])) {
-          config = configs[i];
-          break;
-        }
-      }
-      return config;
-    };
-
-    this.addConfig = function(config) {
-      configs.push(config);
-    };
-
-    this.setConfigs = function(cfgs) {
-      configs = cfgs;
-    };
-
-    this.isMatch = function(node, cfg) {
-      return isMatch(node, cfg);
-    };
-  };
-
-  return {
-    getInstance: function(configs) {
-      return new Config(configs);
-    }
-  };
-}]);
-
-/* globals angular */
-angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLog', 'formulaField', 'formulaFieldTranslateDefaultsService',
-  'formulaInputFieldTypeService', 'formulaTemplateService',
-  function($rootScope, log, formulaField, formulaFieldTranslateDefaultsService,
-    formulaInputFieldTypeService, formulaTemplateService) {
-    "use strict";
-
-    var applyDefaultValue = function(field) {
-      if (field.default !== undefined) {
-        field.value = field.default;
-      } else if (field.typeOf('select') && !field.multiple) {
-        field.value = field.enum[0];
-      }
-    };
-
-    var watchField = function(field) {
-      field.destroyWatcher = $rootScope.$watch(function fieldWatch() {
-        return field.value;
-      }, function(n, o) {
-        if (n !== o) {
-          if (field.value === null || field.value === "") {
-            field.value = undefined;
-            return; // triggers new watch
-          }
-          field.dirty = true;
-          for (var i = field.parents.length - 1; i >= 0; i--) {
-            field.parents[i].dirty = true;
-            field.parents[i].itemChange(field);
-          }
-          $rootScope.$emit('revalidate');
-        }
-      });
-    };
-
-    var InputField = {
-      create: function(options) {
-        var field = Object.create(formulaField.create(options));
-        angular.extend(field, InputField.prototype);
-        formulaInputFieldTypeService.applyType(field);
-        if (!field.type) {
-          return;
-        }
-        formulaFieldTranslateDefaultsService.translateDefaultValues(field);
-        applyDefaultValue(field);
-
-        // Set schema pattern if not set and pattern is defined
-        if (field.pattern && !field.schema.pattern) {
-          field.schema.pattern = field.pattern;
-        }
-
-        // Automatically hide fields by default if ID starts with underscore
-        if ((field.id && field.id[0] === '_') && field.hidden !== false) {
-          log.debug(log.codes.FIELD_HIDDEN_DEFAULT, {
-            field: field.path
-          });
-          field.hidden = true;
-        }
-
-        formulaTemplateService.initNode(field);
-
-        field.visible = field.hidden ? false : true;
-
-        watchField(field);
-        return field;
-      }
-    };
-
-
-    InputField.prototype = {
-
-    };
-
-    return InputField;
-  }
-]);
-
-/* globals angular */
-angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaField', 'formulaTemplateService',
-  function(log, formulaField, formulaTemplateService) {
-    "use strict";
-
-    var applyDefaultValue = function(field) {
-      if (field.default !== undefined) {
-        field.value = field.default;
-      } else {
-        field.value = {};
-      }
-    };
-
-    var applyType = function(field) {
-      field.mainType = 'object';
-      if (!field.schema.properties) {
-        log.warning(log.codes.FIELD_MISSING_PROPERTY, {
-          property: 'properties',
-          field: field.path
-        });
-        field.type = null;
-      }
-    };
-
-    var ObjectField = {
-      create: function(options) {
-        var field = Object.create(formulaField.create(options));
-        angular.extend(field, ObjectField.prototype);
-        applyType(field);
-        if (!field.type) {
-          return;
-        }
-        applyDefaultValue(field);
-
-        field.fieldAdd();
-
-        formulaTemplateService.initNode(field);
-
-        field.visible = field.hidden ? false : true;
-
-        return field;
-      }
-    };
-
-    var skipField = function(fieldDefinition) {
-      return (typeof fieldDefinition === 'string' && fieldDefinition.charAt(0) === "!");
-    };
-
-    ObjectField.prototype = {
-
-      /**
-       * @method fieldAdd
-       *
-       * Function used to add subfields to object and array-typed field.
-       *
-       * @param schema JSON Schema defining the field being added
-       * @returns true if the field was successfully added, otherwise false
-       */
-
-      fieldAdd: function() {
-        var parents = this.parents.slice();
-        parents.push(this);
-
-        if (!this.fields) {
-          this.fields = [];
-        }
-
-        Object.keys(this.schema.properties).forEach(function(key) {
-          var schema = this.schema.properties[key];
-          var fieldDefinition;
-          if (this.fieldDefinition.fields) {
-            this.fieldDefinition.fields.forEach(function(field) {
-              var id;
-              if (typeof field === 'string') {
-                id = field.replace('!', '');
-              } else {
-                id = field.id;
-              }
-              if (key === id) {
-                fieldDefinition = field;
-              }
-            });
-          }
-          if (!skipField(fieldDefinition)) {
-            var newField = formulaField.builder.build({
-              schema: schema,
-              id: key,
-              parents: parents,
-              fieldDefinition: fieldDefinition
-            });
-            if (newField) {
-              newField.setRequired(this.schema.required);
-              this.fields.push(newField);
-            }
-          }
-
-        }, this);
-      },
-
-      itemChange: function(item) {
-        if (this.fields) {
-          this.value = {};
-          this.fields.forEach(function(field) {
-            if (field.value !== undefined) {
-              this.value[field.id] = field.value;
-            }
-          }, this);
-        }
-      },
-
-      valueFromModel: function(model) {
-        if (model[this.id] !== undefined) {
-          this.fields.forEach(function(fc, index) {
-            if (model[this.id][fc.id] !== undefined) {
-              fc.valueFromModel(model[this.id]);
-            }
-          }, this);
-
-          formulaField.prototype.valueFromModel.call(this);
-        }
-      }
-
-    };
-
-    return ObjectField;
-  }
-]);
-
-/* globals angular */
 angular.module('formula').service('formulaArrayFieldTypeService', ['$filter', 'formulaLog', 'formulaFormat',
   function($filter, log, format) {
     "use strict";
@@ -2517,5 +1831,690 @@ angular.module('formula').service('formulaInputFieldTypeService', ['$filter', 'f
     return {
       applyType: applyType
     };
+  }
+]);
+
+/* globals angular */
+angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaField', 'formulaArrayFieldTypeService', 'formulaTemplateService',
+  function($rootScope, formulaField, formulaArrayFieldTypeService, formulaTemplateService) {
+    "use strict";
+
+    var applyDefaultValue = function(field) {
+      if (field.default !== undefined) {
+        // Ensure array typed default if required
+        if (!(field.default instanceof Array)) {
+          field.default = [field.default];
+        }
+        field.value = field.default;
+      } else {
+        field.value = [];
+      }
+    };
+
+    var ArrayField = {
+      create: function(options) {
+        var field = Object.create(formulaField.create(options));
+        angular.extend(field, ArrayField.prototype);
+        formulaArrayFieldTypeService.applyType(field);
+        if (!field.type) {
+          return;
+        }
+        applyDefaultValue(field);
+
+        field.fieldAdd();
+
+        // Add one element to arrays which requires at least one element
+        if (field.typeOf('array') && field.schema.minItems) {
+          field.itemAdd();
+        }
+
+        formulaTemplateService.initNode(field);
+
+        field.visible = field.hidden ? false : true;
+
+        return field;
+      },
+    };
+
+    var countHidden = function(memo, value) {
+      return memo + (value.hidden ? 0 : 1);
+    };
+
+    ArrayField.prototype = {
+
+      /**
+       * @method fieldAdd
+       *
+       * Function used to add subfields to object and array-typed field.
+       *
+       * @param schema JSON Schema defining the field being added
+       * @returns true if the field was successfully added, otherwise false
+       */
+      fieldAdd: function() {
+        var newField;
+        var parents = this.parents.slice();
+        parents.push(this);
+
+        if (!this.fields) {
+          this.fields = [];
+        }
+
+        var id = /\/([^\/]*?)$/.exec(this.path)[1] + '_item';
+        var fieldDefinition = {
+          id: id
+        };
+        fieldDefinition.fields = this.fieldDefinition.fields || null;
+        var schema = this.schema.items;
+        newField = formulaField.builder.build({
+          schema: schema,
+          id: id,
+          parents: parents,
+          fieldDefinition: fieldDefinition
+        });
+        if (newField) {
+          newField.setRequired(this.schema.required);
+          newField.index = this.fields.length;
+          this.fields.push(newField);
+        }
+      },
+
+      /**
+       * @method itemAdd
+       *
+       * Function used to add a copy of the subfields for validating.
+       * The values of each fieldset are automatically monitored.
+       *
+       * @param preventValidation bool
+       * @returns Reference to the item just added
+       */
+      itemAdd: function(preventValidation) {
+        if (this.fields) {
+          var parents = this.parents.slice();
+          parents.push(this);
+
+          var index = this.values.length;
+          var proto = this.fields[0];
+          var field = formulaField.builder.build({
+            schema: proto.schema,
+            id: proto.id,
+            parents: parents,
+            fieldDefinition: proto.fieldDefinition,
+            index: index
+          });
+          if (!field.type) {
+            return null;
+          }
+          this.values.push(field);
+
+          if (field.value !== undefined) {
+            this.value.push(field.value);
+          }
+          this.dirty = true;
+          this.dirtyParents();
+          if (preventValidation !== true) {
+            $rootScope.$emit('revalidate');
+          }
+          return field;
+        }
+
+        return null;
+      },
+
+      /**
+       * @method itemRemove
+       *
+       * Function used to remove a fieldset from an array-typed field.
+       *
+       * @param item Index number of the fieldset which should be removed
+       */
+      itemRemove: function(item) {
+        if (this.values.length > item) {
+          this.values.splice(item, 1);
+          this.value.splice(item, 1);
+        }
+
+        this.values.forEach(function(fs, i) {
+          fs.index = i;
+        });
+
+        if (typeof item.destroyWatcher === 'function') {
+          item.destroyWatcher();
+        }
+
+        this.dirty = true;
+        this.dirtyParents();
+        $rootScope.$emit('revalidate');
+      },
+
+      itemChange: function(item) {
+        if (this.values) {
+          this.value = [];
+          this.values.forEach(function(field) {
+            if (field.value !== undefined) {
+              this.value.push(field.value);
+            }
+          }, this);
+        }
+      },
+
+      /**
+       * @method itemToggle
+       *
+       * Function used to toggle visibility of a fieldset item.
+       *
+       * @param item Index number of the fieldset which should be toggled
+       */
+      itemToggle: function(item) {
+        if (this.values.length > item) {
+          this.values[item].visible = !this.values[item].visible;
+        }
+      },
+
+      valueFromModel: function(model) {
+        if (model[this.id] !== undefined) {
+          this.values = [];
+          model[this.id].forEach(function(item, index) {
+            var newField;
+            if (this.typeOf('fieldset')) {
+              newField = this.itemAdd(true /* preventValidation */ );
+              if (newField.index !== 0) {
+                newField.visible = false;
+              }
+              if (newField) {
+                var valueModel = {};
+                valueModel[this.values[index].id] = item;
+                this.values[index].valueFromModel(valueModel);
+              }
+            } else if (this.typeOf('field')) {
+              newField = this.itemAdd(true /* preventValidation */ );
+              if (newField) {
+                this.values[index].value = item;
+              }
+            } else {
+              // @TODO Support array:array
+              // jshint -W035
+            }
+          }, this);
+
+          formulaField.prototype.valueFromModel.call(this, model);
+        }
+      },
+
+      nrArrayValues: function() {
+        if (this.values) {
+          return this.values.reduce(countHidden, 0);
+        }
+        return 0;
+      }
+    };
+
+    return ArrayField;
+  }
+]);
+
+/* globals angular */
+angular.module('formula').factory('formulaField', ['$filter', '$injector', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
+  function($filter, $injector, log, i18n, formulaTemplateService, formulaFieldValidateService) {
+    "use strict";
+
+    var fieldBuilder;
+
+    var validateFieldId = function(field) {
+      ['.', '/', '#'].forEach(function(invalidChar) {
+        if (this.id && this.id.indexOf(invalidChar) >= 0) {
+          log.warning(log.codes.FIELD_INVALID_ID, {
+            character: invalidChar,
+            field: this.path
+          });
+        }
+      }, field);
+    };
+
+    var assign = function(field, data) {
+      if (typeof field === 'object') {
+        var attribs = 'condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,nullable,pattern,readonly,required,step,title,type,values'.split(',');
+        angular.forEach(data, function(v, k) {
+          if (attribs.indexOf(k) !== -1) {
+            this[k] = v;
+          }
+        }, field);
+      }
+    };
+
+    var reduceFieldTypes = function(field) {
+      if (field.type instanceof Array) {
+        field.nullable = field.type.some(function(type) {
+          return type === 'null';
+        });
+        if (field.type.length === 1) {
+          field.type = field.type[0];
+        } else if (field.type.length === 2) {
+          if (field.type[0] === 'null') {
+            field.type = field.type[1];
+          } else if (field.type[1] === 'null') {
+            field.type = field.type[0];
+          }
+        } else {
+          field.types = field.type;
+          field.type = 'any';
+          // @TODO support any
+        }
+      }
+    };
+
+    var Field = {
+      create: function(options) {
+        var field = Object.create(Field.prototype);
+        field.parents = options.parents || [];
+        field.id = options.id;
+        field.title = options.id.replace(/_/g, ' ');
+        field.index = options.index;
+
+        assign(field, (field.schema = options.schema));
+        assign(field, (field.fieldDefinition = options.fieldDefinition || {}));
+        if (field.schema.items && field.fieldDefinition.fields) {
+          assign(field.items, field.fieldDefinition.fields[0]);
+        }
+        validateFieldId(field);
+
+        field.uidGen();
+
+        reduceFieldTypes(field);
+
+        return field;
+      },
+      fieldBuilder: fieldBuilder
+    };
+
+    Field.uids = [];
+
+    Field.prototype = {
+      dirtyParents: function() {
+        for (var i = this.parents.length - 1; i >= 0; i--) {
+          this.parents[i].dirty = true;
+          this.parents[i].itemChange(this);
+        }
+      },
+
+      /**
+       * @method pathGen
+       *
+       * Function used to generate full JSON path for fields
+       */
+      get path() {
+        var path = '#';
+
+        // jshint -W116
+        var genFieldPath = function(field) {
+          var path = '/';
+
+          // (null || undefined)
+          if (field.index != null) {
+            path += field.index;
+          } else {
+            path += field.id;
+          }
+          return path;
+        };
+
+        this.parents.forEach(function(parent) {
+          path += genFieldPath(parent);
+        });
+
+        path += genFieldPath(this);
+        return path;
+      },
+
+      /**
+       * @method typeOf
+       *
+       * Function used to check if field in a specific type.
+       *
+       * @param type Type to check
+       * @returns true if field type matches with specified type, otherwise false
+       */
+      typeOf: function(type) {
+        if (!(this.type && typeof this.type === 'string')) {
+          return false;
+        }
+        var types;
+        return (type === this.type || type === (types = this.type.split(':'))[0] || type === types[1]);
+      },
+
+      /**
+       * @method uidGen
+       *
+       * Function used to generate a new Unique field ID.
+       *
+       * @param len Optional number parameter to specify the UID-length
+       * @returns The newly generated UID
+       */
+      uidGen: function(len) {
+        var uid = 'formula-',
+          chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+        for (var i = 0; i < (len ? len : 8); ++i) {
+          uid += chars[Math.floor(Math.random() * chars.length)];
+        }
+
+        if (Field.uids.indexOf(uid) !== -1) {
+          return this.uidGen(len);
+        } else {
+          this.uid = uid;
+        }
+
+        return uid;
+      },
+
+      isEmpty: function() {
+        // intentional == (null || undefined)
+        // jshint -W116
+        return (this.value == null || this.value.length === 0);
+      },
+      /**
+       * @method validate
+       *
+       * Function used to validate the field based on its schema.
+       * This function also sets the field error memeber value if the validation fails,
+       * and additionally sets the form valid state if a parent form is specified.
+       *
+       * @returns true if the field is valid, otherwise false
+       */
+      validate: function(force, silent) {
+        return formulaFieldValidateService.validate(this, {
+          force: force,
+          silent: silent
+        });
+      },
+
+      valueFromModel: function(model) {
+        if (model[this.id] !== undefined && this.value !== model[this.id]) {
+          this.value = model[this.id];
+          this.dirty = true;
+          formulaTemplateService.initNode(this);
+        }
+      },
+
+      setRequired: function(required) {
+        this.required = (required === true) || (required instanceof Array && required.indexOf(this.id) !== -1);
+      },
+
+      getErrorText: function(error) {
+        var text = '';
+        if (error.dataPath) {
+          var line = Number(error.dataPath.replace(/^\/(\d+).*$/, '$1')) + 1;
+          text += $filter('formulaReplace')(i18n.line, {
+            line: line,
+            error: error.message
+          });
+        } else {
+          text += error.message;
+        }
+        return text;
+      }
+    };
+
+    return Field;
+  }
+]);
+
+/* globals angular */
+angular.module('formula').factory('formulaFieldConfig', [function() {
+  "use strict";
+
+  var Config = function(cfgs) {
+    var configs = cfgs || [];
+
+    var isMatch = function(node, cfg) {
+      var match = false;
+      if (cfg.match) {
+        if (typeof cfg.match === 'function') {
+          try {
+            if (cfg.match.call({}, node)) {
+              match = true;
+            }
+          } catch (e) {
+            // noop
+          }
+        } else if (typeof cfg.match === 'string' && [node.mainType, node.id, node.path].indexOf(cfg.match) !== -1) {
+          match = true;
+        }
+      }
+      return match;
+    };
+
+    this.getMatchingConfig = function(node) {
+      var config;
+      var last = configs.length - 1;
+      for (var i = last; i >= 0; i--) {
+        if (isMatch(node, configs[i])) {
+          config = configs[i];
+          break;
+        }
+      }
+      return config;
+    };
+
+    this.addConfig = function(config) {
+      configs.push(config);
+    };
+
+    this.setConfigs = function(cfgs) {
+      configs = cfgs;
+    };
+
+    this.isMatch = function(node, cfg) {
+      return isMatch(node, cfg);
+    };
+  };
+
+  return {
+    getInstance: function(configs) {
+      return new Config(configs);
+    }
+  };
+}]);
+
+/* globals angular */
+angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLog', 'formulaField', 'formulaFieldTranslateDefaultsService',
+  'formulaInputFieldTypeService', 'formulaTemplateService',
+  function($rootScope, log, formulaField, formulaFieldTranslateDefaultsService,
+    formulaInputFieldTypeService, formulaTemplateService) {
+    "use strict";
+
+    var applyDefaultValue = function(field) {
+      if (field.default !== undefined) {
+        field.value = field.default;
+      } else if (field.typeOf('select') && !field.multiple) {
+        field.value = field.enum[0];
+      }
+    };
+
+    var watchField = function(field) {
+      field.destroyWatcher = $rootScope.$watch(function fieldWatch() {
+        return field.value;
+      }, function(n, o) {
+        if (n !== o) {
+          if (field.value === null || field.value === "") {
+            field.value = undefined;
+            return; // triggers new watch
+          }
+          field.dirty = true;
+          for (var i = field.parents.length - 1; i >= 0; i--) {
+            field.parents[i].dirty = true;
+            field.parents[i].itemChange(field);
+          }
+          $rootScope.$emit('revalidate');
+        }
+      });
+    };
+
+    var InputField = {
+      create: function(options) {
+        var field = Object.create(formulaField.create(options));
+        angular.extend(field, InputField.prototype);
+        formulaInputFieldTypeService.applyType(field);
+        if (!field.type) {
+          return;
+        }
+        formulaFieldTranslateDefaultsService.translateDefaultValues(field);
+        applyDefaultValue(field);
+
+        // Set schema pattern if not set and pattern is defined
+        if (field.pattern && !field.schema.pattern) {
+          field.schema.pattern = field.pattern;
+        }
+
+        // Automatically hide fields by default if ID starts with underscore
+        if ((field.id && field.id[0] === '_') && field.hidden !== false) {
+          log.debug(log.codes.FIELD_HIDDEN_DEFAULT, {
+            field: field.path
+          });
+          field.hidden = true;
+        }
+
+        formulaTemplateService.initNode(field);
+
+        field.visible = field.hidden ? false : true;
+
+        watchField(field);
+        return field;
+      }
+    };
+
+
+    InputField.prototype = {
+
+    };
+
+    return InputField;
+  }
+]);
+
+/* globals angular */
+angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaField', 'formulaTemplateService',
+  function(log, formulaField, formulaTemplateService) {
+    "use strict";
+
+    var applyDefaultValue = function(field) {
+      if (field.default !== undefined) {
+        field.value = field.default;
+      } else {
+        field.value = {};
+      }
+    };
+
+    var applyType = function(field) {
+      field.mainType = 'object';
+      if (!field.schema.properties) {
+        log.warning(log.codes.FIELD_MISSING_PROPERTY, {
+          property: 'properties',
+          field: field.path
+        });
+        field.type = null;
+      }
+    };
+
+    var ObjectField = {
+      create: function(options) {
+        var field = Object.create(formulaField.create(options));
+        angular.extend(field, ObjectField.prototype);
+        applyType(field);
+        if (!field.type) {
+          return;
+        }
+        applyDefaultValue(field);
+
+        field.fieldAdd();
+
+        formulaTemplateService.initNode(field);
+
+        field.visible = field.hidden ? false : true;
+
+        return field;
+      }
+    };
+
+    var skipField = function(fieldDefinition) {
+      return (typeof fieldDefinition === 'string' && fieldDefinition.charAt(0) === "!");
+    };
+
+    ObjectField.prototype = {
+
+      /**
+       * @method fieldAdd
+       *
+       * Function used to add subfields to object and array-typed field.
+       *
+       * @param schema JSON Schema defining the field being added
+       * @returns true if the field was successfully added, otherwise false
+       */
+
+      fieldAdd: function() {
+        var parents = this.parents.slice();
+        parents.push(this);
+
+        if (!this.fields) {
+          this.fields = [];
+        }
+
+        Object.keys(this.schema.properties).forEach(function(key) {
+          var schema = this.schema.properties[key];
+          var fieldDefinition;
+          if (this.fieldDefinition.fields) {
+            this.fieldDefinition.fields.forEach(function(field) {
+              var id;
+              if (typeof field === 'string') {
+                id = field.replace('!', '');
+              } else {
+                id = field.id;
+              }
+              if (key === id) {
+                fieldDefinition = field;
+              }
+            });
+          }
+          if (!skipField(fieldDefinition)) {
+            var newField = formulaField.builder.build({
+              schema: schema,
+              id: key,
+              parents: parents,
+              fieldDefinition: fieldDefinition
+            });
+            if (newField) {
+              newField.setRequired(this.schema.required);
+              this.fields.push(newField);
+            }
+          }
+
+        }, this);
+      },
+
+      itemChange: function(item) {
+        if (this.fields) {
+          this.value = {};
+          this.fields.forEach(function(field) {
+            if (field.value !== undefined) {
+              this.value[field.id] = field.value;
+            }
+          }, this);
+        }
+      },
+
+      valueFromModel: function(model) {
+        if (model[this.id] !== undefined) {
+          this.fields.forEach(function(fc, index) {
+            if (model[this.id][fc.id] !== undefined) {
+              fc.valueFromModel(model[this.id]);
+            }
+          }, this);
+
+          formulaField.prototype.valueFromModel.call(this, model);
+        }
+      }
+
+    };
+
+    return ObjectField;
   }
 ]);

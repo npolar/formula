@@ -45,7 +45,7 @@ angular.module('formula').service('formulaEvaluateConditionsService', ['$rootSco
 
         if (!keepFailing) {
           if (pass) {
-            field.value = field.backupValue;
+            field.value = field.backupValue || field.value;
           } else {
             field.backupValue = field.value;
             field.value = undefined;
@@ -56,7 +56,7 @@ angular.module('formula').service('formulaEvaluateConditionsService', ['$rootSco
 
     return {
       evaluateConditions: evaluateConditions,
-      keepFailing: function(val) {
+      setKeepFailing: function(val) {
         keepFailing = val;
       }
     };

@@ -119,8 +119,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
 ]);
 
 /*
- @TODO Remove iif-wrappers
+@FIXME evaluateConditions not working on valueFromModel ? (see array_object)
  @TODO errors per fieldset
- @FIXME evaluateConditions not working on valueFromModel ? (see array_object)
  @FIXME Recalc index on drag and drop
  */

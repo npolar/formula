@@ -93,7 +93,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.mainType = 'form';
 
       templates.initNode(this);
-      formulaEvaluateConditionsService.keepFailing(!!keepFailing);
+      formulaEvaluateConditionsService.setKeepFailing(!!keepFailing);
 
       if (formDefinition) {
         this.title = formDefinition.title;

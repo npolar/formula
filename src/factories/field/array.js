@@ -200,7 +200,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
             }
           }, this);
 
-          formulaField.prototype.valueFromModel.call(this);
+          formulaField.prototype.valueFromModel.call(this, model);
         }
       },
 

@@ -116,7 +116,7 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
             }
           }, this);
 
-          formulaField.prototype.valueFromModel.call(this);
+          formulaField.prototype.valueFromModel.call(this, model);
         }
       }
 

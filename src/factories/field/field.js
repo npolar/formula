@@ -174,7 +174,7 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
       },
 
       valueFromModel: function(model) {
-        if (model && model[this.id] !== undefined && this.value !== model[this.id]) {
+        if (model[this.id] !== undefined && this.value !== model[this.id]) {
           this.value = model[this.id];
           this.dirty = true;
           formulaTemplateService.initNode(this);
