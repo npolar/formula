@@ -1,43 +1,25 @@
 /* globals angular */
+angular.module('formula').filter('formulaInlineValues', [function() {
+  "use strict";
 
-(function() {
-"use strict";
+  return function(input, params) {
 
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2015, http://npolar.no/
- */
+    var result = [];
 
-angular.module('formula')
+    angular.forEach(input, function(field) {
+      if (field.value instanceof Array) {
+        result.push('Array[' + field.value.length + ']');
+      } else switch (typeof field.value) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+          result.push(field.value);
+          break;
 
-	/**
-	 * @filter inlineValues
-	 *
-	 * Filter used to inline an array of values.
-	 */
+        default:
+      }
+    });
 
-	.filter('formulaInlineValues', [function() {
-		return function(input, params) {
-			var result = [];
-
-			angular.forEach(input, function(field) {
-				if(field.value instanceof Array) {
-					result.push('Array[' + field.value.length + ']');
-				} else switch(typeof field.value) {
-					case 'string':
-					case 'number':
-					case 'boolean':
-						result.push(field.value);
-						break;
-
-					default:
-				}
-			});
-
-			return result.join(', ');
-		};
-	}]);
-
-})();
+    return result.join(', ');
+  };
+}]);

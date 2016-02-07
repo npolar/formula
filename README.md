@@ -2,7 +2,7 @@
 
 Generic JSON Schema form builder using Angular
 
-For useage examples, check out the [Formula demo](http://npolar.github.io/formula/demo/) webpage.
+For usage examples, check out the [Formula demo](http://npolar.github.io/formula/demo/) webpage.
 
 
 ## Dependencies
@@ -100,6 +100,8 @@ If you are defining your own template you need to provide at least one with ```m
 
 Templates are evaluated in LIFO order!
 All templates can have one root element only.
+
+The matched template can be overridden by setting the ```template``` property directly on any node.
 
 ### The service instance
 The instance you get from bootstrapping (```formula.getInstance()```) has setters for all the available options, and add-functions for array options. E.g. ```formula.setTemplates```, ```formula.addTemplate```, ```formula.setModel``` ...

@@ -1,26 +1,10 @@
 /* globals angular,window,console */
-
-(function() {
-"use strict";
-
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
-angular.module('formula')
-
-/**
- * @factory form
- *
- * Service used to create HTML form handler class instances.
- *
- * @returns form class constructor
- */
-.factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaField', 'formulaI18n',
+angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaFieldBuilder', 'formulaI18n',
   'formulaEvaluateConditionsService', 'formulaTemplateService',
-  function($rootScope, jsonLoader, Model, Field, i18n, formulaEvaluateConditionsService, templates) {
+  function($rootScope, jsonLoader, Model, fieldBuiler, i18n, formulaEvaluateConditionsService, templates) {
+    "use strict";
+
+
     function fieldsetFromSchema(schema, data) {
       if (schema && schema.type === 'object') {
         var fieldsets = [{
@@ -31,8 +15,11 @@ angular.module('formula')
 
         Object.keys(schema.properties).forEach(function(key) {
           var val = schema.properties[key];
-          var newField = new Field(val, key);
-          if (newField.type) {
+          var newField = fieldBuiler.build({
+            schema: val,
+            id: key
+          });
+          if (newField) {
             newField.setRequired(schema.required);
             newField.valueFromModel(data);
             fieldsets[0].fields.push(newField);
@@ -64,9 +51,15 @@ angular.module('formula')
             } else {
               key = f.id;
             }
-            var fieldSchema = schema.properties[key] || { id: key };
-            var newField = new Field(fieldSchema, key, null, f);
-            if (newField.type) {
+            var fieldSchema = schema.properties[key] || {
+              id: key
+            };
+            var newField = fieldBuiler.build({
+              schema: fieldSchema,
+              id: key,
+              fieldDefinition: f
+            });
+            if (newField) {
               newField.setRequired(schema.required);
               newField.valueFromModel(data);
               fieldset.fields.push(newField);
@@ -100,7 +93,7 @@ angular.module('formula')
       this.mainType = 'form';
 
       templates.initNode(this);
-      formulaEvaluateConditionsService.keepFailing(!!keepFailing);
+      formulaEvaluateConditionsService.setKeepFailing(!!keepFailing);
 
       if (formDefinition) {
         this.title = formDefinition.title;
@@ -111,6 +104,7 @@ angular.module('formula')
 
       this.onsave = function(model) {
         window.open("data:application/json," + JSON.stringify(model));
+        this.ready = true;
       };
 
       var self = this;
@@ -121,10 +115,10 @@ angular.module('formula')
       this.validate(true, true);
     }
 
-    var collectFields = function (field) {
+    var collectFields = function(field) {
       var fields = [];
 
-      var recurseField = function (field) {
+      var recurseField = function(field) {
         fields.push.apply(fields, collectFields(field));
       };
 
@@ -141,23 +135,23 @@ angular.module('formula')
 
     Form.prototype = {
 
-      updateTemplates: function () {
+      updateTemplates: function() {
         templates.initNode(this);
         this.fieldsets.forEach(templates.initNode);
         this.fields().forEach(templates.initNode);
       },
 
-      updateTemplate: function (template) {
+      updateTemplate: function(template) {
         templates.evalTemplate(this, template);
-        this.fieldsets.forEach(function (fieldset) {
+        this.fieldsets.forEach(function(fieldset) {
           templates.evalTemplate(fieldset, template);
         });
-        this.fields().forEach(function (field) {
+        this.fields().forEach(function(field) {
           templates.evalTemplate(field, template);
         });
       },
 
-      fields: function () {
+      fields: function() {
         var fields = [];
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
@@ -167,8 +161,8 @@ angular.module('formula')
         return fields;
       },
 
-      destroy: function () {
-        this.fields().forEach(function (field) {
+      destroy: function() {
+        this.fields().forEach(function(field) {
           if (typeof field.destroyWatcher === 'function') {
             field.destroyWatcher();
           }
@@ -304,28 +298,30 @@ angular.module('formula')
        * @returns true if the entire form is valid, otherwise false
        */
       validate: function(force, silent) {
-        var errors = this.errors || [];
-        var fieldValidate = function(field) {
+        this.errors = [];
+        var fieldValidate = function(field, fieldset) {
+          fieldset.errors = fieldset.errors || [];
           if (field.typeOf('array')) {
             field.values.forEach(function(value) {
-              fieldValidate(value);
+              fieldValidate(value, fieldset);
             });
           } else if (field.typeOf('object')) {
             field.fields.forEach(function(subfield) {
-              fieldValidate(subfield);
+              fieldValidate(subfield, fieldset);
             });
           }
 
           if (field.dirty || force) {
             var index;
+            fieldset.dirty = true;
             if (field.validate(force, silent)) {
-              if ((index = errors.indexOf(field.path)) !== -1) {
-                errors.splice(index, 1);
+              if ((index = fieldset.errors.indexOf(field.path)) !== -1) {
+                fieldset.errors.splice(index, 1);
               }
             } else if (field.typeOf('input')) { // Only show input errors
-              errors.push(field.path);
+              fieldset.errors.push(field.path);
               // Only unique
-              errors = errors.filter(function(value, index, self) {
+              fieldset.errors = fieldset.errors.filter(function(value, index, self) {
                 return self.indexOf(value) === index;
               });
             }
@@ -336,7 +332,7 @@ angular.module('formula')
 
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
-            fieldValidate(field);
+            fieldValidate(field, fieldset);
 
             if (field.valid) {
               this.model.data[field.id] = field.value;
@@ -344,10 +340,12 @@ angular.module('formula')
               delete this.model.data[field.id];
             }
           }, this);
+          this.errors = this.errors.concat(fieldset.errors);
+          fieldset.valid = !fieldset.dirty || (silent || !(fieldset.errors.length));
+          fieldset.dirty = false;
         }, this);
 
         formulaEvaluateConditionsService.evaluateConditions(this);
-        this.errors = errors;
 
         if ((this.valid = !(this.errors.length))) {
           this.errors = null;
@@ -359,5 +357,3 @@ angular.module('formula')
     return Form;
   }
 ]);
-
-})();
