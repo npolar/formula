@@ -297,28 +297,29 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
        * @returns true if the entire form is valid, otherwise false
        */
       validate: function(force, silent) {
-        var errors = this.errors || [];
-        var fieldValidate = function(field) {
+        this.errors = [];
+        var fieldValidate = function(field, fieldset) {
+          fieldset.errors = fieldset.errors || [];
           if (field.typeOf('array')) {
             field.values.forEach(function(value) {
-              fieldValidate(value);
+              fieldValidate(value, fieldset);
             });
           } else if (field.typeOf('object')) {
             field.fields.forEach(function(subfield) {
-              fieldValidate(subfield);
+              fieldValidate(subfield, fieldset);
             });
           }
 
           if (field.dirty || force) {
             var index;
             if (field.validate(force, silent)) {
-              if ((index = errors.indexOf(field.path)) !== -1) {
-                errors.splice(index, 1);
+              if ((index = fieldset.errors.indexOf(field.path)) !== -1) {
+                fieldset.errors.splice(index, 1);
               }
             } else if (field.typeOf('input')) { // Only show input errors
-              errors.push(field.path);
+              fieldset.errors.push(field.path);
               // Only unique
-              errors = errors.filter(function(value, index, self) {
+              fieldset.errors = fieldset.errors.filter(function(value, index, self) {
                 return self.indexOf(value) === index;
               });
             }
@@ -329,7 +330,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
-            fieldValidate(field);
+            fieldValidate(field, fieldset);
 
             if (field.valid) {
               this.model.data[field.id] = field.value;
@@ -337,10 +338,11 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
               delete this.model.data[field.id];
             }
           }, this);
+          this.errors = this.errors.concat(fieldset.errors);
+          fieldset.valid = silent || !(fieldset.errors.length);
         }, this);
 
         formulaEvaluateConditionsService.evaluateConditions(this);
-        this.errors = errors;
 
         if ((this.valid = !(this.errors.length))) {
           this.errors = null;
