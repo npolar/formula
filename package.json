@@ -1,6 +1,6 @@
 {
   "name": "formula",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "HTML forms from JSON schema",
   "main": "dist/formula.commonjs.js",
   "scripts": {
