@@ -48,7 +48,12 @@ gulp.task('validate-js', ['compile-templates'], function() {
 gulp.task('compile-commonjs', ['compile-templates'], function () {
 	return gulp.src(['src/**/*.js'])
 		.pipe(concat('formula.commonjs.js'))
-		.pipe(defineModule('commonjs', { require: {angular: 'angular', tv4: 'tv4'}}))
+		.pipe(defineModule('commonjs', { require: {
+      angular: 'angular',
+      tv4: 'tv4',
+      sortablejs: 'sortablejs',
+      ngSortable: 'sortablejs/ng-sortable'
+    }}))
 		.pipe(gulp.dest('./dist/'));
 });
 

@@ -1,4 +1,4 @@
-var angular = require("angular");var tv4 = require("tv4");module.exports = /* globals angular */
+var angular = require("angular");var tv4 = require("tv4");var sortablejs = require("sortablejs");var ngSortable = require("sortablejs/ng-sortable");module.exports = /* globals angular */
 
 (function() {
 "use strict";
