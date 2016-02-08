@@ -188,9 +188,9 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
       getErrorText: function(error) {
         var text = '';
         if (error.dataPath) {
-          var line = Number(error.dataPath.replace(/^\/(\d+).*$/, '$1')) + 1;
-          text += $filter('formulaReplace')(i18n.line, {
-            line: line,
+          var item = Number(error.dataPath.replace(/^\/(\d+).*$/, '$1')) + 1;
+          text += $filter('formulaReplace')(i18n.text.item, {
+            item: item,
             error: error.message
           });
         } else {

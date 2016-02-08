@@ -28,7 +28,7 @@
       "label": "Validér",
       "tooltip": "Klikk for å validere dokumentet"
     },
-    "line": "Rad {line}: {error}"
+    "item": "Rad {item}: {error}"
   },
   "fieldsets": [],
   "fields": {}

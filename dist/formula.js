@@ -861,6 +861,12 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
   }
 ]);
 
+
+// @FIXME bug in getErrorText
+// @FIXME add drag handle
+// @FIXME add move buttons to material
+// @FIXME multilang fields..
+
 /* globals angular, tv4 */
 angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaLog', '$q',
   function(jsonLoader, log, $q) {
@@ -898,7 +904,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
           label: 'Validate',
           tooltip: 'Click to validate form'
         },
-        line: 'Line {line}: {error}',
+        item: 'Item {item}: {error}',
       },
 
       fields: {},
@@ -1976,9 +1982,9 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
       getErrorText: function(error) {
         var text = '';
         if (error.dataPath) {
-          var line = Number(error.dataPath.replace(/^\/(\d+).*$/, '$1')) + 1;
-          text += $filter('formulaReplace')(i18n.line, {
-            line: line,
+          var item = Number(error.dataPath.replace(/^\/(\d+).*$/, '$1')) + 1;
+          text += $filter('formulaReplace')(i18n.text.item, {
+            item: item,
             error: error.message
           });
         } else {

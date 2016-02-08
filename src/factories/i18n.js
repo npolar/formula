@@ -35,7 +35,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
           label: 'Validate',
           tooltip: 'Click to validate form'
         },
-        line: 'Line {line}: {error}',
+        item: 'Item {item}: {error}',
       },
 
       fields: {},
