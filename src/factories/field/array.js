@@ -15,6 +15,12 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       }
     };
 
+    var recalcIndex = function(field) {
+      field.values.forEach(function(fs, i) {
+        fs.index = i;
+      });
+    };
+
     var ArrayField = {
       create: function(options) {
         var field = Object.create(formulaField.create(options));
@@ -36,7 +42,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         field.sortable = {
           onEnd: function (e) {
             field.values = e.models;
-            field.recalcIndex();
+            recalcIndex(field);
             field.itemChange();
           }
         };
@@ -143,6 +149,8 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
           this.value.splice(item, 1);
         }
 
+        recalcIndex(this);
+
         if (typeof item.destroyWatcher === 'function') {
           item.destroyWatcher();
         }
@@ -152,10 +160,22 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         $rootScope.$emit('revalidate');
       },
 
-      recalcIndex: function() {
-        this.values.forEach(function(fs, i) {
-          fs.index = i;
-        });
+      moveUp: function (index) {
+        var a = this.values[index];
+        var b = this.values[index - 1];
+        a.index = index - 1;
+        b.index = index;
+        this.values[index - 1] = a;
+        this.values[index] = b;
+      },
+
+      moveDown: function (index) {
+        var a = this.values[index];
+        var b = this.values[index + 1];
+        a.index = index + 1;
+        b.index = index;
+        this.values[index + 1] = a;
+        this.values[index] = b;
       },
 
       itemChange: function(item) {

@@ -12,6 +12,8 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
           tooltip: 'Click to add a new item'
         },
         invalid: '{count} invalid fields',
+        moveup: 'Move item up',
+        movedown: 'Move item down',
         maximize: {
           label: 'Maximize',
           tooltip: 'Click to maximize item'
