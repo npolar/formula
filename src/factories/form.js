@@ -244,7 +244,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
           if (field.dirty || force) {
             var index;
-            fieldset.dirty = true;
+            fieldset.dirty = fieldset.dirty || field.dirty;
             if (field.validate(force, silent)) {
               if ((index = fieldset.errors.indexOf(field.path)) !== -1) {
                 fieldset.errors.splice(index, 1);
@@ -272,6 +272,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             }
           }, this);
           this.errors = this.errors.concat(fieldset.errors);
+          console.log("fs", fieldset.dirty, silent, fieldset.errors);
           fieldset.valid = !fieldset.dirty || (silent || !(fieldset.errors.length));
           fieldset.dirty = false;
         }, this);

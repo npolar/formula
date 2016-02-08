@@ -610,7 +610,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
           if (field.dirty || force) {
             var index;
-            fieldset.dirty = true;
+            fieldset.dirty = fieldset.dirty || field.dirty;
             if (field.validate(force, silent)) {
               if ((index = fieldset.errors.indexOf(field.path)) !== -1) {
                 fieldset.errors.splice(index, 1);
@@ -638,6 +638,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             }
           }, this);
           this.errors = this.errors.concat(fieldset.errors);
+          console.log("fs", fieldset.dirty, silent, fieldset.errors);
           fieldset.valid = !fieldset.dirty || (silent || !(fieldset.errors.length));
           fieldset.dirty = false;
         }, this);
@@ -2067,7 +2068,7 @@ angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLo
       field.destroyWatcher = $rootScope.$watch(function fieldWatch() {
         return field.value;
       }, function(n, o) {
-        if (n !== o) {
+        if (!angular.equals(n, o)) {
           if (field.value === null || field.value === "") {
             field.value = undefined;
             return; // triggers new watch

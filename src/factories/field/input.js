@@ -17,7 +17,7 @@ angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLo
       field.destroyWatcher = $rootScope.$watch(function fieldWatch() {
         return field.value;
       }, function(n, o) {
-        if (n !== o) {
+        if (!angular.equals(n, o)) {
           if (field.value === null || field.value === "") {
             field.value = undefined;
             return; // triggers new watch
