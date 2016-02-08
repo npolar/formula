@@ -1,4 +1,4 @@
-/* globals angular */
+/* globals angular,tv4 */
 angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTemplateService', 'formulaSchema', 'formulaJsonLoader', 'formulaForm',
   function($q, i18n, templates, Schema, jsonLoader, Form) {
     "use strict";

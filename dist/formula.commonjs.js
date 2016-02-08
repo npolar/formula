@@ -638,7 +638,6 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             }
           }, this);
           this.errors = this.errors.concat(fieldset.errors);
-          console.log("fs", fieldset.dirty, silent, fieldset.errors);
           fieldset.valid = !fieldset.dirty || (silent || !(fieldset.errors.length));
           fieldset.dirty = false;
         }, this);
@@ -741,7 +740,7 @@ angular.module('formula').factory('formulaFormat', [function() {
   };
 }]);
 
-/* globals angular */
+/* globals angular,tv4 */
 angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTemplateService', 'formulaSchema', 'formulaJsonLoader', 'formulaForm',
   function($q, i18n, templates, Schema, jsonLoader, Form) {
     "use strict";
@@ -917,7 +916,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
 
     var set = function(code) {
       var cacheKey = codeAliases[code];
-      tv4.language(cacheKey.replace(/_.*/, ''));
+      tv4.language(cacheKey.replace('_', '-'));
       if (cache[cacheKey]) {
         return Promise.resolve(cache[cacheKey]).then(function(locale) {
           currentLocale = locale;
@@ -925,6 +924,12 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
         });
       }
 
+    };
+
+    var addTv4 = function (lang, key) {
+      if (lang.tv4) {
+        tv4.addLanguage(key.replace('_', '-'), lang.tv4);
+      }
     };
 
     /**
@@ -966,11 +971,12 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
             fieldsets: data.fieldsets,
             text: data.text
           };
-
+          addTv4(data, cacheKey);
           deferred.resolve(cache[cacheKey]);
         });
       } else { // lang is map
         cache[cacheKey] = lang;
+        addTv4(lang, cacheKey);
         deferred.resolve(lang);
       }
 

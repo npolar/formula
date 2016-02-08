@@ -272,7 +272,6 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             }
           }, this);
           this.errors = this.errors.concat(fieldset.errors);
-          console.log("fs", fieldset.dirty, silent, fieldset.errors);
           fieldset.valid = !fieldset.dirty || (silent || !(fieldset.errors.length));
           fieldset.dirty = false;
         }, this);
