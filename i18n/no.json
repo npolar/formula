@@ -1,0 +1,35 @@
+{
+  "text": {
+    "add": {
+      "label": "Legg til",
+      "tooltip": "Klikk for å legge til et nytt element"
+    },
+    "invalid": "{count} ugyldige felt",
+    "moveup": "Flytt element opp",
+    "movedown": "Flytt element ned",
+    "maximize": {
+      "label": "Maksimer",
+      "tooltip": "Klikk for å maksimer"
+    },
+    "minimize": {
+      "label": "Minimere",
+      "tooltip": "Klikk for å minimere"
+    },
+    "remove": {
+      "label": "Fjern",
+      "tooltip": "Klikk for å fjerne elementet"
+    },
+    "required": "Påkrevd felt",
+    "save": {
+      "label": "Lagre",
+      "tooltip": "Klikk for å lagre dokumentet"
+    },
+    "validate": {
+      "label": "Validér",
+      "tooltip": "Klikk for å validere dokumentet"
+    },
+    "line": "Rad {line}: {error}"
+  },
+  "fieldsets": [],
+  "fields": {}
+}
