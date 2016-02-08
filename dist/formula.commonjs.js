@@ -286,10 +286,9 @@ angular.module('formula').directive('formulaInput', ['$compile',
   }
 ]);
 
-/* globals angular,window,console */
-angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaFieldBuilder', 'formulaI18n',
-  'formulaEvaluateConditionsService', 'formulaTemplateService',
-  function($rootScope, jsonLoader, Model, fieldBuiler, i18n, formulaEvaluateConditionsService, templates) {
+/* globals angular */
+angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'formulaTemplateService',
+  function(fieldBuiler, templates) {
     "use strict";
 
 
@@ -298,7 +297,8 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
         var fieldsets = [{
           fields: [],
           id: 'the-fieldset',
-          mainType: 'fieldset'
+          mainType: 'fieldset',
+          valid: true
         }];
 
         Object.keys(schema.properties).forEach(function(key) {
@@ -330,7 +330,8 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             active: (i ? false : true),
             fields: [],
             id: fs.title + i,
-            mainType: 'fieldset'
+            mainType: 'fieldset',
+            valid: true
           };
           fs.fields.forEach(function(f, j) {
             var key;
@@ -361,6 +362,19 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       return null;
     };
 
+    return {
+      fieldsetFromSchema: fieldsetFromSchema,
+      fieldsetFromDefinition: fieldsetFromDefinition
+    };
+  }
+]);
+
+/* globals angular,window,console */
+angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaI18n',
+  'formulaEvaluateConditionsService', 'formulaTemplateService', 'formulaFieldset',
+  function($rootScope, jsonLoader, Model, i18n, formulaEvaluateConditionsService, templates, formulaFieldset) {
+    "use strict";
+
     /**
      * @class form
      *
@@ -385,9 +399,9 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
       if (formDefinition) {
         this.title = formDefinition.title;
-        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, this.model.data);
+        this.fieldsets = formulaFieldset.fieldsetFromDefinition(schema, formDefinition, this.model.data);
       } else {
-        this.fieldsets = fieldsetFromSchema(schema, this.model.data);
+        this.fieldsets = formulaFieldset.fieldsetFromSchema(schema, this.model.data);
       }
 
       this.onsave = function(model) {
