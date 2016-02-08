@@ -1,77 +1,8 @@
 /* globals angular,window,console */
-angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaFieldBuilder', 'formulaI18n',
-  'formulaEvaluateConditionsService', 'formulaTemplateService',
-  function($rootScope, jsonLoader, Model, fieldBuiler, i18n, formulaEvaluateConditionsService, templates) {
+angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaI18n',
+  'formulaEvaluateConditionsService', 'formulaTemplateService', 'formulaFieldset',
+  function($rootScope, jsonLoader, Model, i18n, formulaEvaluateConditionsService, templates, formulaFieldset) {
     "use strict";
-
-
-    function fieldsetFromSchema(schema, data) {
-      if (schema && schema.type === 'object') {
-        var fieldsets = [{
-          fields: [],
-          id: 'the-fieldset',
-          mainType: 'fieldset'
-        }];
-
-        Object.keys(schema.properties).forEach(function(key) {
-          var val = schema.properties[key];
-          var newField = fieldBuiler.build({
-            schema: val,
-            id: key
-          });
-          if (newField) {
-            newField.setRequired(schema.required);
-            newField.valueFromModel(data);
-            fieldsets[0].fields.push(newField);
-          }
-        });
-        templates.initNode(fieldsets[0]);
-        return fieldsets;
-      }
-
-      return null;
-    }
-
-    var fieldsetFromDefinition = function(schema, formDefinition, data) {
-      if (schema && schema.type === 'object' && formDefinition.fieldsets) {
-        var fieldsets = [];
-
-        formDefinition.fieldsets.forEach(function(fs, i) {
-          var fieldset = {
-            title: fs.title,
-            active: (i ? false : true),
-            fields: [],
-            id: fs.title + i,
-            mainType: 'fieldset'
-          };
-          fs.fields.forEach(function(f, j) {
-            var key;
-            if (typeof f === 'string') {
-              key = f;
-            } else {
-              key = f.id;
-            }
-            var fieldSchema = schema.properties[key] || {
-              id: key
-            };
-            var newField = fieldBuiler.build({
-              schema: fieldSchema,
-              id: key,
-              fieldDefinition: f
-            });
-            if (newField) {
-              newField.setRequired(schema.required);
-              newField.valueFromModel(data);
-              fieldset.fields.push(newField);
-            }
-          });
-          templates.initNode(fieldset);
-          fieldsets.push(fieldset);
-        });
-        return fieldsets;
-      }
-      return null;
-    };
 
     /**
      * @class form
@@ -97,9 +28,9 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
       if (formDefinition) {
         this.title = formDefinition.title;
-        this.fieldsets = fieldsetFromDefinition(schema, formDefinition, this.model.data);
+        this.fieldsets = formulaFieldset.fieldsetFromDefinition(schema, formDefinition, this.model.data);
       } else {
-        this.fieldsets = fieldsetFromSchema(schema, this.model.data);
+        this.fieldsets = formulaFieldset.fieldsetFromSchema(schema, this.model.data);
       }
 
       this.onsave = function(model) {
