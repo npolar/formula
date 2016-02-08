@@ -1,11 +1,10 @@
 "use strict";
-/* globals angular, tv4 */
+/* globals angular */
 
 angular.module('demo', ['formula'])
   .controller('demoController', ['$scope', '$timeout', '$q', 'formula',
     function($scope, $timeout, $q, formula) {
       var updateModel = function() {
-        console.clear();
         $scope.formula.setModel({
           _id: 'foobarID',
           string: 'timeoutfoobar',

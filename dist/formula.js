@@ -334,12 +334,7 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
             valid: true
           };
           fs.fields.forEach(function(f, j) {
-            var key;
-            if (typeof f === 'string') {
-              key = f;
-            } else {
-              key = f.id;
-            }
+            var key = (typeof f === 'string') ? f : f.id;
             var fieldSchema = schema.properties[key] || {
               id: key
             };
