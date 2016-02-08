@@ -117,8 +117,3 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
     };
   }
 ]);
-
-
-// @FIXME add drag handle
-// @FIXME add move buttons to material
-// @FIXME multilang fields..
