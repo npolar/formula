@@ -164,59 +164,17 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
        *
        */
       translate: function() {
-
-        function fieldTranslate(field, parent) {
-          var fieldTranslation = (parent && parent.fields ? (parent.fields[field.id] || null) : null);
-
-          if (field.typeOf('array') || field.typeOf('object')) {
-            angular.forEach(field.fields, function(field) {
-              fieldTranslate(field, fieldTranslation);
-            });
-
-            angular.forEach(field.values, function(fieldset) {
-              angular.forEach(fieldset.fields, function(field) {
-                fieldTranslate(field, fieldTranslation);
-              });
-            });
-          }
-
-          if (fieldTranslation) {
-            field.title = fieldTranslation.title || field.title;
-
-            field.description = fieldTranslation.description || field.description;
-
-            if (field.typeOf('select')) {
-              field.values = [];
-
-              angular.forEach(field.enum, function(key, index) {
-                field.values.push({
-                  id: key,
-                  label: fieldTranslation.values ? (fieldTranslation.values[index] || key) : key
-                });
-              });
-            }
-          } else {
-            if (field.typeOf('select')) {
-              field.values = [];
-
-              angular.forEach(field.enum, function(val) {
-                field.values.push({
-                  id: val,
-                  label: val
-                });
-              });
-            }
-          }
-        }
-
         this.fieldsets.forEach(function(fs, i) {
           if (i18n.fieldsets) {
             fs.title = i18n.fieldsets[i] || fs.title;
           }
-
-          fs.fields.forEach(function(field) {
-            fieldTranslate(field, i18n);
-          });
+          if (i18n.fields) {
+            fs.fields.forEach(function(field) {
+              if (i18n.fields[field.id]) {
+                field.translate(i18n.fields[field.id]);
+              }
+            });
+          }
         });
       },
 

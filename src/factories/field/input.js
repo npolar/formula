@@ -67,7 +67,15 @@ angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLo
 
 
     InputField.prototype = {
+      translate: function (translations) {
+        if (this.typeOf('select') && translations.values) {
+          this.values.forEach(function (value, index) {
+            value.label = translations.values[index] || value.label;
+          }, this);
+        }
 
+        formulaField.prototype.translate.call(this, translations);
+      }
     };
 
     return InputField;

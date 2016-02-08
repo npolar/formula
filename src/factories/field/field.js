@@ -4,6 +4,7 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
     "use strict";
 
     var fieldBuilder;
+    var uids = [];
 
     var validateFieldId = function(field) {
       ['.', '/', '#'].forEach(function(invalidChar) {
@@ -48,6 +49,24 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
       }
     };
 
+    var uidGen = function (field) {
+      var uid = 'formula-',
+        chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+      for (var i = 0; i < 8; ++i) {
+        uid += chars[Math.floor(Math.random() * chars.length)];
+      }
+
+      if (uids.indexOf(uid) !== -1) {
+        return uidGen(field);
+      } else {
+        field.uid = uid;
+        uids.push(uid);
+      }
+
+      return uid;
+    };
+
     var Field = {
       create: function(options) {
         var field = Object.create(Field.prototype);
@@ -61,18 +80,15 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
         if (field.schema.items && field.fieldDefinition.fields) {
           assign(field.items, field.fieldDefinition.fields[0]);
         }
+
         validateFieldId(field);
-
-        field.uidGen();
-
+        uidGen(field);
         reduceFieldTypes(field);
 
         return field;
       },
       fieldBuilder: fieldBuilder
     };
-
-    Field.uids = [];
 
     Field.prototype = {
       dirtyParents: function() {
@@ -127,31 +143,6 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
         return (type === this.type || type === (types = this.type.split(':'))[0] || type === types[1]);
       },
 
-      /**
-       * @method uidGen
-       *
-       * Function used to generate a new Unique field ID.
-       *
-       * @param len Optional number parameter to specify the UID-length
-       * @returns The newly generated UID
-       */
-      uidGen: function(len) {
-        var uid = 'formula-',
-          chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-        for (var i = 0; i < (len ? len : 8); ++i) {
-          uid += chars[Math.floor(Math.random() * chars.length)];
-        }
-
-        if (Field.uids.indexOf(uid) !== -1) {
-          return this.uidGen(len);
-        } else {
-          this.uid = uid;
-        }
-
-        return uid;
-      },
-
       isEmpty: function() {
         // intentional == (null || undefined)
         // jshint -W116
@@ -183,6 +174,11 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
 
       setRequired: function(required) {
         this.required = (required === true) || (required instanceof Array && required.indexOf(this.id) !== -1);
+      },
+
+      translate: function(translations) {
+        this.title = translations.title || this.title;
+        this.description = translations.description || this.description;
       },
 
       getErrorText: function(error) {

@@ -54,8 +54,11 @@
       "title": "Objektliste",
       "description": "Flyvende ku!",
       "fields": {
-        "number": {
-          "title": "Tall"
+        "title": "obbbjj",
+        "fields": {
+          "number": {
+            "title": "Tall"
+          }
         }
       }
     },
@@ -65,22 +68,31 @@
     "array_hierarchy": {
       "title": "I",
       "fields": {
-        "sub_array_one": {
-          "title": "II",
-          "fields": {
-            "sub_sub_array_one": {
-              "title": "III",
+        "title": "I item",
+        "fields": {
+          "sub_array_one": {
+            "title": "II",
+            "fields": {
+              "title": "II item",
               "fields": {
-                "obj_1_1_1": {
-                  "title": "Julenisse"
-                },
-                "obj_1_1_2": {
-                  "title": "Iskaffe",
-                  "description": "Caffe Cortado"
-                },
-                "obj_1_1_3": {
-                  "title": "Velg side",
-                  "values": ["Den MØRKE siden", "Den LYSE siden"]
+                "sub_sub_array_one": {
+                  "title": "III",
+                  "fields": {
+                    "title": "III item",
+                    "fields": {
+                      "obj_1_1_1": {
+                        "title": "Julenisse"
+                      },
+                      "obj_1_1_2": {
+                        "title": "Iskaffe",
+                        "description": "Caffe Cortado"
+                      },
+                      "obj_1_1_3": {
+                        "title": "Velg side",
+                        "values": ["Den MØRKE siden", "Den LYSE siden"]
+                      }
+                    }
+                  }
                 }
               }
             }

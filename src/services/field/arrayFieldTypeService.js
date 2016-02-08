@@ -13,11 +13,6 @@ angular.module('formula').service('formulaArrayFieldTypeService', ['$filter', 'f
           field.type = 'array:fieldset';
         } else if (items.type === 'array') {
           field.type = 'array:array';
-        } else if (items.enum) {
-          field.enum = items.enum;
-          field.multiple = true;
-          field.type = 'input:select';
-          field.mainType = 'field';
         } else if (items.allOf) {
           // @TODO
           log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {

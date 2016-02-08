@@ -118,7 +118,19 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
 
           formulaField.prototype.valueFromModel.call(this, model);
         }
-      }
+      },
+
+      translate: function (translations) {
+        if (translations.fields) {
+          this.fields.forEach(function(field) {
+            if (translations.fields[field.id]) {
+              field.translate(translations.fields[field.id]);
+            }
+          });
+        }
+
+        formulaField.prototype.translate.call(this, translations);
+      },
 
     };
 

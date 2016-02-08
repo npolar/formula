@@ -3,18 +3,34 @@ angular.module('formula').service('formulaInputFieldTypeService', ['$filter', 'f
   function($filter, log, format) {
     "use strict";
 
+    var handleMultiEnum = function (field) {
+      field.enum = field.schema.items.enum;
+      field.multiple = true;
+      if (field.schema.minItems >= 1) {
+        field.required = true;
+      }
+    };
+
+    var handleEnums = function (field) {
+      field.values = [];
+      field.enum.forEach(function(val) {
+        field.values.push({
+          id: val,
+          label: val
+        });
+      });
+    };
+
     var applyType = function(field) {
       field.mainType = 'field';
       var newType = 'input:text'; // default
+      if (field.schema.items && field.schema.items.enum) { // enums as array in schema
+        handleMultiEnum(field);
+      }
+
       if (field.type === 'select' || field.enum) {
         newType = 'input:select';
-        field.values = [];
-        field.enum.forEach(function(val) {
-          field.values.push({
-            id: val,
-            label: val
-          });
-        });
+        handleEnums(field);
       } else if (field.format) {
         var formatNoDash = field.format.replace('-', '');
 
@@ -33,16 +49,6 @@ angular.module('formula').service('formulaInputFieldTypeService', ['$filter', 'f
         switch (field.type) {
           case 'any':
             newType = 'input:any';
-            break;
-          case 'array':
-            if (field.schema.items.enum) {
-              field.enum = field.schema.items.enum;
-              field.multiple = true;
-              newType = 'input:select';
-              if (field.schema.minItems >= 1) {
-                field.required = true;
-              }
-            }
             break;
 
           case 'boolean':

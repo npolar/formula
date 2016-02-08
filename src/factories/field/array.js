@@ -34,7 +34,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         field.fieldAdd();
 
         // Add one element to arrays which requires at least one element
-        if (field.typeOf('array') && field.schema.minItems) {
+        if (field.schema.minItems) {
           field.itemAdd();
         }
 
@@ -230,6 +230,15 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
 
           formulaField.prototype.valueFromModel.call(this, model);
         }
+      },
+
+      translate: function (translations) {
+        Object.keys(translations.fields).forEach(function (key, index) {
+          this.fields.concat(this.values).forEach(function(field) {
+            field.translate(translations.fields);
+          }, this);
+        }, this);
+        formulaField.prototype.translate.call(this, translations);
       },
 
       nrArrayValues: function() {
