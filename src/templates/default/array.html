@@ -7,8 +7,8 @@
       <fieldset ng-class="{ valid: value.valid }">
         <legend>
           <span ng-if="!value.visible">{{ value.fields | formulaInlineValues }}</span>
-          <a ng-if="!$first" class="toggle" href="" ng-click="field.moveUp($index)" title="{{ i18n.text.moveup }}">^</a>
-          <a ng-if="!$last" class="toggle" href="" ng-click="field.moveDown($index)" title="{{ i18n.text.movedown }}">˅</a>
+          <a ng-show="!$first" class="toggle" href="" ng-click="field.moveUp($index)" title="{{ i18n.text.moveup }}">^</a>
+          <a ng-show="!$last" class="toggle" href="" ng-click="field.moveDown($index)" title="{{ i18n.text.movedown }}">˅</a>
           <a class="toggle" href="" ng-click="field.itemToggle($index)" title="{{ value.visible ? i18n.text.minimize.tooltip : i18n.text.maximize.tooltip }}">{{ value.visible ? '_' : '‾' }}</a>
           <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ i18n.text.remove.tooltip }}">&times;</a>
         </legend>
@@ -19,9 +19,13 @@
   </ul>
 
   <ul ng-if="::field.typeOf('field')" ng-sortable="field.sortable">
-    <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values track by value.path">
+    <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values">
       <input formula:input field="value" />
-      <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ i18n.text.remove.tooltip }}">&times;</a>
+      <div class="input-ctrls">
+        <a ng-show="!$first" class="toggle" href="" ng-click="field.moveUp($index)" title="{{ i18n.text.moveup }}">^</a>
+        <a ng-show="!$last" class="toggle" href="" ng-click="field.moveDown($index)" title="{{ i18n.text.movedown }}">˅</a>
+        <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ i18n.text.remove.tooltip }}">&times;</a>
+      </div>
     </li>
   </ul>
 

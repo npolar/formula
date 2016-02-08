@@ -354,7 +354,12 @@
 .formula fieldset ul li > input {
   box-sizing: border-box;
   margin-right: 5px;
-  width: calc(100% - 35px);
+  width: calc(100% - 110px);
+}
+
+.formula .input-ctrls {
+  text-align: right;
+  display: inline-block;
 }
 
 .formula .loading {

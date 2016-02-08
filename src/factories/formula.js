@@ -1,4 +1,4 @@
-/* globals angular,tv4 */
+/* globals angular */
 angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTemplateService', 'formulaSchema', 'formulaJsonLoader', 'formulaForm',
   function($q, i18n, templates, Schema, jsonLoader, Form) {
     "use strict";
@@ -119,7 +119,6 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
 ]);
 
 
-// @FIXME bug in getErrorText
 // @FIXME add drag handle
 // @FIXME add move buttons to material
 // @FIXME multilang fields..
