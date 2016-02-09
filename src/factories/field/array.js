@@ -44,7 +44,6 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
             field.values = e.models;
             recalcIndex(field);
             field.itemChange();
-            console.log('reorder', field.values.reduce((memo, value) => memo += ', ' + value.index + value.value.string_default, ''));
           }
         };
         field.visible = field.hidden ? false : true;
