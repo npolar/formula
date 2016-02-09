@@ -3,7 +3,7 @@
     ({{ field.nrArrayValues() || 0 }})</legend>
 
   <ul ng-if="::field.typeOf('fieldset')" ng-sortable="field.sortable">
-    <li ng-repeat="value in field.values track by value.path" ng-if="!value.hidden">
+    <li ng-repeat="value in field.values" ng-if="!value.hidden">
       <fieldset ng-class="{ valid: value.valid }">
         <legend>
           <span ng-if="!value.visible">{{ value.fields | formulaInlineValues }}</span>

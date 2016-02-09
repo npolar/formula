@@ -77,18 +77,6 @@
 					"number": {
 						"type": "number",
 						"description": "required number input"
-					},
-					"number2": {
-						"type": "number",
-						"description": "number input"
-					},
-					"number3": {
-						"type": "number",
-						"description": "number input"
-					},
-					"number4": {
-						"type": "number",
-						"description": "number input"
 					}
 				},
 				"required": [ "number" ]
