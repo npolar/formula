@@ -7,8 +7,8 @@
       <fieldset ng-class="{ valid: value.valid }">
         <legend>
           <span ng-if="!value.visible">{{ value.value | formulaInlineValues }}</span>
-          <a ng-show="!$first" class="toggle" href="" ng-click="field.moveUp($index)" title="{{ i18n.text.moveup }}">^</a>
-          <a ng-show="!$last" class="toggle" href="" ng-click="field.moveDown($index)" title="{{ i18n.text.movedown }}">˅</a>
+          <a ng-show="!$first" class="toggle" href="" ng-click="field.moveUp($index)" title="{{ i18n.text.moveup }}">&uarr;</a>
+          <a ng-show="!$last" class="toggle" href="" ng-click="field.moveDown($index)" title="{{ i18n.text.movedown }}">&darr;</a>
           <a class="toggle" href="" ng-click="field.itemToggle($index)" title="{{ value.visible ? i18n.text.minimize.tooltip : i18n.text.maximize.tooltip }}">{{ value.visible ? '_' : '‾' }}</a>
           <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ i18n.text.remove.tooltip }}">&times;</a>
         </legend>
@@ -22,8 +22,8 @@
     <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values">
       <input formula:input field="value" />
       <div class="input-ctrls">
-        <a ng-show="!$first" class="toggle" href="" ng-click="field.moveUp($index)" title="{{ i18n.text.moveup }}">^</a>
-        <a ng-show="!$last" class="toggle" href="" ng-click="field.moveDown($index)" title="{{ i18n.text.movedown }}">˅</a>
+        <a ng-show="!$first" class="toggle" href="" ng-click="field.moveUp($index)" title="{{ i18n.text.moveup }}">&uarr;</a>
+        <a ng-show="!$last" class="toggle" href="" ng-click="field.moveDown($index)" title="{{ i18n.text.movedown }}">&darr;</a>
         <a class="remove" href="" ng-click="field.itemRemove($index)" title="{{ i18n.text.remove.tooltip }}">&times;</a>
       </div>
     </li>
