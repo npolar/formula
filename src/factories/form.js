@@ -230,7 +230,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             }
           }, this);
           this.errors = this.errors.concat(fieldset.errors);
-          fieldset.valid = !fieldset.dirty || (silent || !(fieldset.errors.length));
+          fieldset.valid = (!fieldset.dirty && fieldset.valid) || (silent || !(fieldset.errors.length));
           fieldset.dirty = false;
         }, this);
 
