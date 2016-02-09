@@ -31,7 +31,7 @@ angular.module('demo', ['formula'])
           },
           nested_array: [
             [1, 2],
-            [1, 2]
+            [3, 4]
           ],
           array_hierarchy: [{
             sub_array_one: [{

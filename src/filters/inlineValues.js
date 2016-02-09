@@ -2,18 +2,19 @@
 angular.module('formula').filter('formulaInlineValues', [function() {
   "use strict";
 
-  return function(input, params) {
+  return function(values, params) {
 
     var result = [];
 
-    angular.forEach(input, function(field) {
-      if (field.value instanceof Array) {
-        result.push('Array[' + field.value.length + ']');
-      } else switch (typeof field.value) {
+    angular.forEach(values, function(value) {
+      
+      if (value instanceof Array) {
+        result.push('Array[' + value.length + ']');
+      } else switch (typeof value) {
         case 'string':
         case 'number':
         case 'boolean':
-          result.push(field.value);
+          result.push(value);
           break;
 
         default:

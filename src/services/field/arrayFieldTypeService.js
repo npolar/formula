@@ -9,10 +9,8 @@ angular.module('formula').service('formulaArrayFieldTypeService', ['$filter', 'f
       if (field.schema.items) {
         var items = field.schema.items;
 
-        if (items.type === 'object') {
+        if (items.type === 'object' || items.type === 'array') {
           field.type = 'array:fieldset';
-        } else if (items.type === 'array') {
-          field.type = 'array:array';
         } else if (items.allOf) {
           // @TODO
           log.warning(log.codes.FIELD_UNSUPPORTED_PROPERTY, {

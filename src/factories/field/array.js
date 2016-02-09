@@ -209,10 +209,11 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
             var newField;
             if (this.typeOf('fieldset')) {
               newField = this.itemAdd(true /* preventValidation */ );
-              if (newField.index !== 0) {
+              if (newField.index !== 0) { // @FIXME does not handle hidden array items
                 newField.visible = false;
               }
               if (newField) {
+
                 var valueModel = {};
                 valueModel[this.values[index].id] = item;
                 this.values[index].valueFromModel(valueModel);
@@ -222,14 +223,12 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
               if (newField) {
                 this.values[index].value = item;
               }
-            } else {
-              // @TODO Support array:array
-              // jshint -W035
             }
           }, this);
 
           formulaField.prototype.valueFromModel.call(this, model);
         }
+
       },
 
       translate: function (translations) {
