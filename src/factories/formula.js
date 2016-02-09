@@ -17,12 +17,12 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       }
 
       (options.languages instanceof Array ? options.languages : []).forEach(function(language, index) {
-        i18n.add(language.uri || language.map, language.code, language.aliases).then(function() {
-          if (index === 0) {
-            setLanguage(language.code);
-          }
-        });
+        i18n.add(language.uri || language.map, language.code, language.aliases);
       });
+
+      if (options.language) {
+        setLanguage(options.language);
+      }
 
       var formLoaded = $q.all(asyncs).then(function(responses) {
         createForm(responses[1], responses[2]);
