@@ -717,12 +717,12 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       }
 
       (options.languages instanceof Array ? options.languages : []).forEach(function(language, index) {
-        i18n.add(language.uri || language.map, language.code, language.aliases).then(function() {
-          if (index === 0) {
-            setLanguage(language.code);
-          }
-        });
+        i18n.add(language.uri || language.map, language.code, language.aliases);
       });
+
+      if (options.language) {
+        setLanguage(options.language);
+      }
 
       var formLoaded = $q.all(asyncs).then(function(responses) {
         createForm(responses[1], responses[2]);
@@ -1272,48 +1272,6 @@ angular.module('formula').factory('formulaSchema', ['$q', 'formulaJsonLoader', '
 ]);
 
 /* globals angular */
-angular.module('formula').filter('formulaInlineValues', [function() {
-  "use strict";
-
-  return function(input, params) {
-
-    var result = [];
-
-    angular.forEach(input, function(field) {
-      if (field.value instanceof Array) {
-        result.push('Array[' + field.value.length + ']');
-      } else switch (typeof field.value) {
-        case 'string':
-        case 'number':
-        case 'boolean':
-          result.push(field.value);
-          break;
-
-        default:
-      }
-    });
-
-    return result.join(', ');
-  };
-}]);
-
-/* globals angular */
-angular.module('formula').filter('formulaReplace', [function() {
-  "use strict";
-
-  return function(input, params) {
-    var result = input;
-
-    (input.match(/\{[^\}]*\}/g) || [])
-    .forEach(function(val) {
-      result = result.replace(val, params[val.substr(1, val.length - 2)]);
-    });
-
-    return result;
-  };
-}]);
-
-/* globals angular */
 angular.module('formula').service('formulaClassService', [function() {
   "use strict";
 
@@ -1504,6 +1462,48 @@ $templateCache.put("formula/default/field.html","<div ng-class=\"{ valid: field.
 $templateCache.put("formula/default/fieldset.html","<fieldset ng-show=\"fieldset.active\"><formula:fields fields=\"::fieldset.fields\"></formula:fields></fieldset>");
 $templateCache.put("formula/default/form.html","<div><div class=\"formula\" ng-if=\"!form.ready\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div><form class=\"formula\" ng-show=\"form.ready\"><header ng-if=\"::form.title\">{{ form.title }}</header><nav ng-if=\"::form.fieldsets.length > 1\"><a href=\"\" ng-class=\"{ active: fieldset.active, error: !fieldset.valid }\" ng-click=\"form.activate(fieldset)\" ng-repeat=\"fieldset in ::form.fieldsets track by fieldset.id\">{{ fieldset.title }}</a></nav><formula:fieldsets></formula:fieldsets><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ i18n.text.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-click=\"form.validate(true);\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.validate.tooltip }}\"><strong>&#10003;</strong> {{ i18n.text.validate.label }}</button> <button ng-click=\"form.save()\" ng-disabled=\"!form.valid\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.save.tooltip }}\"><strong>&#9921;</strong> {{ i18n.text.save.label }}</button></footer></form></div>");
 $templateCache.put("formula/default/object.html","<fieldset><legend ng-if=\"::field.title\">{{ field.title }}</legend><formula:fields fields=\"::field.fields\"></formula:fields></fieldset>");}]);
+/* globals angular */
+angular.module('formula').filter('formulaInlineValues', [function() {
+  "use strict";
+
+  return function(input, params) {
+
+    var result = [];
+
+    angular.forEach(input, function(field) {
+      if (field.value instanceof Array) {
+        result.push('Array[' + field.value.length + ']');
+      } else switch (typeof field.value) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+          result.push(field.value);
+          break;
+
+        default:
+      }
+    });
+
+    return result.join(', ');
+  };
+}]);
+
+/* globals angular */
+angular.module('formula').filter('formulaReplace', [function() {
+  "use strict";
+
+  return function(input, params) {
+    var result = input;
+
+    (input.match(/\{[^\}]*\}/g) || [])
+    .forEach(function(val) {
+      result = result.replace(val, params[val.substr(1, val.length - 2)]);
+    });
+
+    return result;
+  };
+}]);
+
 /* globals angular */
 angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaField', 'formulaArrayFieldTypeService', 'formulaTemplateService',
   function($rootScope, formulaField, formulaArrayFieldTypeService, formulaTemplateService) {
