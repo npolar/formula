@@ -65,7 +65,7 @@ angular.module('demo', ['formula'])
 
       $scope.formula = formula.getInstance({
         schema: "json/demo-schema.json",
-        form: "json/demo-form.json",
+        //form: "json/demo-form.json",
         // languages: [{
         //   code: 'nb_NO',
         //   aliases: ['nb', 'no'],

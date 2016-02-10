@@ -296,6 +296,7 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
       if (schema && schema.type === 'object') {
         var fieldsets = [{
           fields: [],
+          active: true,
           id: 'the-fieldset',
           mainType: 'fieldset',
           valid: true
@@ -329,7 +330,7 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
             title: fs.title,
             active: (i ? false : true),
             fields: [],
-            id: fs.title + i,
+            id: 'fs' + i,
             mainType: 'fieldset',
             valid: true
           };
@@ -1280,7 +1281,6 @@ angular.module('formula').filter('formulaInlineValues', [function() {
     var result = [];
 
     angular.forEach(values, function(value) {
-      
       if (value instanceof Array) {
         result.push('Array[' + value.length + ']');
       } else switch (typeof value) {

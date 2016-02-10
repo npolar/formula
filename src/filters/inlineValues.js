@@ -7,7 +7,6 @@ angular.module('formula').filter('formulaInlineValues', [function() {
     var result = [];
 
     angular.forEach(values, function(value) {
-      
       if (value instanceof Array) {
         result.push('Array[' + value.length + ']');
       } else switch (typeof value) {
