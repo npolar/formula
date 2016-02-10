@@ -6,19 +6,19 @@ angular.module('formula').service('formulaTemplateService', ['$templateCache', '
 
     // LIFO prio
     var DEFAULT_TEMPLATES = [{
-      match: 'field',
+      match: '@field',
       templateUrl: 'formula/default/field.html'
     }, {
-      match: 'object',
+      match: '@object',
       templateUrl: 'formula/default/object.html'
     }, {
-      match: 'array',
+      match: '@array',
       templateUrl: 'formula/default/array.html'
     }, {
-      match: 'fieldset',
+      match: '@fieldset',
       templateUrl: 'formula/default/fieldset.html'
     }, {
-      match: 'form',
+      match: '@form',
       templateUrl: 'formula/default/form.html'
     }];
 

@@ -298,7 +298,7 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
           fields: [],
           active: true,
           id: 'the-fieldset',
-          mainType: 'fieldset',
+          mainType: '@fieldset',
           valid: true
         }];
 
@@ -331,7 +331,7 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
             active: (i ? false : true),
             fields: [],
             id: 'fs' + i,
-            mainType: 'fieldset',
+            mainType: '@fieldset',
             valid: true
           };
           fs.fields.forEach(function(f, j) {
@@ -388,7 +388,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.title = null;
       this.valid = false;
       this.model = new Model(data);
-      this.mainType = 'form';
+      this.mainType = '@form';
 
       templates.initNode(this);
       formulaEvaluateConditionsService.setKeepFailing(!!keepFailing);
@@ -792,11 +792,12 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
         return _cfg.form.save();
       };
 
-      this.setSchema = function(schema) {
-        schema = new Schema();
+      this.getSchema = function () {
+        var deferred = $q.defer();
         formLoaded.then(function(responses) {
-          createForm(responses[1], responses[2]);
+          deferred.resolve(_cfg.form.schema);
         });
+        return deferred.promise;
       };
 
       this.i18n = {
@@ -1327,7 +1328,7 @@ angular.module('formula').service('formulaClassService', [function() {
 
   // css class of schema type
   var schemaClass = function(node) {
-    var schemaType = node.mainType;
+    var schemaType = node.mainType.replace('@', '');
     return "formula" +
       schemaType.charAt(0).toUpperCase() +
       schemaType.slice(1);
@@ -1413,19 +1414,19 @@ angular.module('formula').service('formulaTemplateService', ['$templateCache', '
 
     // LIFO prio
     var DEFAULT_TEMPLATES = [{
-      match: 'field',
+      match: '@field',
       templateUrl: 'formula/default/field.html'
     }, {
-      match: 'object',
+      match: '@object',
       templateUrl: 'formula/default/object.html'
     }, {
-      match: 'array',
+      match: '@array',
       templateUrl: 'formula/default/array.html'
     }, {
-      match: 'fieldset',
+      match: '@fieldset',
       templateUrl: 'formula/default/fieldset.html'
     }, {
-      match: 'form',
+      match: '@form',
       templateUrl: 'formula/default/form.html'
     }];
 
@@ -2116,7 +2117,7 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
     };
 
     var applyType = function(field) {
-      field.mainType = 'object';
+      field.mainType = '@object';
       if (!field.schema.properties) {
         log.warning(log.codes.FIELD_MISSING_PROPERTY, {
           property: 'properties',
@@ -2248,7 +2249,7 @@ angular.module('formula').service('formulaArrayFieldTypeService', ['$filter', 'f
     "use strict";
 
     var applyType = function(field) {
-      field.mainType = 'array';
+      field.mainType = '@array';
       field.values = [];
       if (field.schema.items) {
         var items = field.schema.items;
@@ -2473,7 +2474,7 @@ angular.module('formula').service('formulaInputFieldTypeService', ['$filter', 'f
     };
 
     var applyType = function(field) {
-      field.mainType = 'field';
+      field.mainType = '@field';
       var newType = 'input:text'; // default
       if (field.schema.items && field.schema.items.enum) { // enums as array in schema
         handleMultiEnum(field);

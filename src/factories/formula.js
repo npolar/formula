@@ -91,11 +91,12 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
         return _cfg.form.save();
       };
 
-      this.setSchema = function(schema) {
-        schema = new Schema();
+      this.getSchema = function () {
+        var deferred = $q.defer();
         formLoaded.then(function(responses) {
-          createForm(responses[1], responses[2]);
+          deferred.resolve(_cfg.form.schema);
         });
+        return deferred.promise;
       };
 
       this.i18n = {

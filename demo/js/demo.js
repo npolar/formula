@@ -64,7 +64,7 @@ angular.module('demo', ['formula'])
       };
 
       $scope.formula = formula.getInstance({
-        schema: "json/demo-schema.json",
+        schema: "http://api.npolar.no/schema/tracking-deployment-1",//"json/demo-schema.json",
         //form: "json/demo-form.json",
         // languages: [{
         //   code: 'nb_NO',

@@ -21,7 +21,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.title = null;
       this.valid = false;
       this.model = new Model(data);
-      this.mainType = 'form';
+      this.mainType = '@form';
 
       templates.initNode(this);
       formulaEvaluateConditionsService.setKeepFailing(!!keepFailing);

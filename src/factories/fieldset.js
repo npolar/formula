@@ -10,7 +10,7 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
           fields: [],
           active: true,
           id: 'the-fieldset',
-          mainType: 'fieldset',
+          mainType: '@fieldset',
           valid: true
         }];
 
@@ -43,7 +43,7 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
             active: (i ? false : true),
             fields: [],
             id: 'fs' + i,
-            mainType: 'fieldset',
+            mainType: '@fieldset',
             valid: true
           };
           fs.fields.forEach(function(f, j) {

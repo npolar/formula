@@ -22,7 +22,7 @@ angular.module('formula').service('formulaInputFieldTypeService', ['$filter', 'f
     };
 
     var applyType = function(field) {
-      field.mainType = 'field';
+      field.mainType = '@field';
       var newType = 'input:text'; // default
       if (field.schema.items && field.schema.items.enum) { // enums as array in schema
         handleMultiEnum(field);

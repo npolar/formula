@@ -12,7 +12,7 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
     };
 
     var applyType = function(field) {
-      field.mainType = 'object';
+      field.mainType = '@object';
       if (!field.schema.properties) {
         log.warning(log.codes.FIELD_MISSING_PROPERTY, {
           property: 'properties',

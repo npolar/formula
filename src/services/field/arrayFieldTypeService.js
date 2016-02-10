@@ -4,7 +4,7 @@ angular.module('formula').service('formulaArrayFieldTypeService', ['$filter', 'f
     "use strict";
 
     var applyType = function(field) {
-      field.mainType = 'array';
+      field.mainType = '@array';
       field.values = [];
       if (field.schema.items) {
         var items = field.schema.items;

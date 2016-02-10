@@ -11,7 +11,7 @@ angular.module('formula').service('formulaClassService', [function() {
 
   // css class of schema type
   var schemaClass = function(node) {
-    var schemaType = node.mainType;
+    var schemaType = node.mainType.replace('@', '');
     return "formula" +
       schemaType.charAt(0).toUpperCase() +
       schemaType.slice(1);
