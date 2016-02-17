@@ -47,6 +47,8 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
     var languagePromises = {};
     var codeAliases = {};
 
+    cache[DEFAULT_TEXTS.code] = DEFAULT_TEXTS;
+
     var set = function(code) {
       var cacheKey = codeAliases[code];
       tv4.language(cacheKey.replace('_', '-'));
