@@ -44,13 +44,14 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
 
     var currentLocale = DEFAULT_TEXTS;
     var cache = {};
+    var languagePromises = {};
     var codeAliases = {};
 
     var set = function(code) {
       var cacheKey = codeAliases[code];
       tv4.language(cacheKey.replace('_', '-'));
-      if (cache[cacheKey]) {
-        return Promise.resolve(cache[cacheKey]).then(function(locale) {
+      if (languagePromises[cacheKey]) {
+        return Promise.resolve(languagePromises[cacheKey]).then(function(locale) {
           currentLocale = locale;
           currentLocale.code = cacheKey;
         });
@@ -58,7 +59,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
 
     };
 
-    var addTv4 = function (lang, key) {
+    var addTv4 = function(lang, key) {
       if (lang.tv4) {
         tv4.addLanguage(key.replace('_', '-'), lang.tv4);
       }
@@ -94,20 +95,22 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
       });
       codeAliases[code] = code;
       var cacheKey = codeAliases[code];
-      cache[cacheKey] = deferred.promise;
+      languagePromises[cacheKey] = deferred.promise;
 
       if (typeof lang === 'string') { // lang is uri
         jsonLoader(lang).then(function(data) {
-          cache[cacheKey] = {
+          var translations = cache[cacheKey] || {};
+          cache[cacheKey] = angular.merge(translations, {
             fields: data.fields,
             fieldsets: data.fieldsets,
             text: data.text
-          };
+          });
           addTv4(data, cacheKey);
           deferred.resolve(cache[cacheKey]);
         });
       } else { // lang is map
-        cache[cacheKey] = lang;
+        var translations = cache[cacheKey] || {};
+        cache[cacheKey] = angular.merge(translations, lang);
         addTv4(lang, cacheKey);
         deferred.resolve(lang);
       }
