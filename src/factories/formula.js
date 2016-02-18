@@ -114,7 +114,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       this.getFields = function () {
         var deferred = $q.defer();
         formLoaded.then(function(responses) {
-          deferred.resolve(this._cfg.form.fields());
+          deferred.resolve(_cfg.form.fields());
         });
         return deferred.promise;
       };
