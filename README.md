@@ -59,6 +59,8 @@ Config to set form title, group properties into fieldsets, override schema type,
 
 ```
 
+In special use cases you might want to have the same field rendered multiple times. To be able to differentiate between multiple instances of the same field you can set the ```instance``` property in the form definition to something unique.
+
 #### options.languages
 Languages is configured like this:
 
@@ -104,7 +106,46 @@ All templates can have one root element only.
 The matched template can be overridden by setting the ```template``` property directly on any node.
 
 ### The service instance
-The instance you get from bootstrapping (```formula.getInstance()```) has setters for all the available options, and add-functions for array options. E.g. ```formula.setTemplates```, ```formula.addTemplate```, ```formula.setModel``` ...
+The instance you get from bootstrapping (```formula.getInstance()```) has the following API:
+
+    formula.setModel(model)
+Set data model
+
+    formula.setForm(formDefinition)
+Set form definition
+
+    formula.setOnSave(saveCallback)
+Set save callback
+
+    formula.save()
+Exec save
+
+    formula.getSchema()
+Get dereferenced schema
+
+    formula.getFieldByPath(jsonPath)
+Get field by json path
+
+    formula.getFields()
+Get all fields
+
+    formula.i18n.add(lang, code, [aliases])
+Add language. lang can be either a uri or a object. See i18n/no.json for example translation. Aliases is an array of alternative language codes. E.g. 'en' might have 'en-GB' and 'en-US' as aliases. Setting either code will resolve to 'en'.
+
+    formula.i18n.set(code)
+Set language
+
+    formula.i18n.code
+Getter for current language code
+
+    formula.setTemplates(templates)
+Set templates
+
+    formula.addTemplate(template)
+Add a template
+
+    formula._cfg
+Config object to pass to formula directive.
 
 ## Supported types
 * **any** rendered as:

@@ -100,6 +100,22 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
         return deferred.promise;
       };
 
+      this.getFieldByPath = function (jsonPath) {
+        if (this._cfg.form) {
+          return this._cfg.form.fields().find(function (field) {
+            return field.path === jsonPath;
+          });
+        }
+        return null;
+      };
+
+      this.getFields = function () {
+        if (this._cfg.form) {
+          return this._cfg.form.fields();
+        }
+        return null;
+      };
+
       this.i18n = {
         add: i18n.add,
         set: setLanguage,

@@ -19,7 +19,7 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
 
     var assign = function(field, data) {
       if (typeof field === 'object') {
-        var attribs = 'condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,nullable,pattern,readonly,required,step,title,type,values'.split(',');
+        var attribs = 'condition,default,description,disabled,enum,format,hidden,instance,maximum,maxLength,minimum,minLength,multiple,nullable,pattern,readonly,required,step,title,type,values'.split(',');
         angular.forEach(data, function(v, k) {
           if (attribs.indexOf(k) !== -1) {
             this[k] = v;
