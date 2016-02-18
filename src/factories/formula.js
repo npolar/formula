@@ -103,7 +103,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       this.getFieldByPath = function (jsonPath) {
         var deferred = $q.defer();
         formLoaded.then(function(responses) {
-          var field = this._cfg.form.fields().find(function (field) {
+          var field = _cfg.form.fields().find(function (field) {
             return field.path === jsonPath;
           });
           deferred.resolve(field);
