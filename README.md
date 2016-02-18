@@ -121,16 +121,16 @@ Set save callback
 Exec save
 
     formula.getSchema()
-Get dereferenced schema
+Get dereferenced schema, returns a promise
 
     formula.getFieldByPath(jsonPath)
-Get field by json path
+Get field by json path, returns a promise
 
     formula.getFields()
-Get all fields
+Get all fields, returns a promise
 
     formula.i18n.add(lang, code, [aliases])
-Add language. lang can be either a uri or a object. See i18n/no.json for example translation. Aliases is an array of alternative language codes. E.g. 'en' might have 'en-GB' and 'en-US' as aliases. Setting either code will resolve to 'en'.
+Add language. lang can be either a uri or a object. See i18n/no.json for example translation. Aliases is an array of alternative language codes. E.g. 'en' might have 'en-GB' and 'en-US' as aliases. Setting either code will resolve to 'en'. Returns a promise.
 
     formula.i18n.set(code)
 Set language
