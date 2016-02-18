@@ -569,17 +569,18 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
           if (field.dirty || force) {
             var index;
-            fieldset.dirty = fieldset.dirty || field.dirty;
             if (field.validate(force, silent)) {
               if ((index = fieldset.errors.indexOf(field.path)) !== -1) {
                 fieldset.errors.splice(index, 1);
               }
             } else if (field.typeOf('input')) { // Only show input errors
-              fieldset.errors.push(field.path);
-              // Only unique
-              fieldset.errors = fieldset.errors.filter(function(value, index, self) {
-                return self.indexOf(value) === index;
-              });
+              if (!silent) {
+                fieldset.errors.push(field.path);
+                // Only unique
+                fieldset.errors = fieldset.errors.filter(function(value, index, self) {
+                  return self.indexOf(value) === index;
+                });
+              }
             }
           }
 
@@ -597,8 +598,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             }
           }, this);
           this.errors = this.errors.concat(fieldset.errors);
-          fieldset.valid = (!fieldset.dirty && fieldset.valid) || (silent || !(fieldset.errors.length));
-          fieldset.dirty = false;
+          fieldset.valid = (silent || !(fieldset.errors.length));
         }, this);
 
         formulaEvaluateConditionsService.evaluateConditions(this);

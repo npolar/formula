@@ -77,7 +77,12 @@
 					"number": {
 						"type": "number",
 						"description": "required number input"
-					}
+					},
+          "string_enum": {
+      			"type": "string",
+      			"description": "string input with enum and default properties set",
+      			"enum": [ "foo", "bar", "baz", "qux" ]
+      		}
 				},
 				"required": [ "number" ]
 			},

@@ -58,6 +58,11 @@
         "fields": {
           "number": {
             "title": "Tall"
+          },
+          "string_enum": {
+            "values": [
+              "snow", "sun", "surf", "cola"
+            ]
           }
         }
       }

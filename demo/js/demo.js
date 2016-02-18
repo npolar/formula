@@ -79,7 +79,7 @@ angular.module('demo', ['formula'])
         templateUrl: "customObject.html"
       });
       $timeout(updateModel, 1000);
-      $timeout(updateModel2, 2000);
+      //$timeout(updateModel2, 2000);
 
 
       $scope.remove = function() {
