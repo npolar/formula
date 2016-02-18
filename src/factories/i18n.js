@@ -47,8 +47,6 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
     var languagePromises = {};
     var codeAliases = {};
 
-    cache[DEFAULT_TEXTS.code] = DEFAULT_TEXTS;
-
     var set = function(code) {
       var cacheKey = codeAliases[code];
       tv4.language(cacheKey.replace('_', '-'));
@@ -102,23 +100,21 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
       if (typeof lang === 'string') { // lang is uri
         jsonLoader(lang).then(function(data) {
           var translations = cache[cacheKey] || {};
-          cache[cacheKey] = angular.merge(translations, {
-            fields: data.fields,
-            fieldsets: data.fieldsets,
-            text: data.text
-          });
-          addTv4(data, cacheKey);
+          cache[cacheKey] = angular.merge(translations, data);
+          addTv4(cache[cacheKey], cacheKey);
           deferred.resolve(cache[cacheKey]);
         });
       } else { // lang is map
         var translations = cache[cacheKey] || {};
         cache[cacheKey] = angular.merge(translations, lang);
-        addTv4(lang, cacheKey);
-        deferred.resolve(lang);
+        addTv4(cache[cacheKey], cacheKey);
+        deferred.resolve(cache[cacheKey]);
       }
 
       return deferred.promise;
     };
+
+    add(DEFAULT_TEXTS, 'en');
 
     return {
       add: add,

@@ -718,12 +718,12 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       }
 
       (options.languages instanceof Array ? options.languages : []).forEach(function(language, index) {
-        i18n.add(language.uri || language.map, language.code, language.aliases);
+        i18n.add(language.uri || language.map, language.code, language.aliases).then(function (locale) {
+          if (locale.code === i18n.code) {
+            setLanguage(locale.code); // If we added more texts to the currect locale, re-set it.
+          }
+        });
       });
-
-      if (options.language) {
-        setLanguage(options.language);
-      }
 
       var formLoaded = $q.all(asyncs).then(function(responses) {
         createForm(responses[1], responses[2]);
@@ -739,6 +739,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
           }
         });
       };
+      setLanguage(options.language || 'en');
 
       var createForm = function(model, formDefinition) {
         if (_cfg.form) {
@@ -922,23 +923,21 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
       if (typeof lang === 'string') { // lang is uri
         jsonLoader(lang).then(function(data) {
           var translations = cache[cacheKey] || {};
-          cache[cacheKey] = angular.merge(translations, {
-            fields: data.fields,
-            fieldsets: data.fieldsets,
-            text: data.text
-          });
-          addTv4(data, cacheKey);
+          cache[cacheKey] = angular.merge(translations, data);
+          addTv4(cache[cacheKey], cacheKey);
           deferred.resolve(cache[cacheKey]);
         });
       } else { // lang is map
         var translations = cache[cacheKey] || {};
         cache[cacheKey] = angular.merge(translations, lang);
-        addTv4(lang, cacheKey);
-        deferred.resolve(lang);
+        addTv4(cache[cacheKey], cacheKey);
+        deferred.resolve(cache[cacheKey]);
       }
 
       return deferred.promise;
     };
+
+    add(DEFAULT_TEXTS, 'en');
 
     return {
       add: add,
