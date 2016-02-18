@@ -10,8 +10,8 @@
       "tooltip": "Klikk for å legge til et nytt element"
     },
     "invalid": "{count} ugyldige felt",
-    "moveup": "Flytt element opp",
-    "movedown": "Flytt element ned",
+    "moveup": "Klikk for å flytt element opp (eller dra)",
+    "movedown": "Klikk for å flytt element ned (eller dra)",
     "maximize": {
       "label": "Maksimer",
       "tooltip": "Klikk for å maksimer"

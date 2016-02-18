@@ -44,7 +44,8 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
             field.values = e.models;
             recalcIndex(field);
             field.itemChange();
-          }
+          },
+          handle: '.drag-handle'
         };
         field.visible = field.hidden ? false : true;
 
