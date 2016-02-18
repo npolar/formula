@@ -45,6 +45,7 @@ angular.module('demo', ['formula'])
         console.log("timeout 1");
         $scope.formula.i18n.add('json/no.json', 'nb_NO', ['nb', 'no']);
         $scope.formula.i18n.set('no');
+        console.log('fieldByPath', $scope.formula.getFieldByPath('#/array_object/0/number'));
       };
 
       var updateModel2 = function() {

@@ -801,6 +801,22 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
         return deferred.promise;
       };
 
+      this.getFieldByPath = function (jsonPath) {
+        if (this._cfg.form) {
+          return this._cfg.form.fields().find(function (field) {
+            return field.path === jsonPath;
+          });
+        }
+        return null;
+      };
+
+      this.getFields = function () {
+        if (this._cfg.form) {
+          return this._cfg.form.fields();
+        }
+        return null;
+      };
+
       this.i18n = {
         add: i18n.add,
         set: setLanguage,
@@ -1784,7 +1800,7 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
 
     var assign = function(field, data) {
       if (typeof field === 'object') {
-        var attribs = 'condition,default,description,disabled,enum,format,hidden,maximum,maxLength,minimum,minLength,multiple,nullable,pattern,readonly,required,step,title,type,values'.split(',');
+        var attribs = 'condition,default,description,disabled,enum,format,hidden,instance,maximum,maxLength,minimum,minLength,multiple,nullable,pattern,readonly,required,step,title,type,values'.split(',');
         angular.forEach(data, function(v, k) {
           if (attribs.indexOf(k) !== -1) {
             this[k] = v;
