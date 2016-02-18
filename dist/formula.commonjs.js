@@ -802,19 +802,22 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       };
 
       this.getFieldByPath = function (jsonPath) {
-        if (this._cfg.form) {
-          return this._cfg.form.fields().find(function (field) {
+        var deferred = $q.defer();
+        formLoaded.then(function(responses) {
+          var field = this._cfg.form.fields().find(function (field) {
             return field.path === jsonPath;
           });
-        }
-        return null;
+          deferred.resolve(field);
+        });
+        return deferred.promise;
       };
 
       this.getFields = function () {
-        if (this._cfg.form) {
-          return this._cfg.form.fields();
-        }
-        return null;
+        var deferred = $q.defer();
+        formLoaded.then(function(responses) {
+          deferred.resolve(this._cfg.form.fields());
+        });
+        return deferred.promise;
       };
 
       this.i18n = {
