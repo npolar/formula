@@ -267,6 +267,48 @@ angular.module('formula').directive('formulaInput', ['$compile',
 ]);
 
 /* globals angular */
+angular.module('formula').filter('formulaInlineValues', [function() {
+  "use strict";
+
+  return function(values, params) {
+
+    var result = [];
+
+    angular.forEach(values, function(value) {
+      if (value instanceof Array) {
+        result.push('Array[' + value.length + ']');
+      } else switch (typeof value) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+          result.push(value);
+          break;
+
+        default:
+      }
+    });
+
+    return result.join(', ');
+  };
+}]);
+
+/* globals angular */
+angular.module('formula').filter('formulaReplace', [function() {
+  "use strict";
+
+  return function(input, params) {
+    var result = input;
+
+    (input.match(/\{[^\}]*\}/g) || [])
+    .forEach(function(val) {
+      result = result.replace(val, params[val.substr(1, val.length - 2)]);
+    });
+
+    return result;
+  };
+}]);
+
+/* globals angular */
 angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'formulaTemplateService',
   function(fieldBuiler, templates) {
     "use strict";
@@ -1273,48 +1315,6 @@ angular.module('formula').factory('formulaSchema', ['$q', 'formulaJsonLoader', '
     return Schema;
   }
 ]);
-
-/* globals angular */
-angular.module('formula').filter('formulaInlineValues', [function() {
-  "use strict";
-
-  return function(values, params) {
-
-    var result = [];
-
-    angular.forEach(values, function(value) {
-      if (value instanceof Array) {
-        result.push('Array[' + value.length + ']');
-      } else switch (typeof value) {
-        case 'string':
-        case 'number':
-        case 'boolean':
-          result.push(value);
-          break;
-
-        default:
-      }
-    });
-
-    return result.join(', ');
-  };
-}]);
-
-/* globals angular */
-angular.module('formula').filter('formulaReplace', [function() {
-  "use strict";
-
-  return function(input, params) {
-    var result = input;
-
-    (input.match(/\{[^\}]*\}/g) || [])
-    .forEach(function(val) {
-      result = result.replace(val, params[val.substr(1, val.length - 2)]);
-    });
-
-    return result;
-  };
-}]);
 
 /* globals angular */
 angular.module('formula').service('formulaClassService', [function() {
