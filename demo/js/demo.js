@@ -45,7 +45,9 @@ angular.module('demo', ['formula'])
         console.log("timeout 1");
         $scope.formula.i18n.add('json/no.json', 'nb_NO', ['nb', 'no']);
         $scope.formula.i18n.set('no');
-        console.log('fieldByPath', $scope.formula.getFieldByPath('#/array_object/0/number'));
+        $scope.formula.getFieldByPath('#/array_object/0/number').then(function (f) {
+          console.log('fieldByPath', f);
+        });
       };
 
       var updateModel2 = function() {
@@ -54,6 +56,7 @@ angular.module('demo', ['formula'])
         });
         console.log("timeout 2");
         $scope.formula.i18n.add({ fieldsets: ["Striiiiiiings"]}, 'nb_NO');
+        $scope.formula.addTemplate({match: 'string_required', template: '<h2 style="font-size: 18px;">updated template</h2>'});
       };
 
       var getResource = function() {
@@ -80,7 +83,7 @@ angular.module('demo', ['formula'])
         templateUrl: "customObject.html"
       });
       $timeout(updateModel, 1000);
-      //$timeout(updateModel2, 2000);
+      $timeout(updateModel2, 2000);
 
 
       $scope.remove = function() {

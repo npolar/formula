@@ -1510,7 +1510,9 @@ angular.module('formula').service('formulaTemplateService', ['$templateCache', '
     };
 
     var evalTemplate = function(node, template) {
-      configs.isMatch(node, template);
+      if (configs.isMatch(node, template)) {
+        node.matchedTemplate = template;
+      }
     };
 
     return {
