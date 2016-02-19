@@ -15,7 +15,6 @@ angular.module('formula').directive('formulaField', ['$compile', 'formulaClassSe
         scope.i18n = i18n;
         scope.$watch('field.template', function (template) {
           if (!field.hidden && field.template) {
-            console.log('compile', field.path, template);
             iElement.html(field.template);
             $compile(iElement.contents())(scope);
           }
