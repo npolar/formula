@@ -72,16 +72,16 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
 
       this.setTemplates = function(templates) {
         templates.setTemplates(templates);
-        if (_cfg.controller) {
-          _cfg.controller.updateTemplates();
-        }
+        formLoaded.then(function(responses) {
+          _cfg.form.updateTemplates();
+        });
       };
 
       this.addTemplate = function(template) {
         templates.addTemplate(template);
-        if (_cfg.controller) {
-          _cfg.controller.updateTemplate(template);
-        }
+        formLoaded.then(function(responses) {
+          _cfg.form.updateTemplate(template);
+        });
       };
 
       this.setOnSave = function(onsave) {

@@ -97,6 +97,7 @@
 .formula .formulaObject,
 .formula .formulaField {
   margin-bottom: 15px;
+  display: block;
 }
 
 .formula fieldset :not(a):not(option):not(button) {
@@ -445,12 +446,12 @@
 
 /* Hide array objects frames and titles */
 
-.formula .formulaArray .formulaObject {
+.formula .formulaArray .formulaObject > fieldset {
   border: 0;
   padding: 0;
 }
 
-.formula .formulaArray .formulaObject > legend {
+.formula .formulaArray .formulaObject > fieldset > legend {
   display: none;
 }
 

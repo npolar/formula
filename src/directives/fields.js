@@ -17,16 +17,12 @@ angular.module('formula').directive('formulaFields', ['$compile', 'formulaClassS
         return function link(scope, iElement, iAttrs) {
           scope.i18n = i18n;
           scope.fields.forEach(function(field) {
-            var template = innerTemplate || field.template || field.matchedTemplate;
-            // Only compile fields that have template
+            var fieldScope = scope.$new();
+            fieldScope.field = field;
+            fieldScope.parent = field.parents[field.parents.length - 1];
+            var template = innerTemplate || '<formula:field field="field"></formula:field>';
             if (!field.hidden && template) {
-              var fieldScope = scope.$new();
-              var elem = angular.element(template);
-              fieldScope.field = field;
-              fieldScope.parent = field.parents[field.parents.length - 1];
-              elem.addClass(formulaClassService.pathClass(field));
-              elem.addClass(formulaClassService.schemaClass(field));
-              $compile(elem)(fieldScope, function(cloned, scope) {
+              $compile(template)(fieldScope, function(cloned, scope) {
                 iElement.append(cloned);
               });
             }

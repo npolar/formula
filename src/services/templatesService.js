@@ -34,8 +34,8 @@ angular.module('formula').service('formulaTemplateService', ['$templateCache', '
       return deferred.promise;
     };
 
-    var getTemplate = function(field) {
-      var config = configs.getMatchingConfig(field);
+    var getTemplate = function(field, templateConfig) {
+      var config = templateConfig || configs.getMatchingConfig(field);
       var deferred = $q.defer();
       if (config) {
         if (config.hidden || config.template === "") {
@@ -58,9 +58,12 @@ angular.module('formula').service('formulaTemplateService', ['$templateCache', '
     };
 
     var initNode = function(node) {
+      if (node.template) {
+        return;
+      }
       getTemplate(node).then(function(template) {
         if (template) {
-          node.matchedTemplate = template;
+          node.template = template;
         } else {
           node.hidden = true;
         }
@@ -80,9 +83,11 @@ angular.module('formula').service('formulaTemplateService', ['$templateCache', '
       configs.addConfig(template);
     };
 
-    var evalTemplate = function(node, template) {
-      if (configs.isMatch(node, template)) {
-        node.matchedTemplate = template;
+    var evalTemplate = function(node, config) {
+      if (configs.isMatch(node, config)) {
+        getTemplate(node, config).then(function (template) {
+          node.template = template;
+        });
       }
     };
 

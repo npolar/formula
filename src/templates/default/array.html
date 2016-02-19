@@ -29,10 +29,9 @@
     </li>
   </ul>
 
+  <div ng-if="field.errors" title="{{ field.errors.join('\n') }}">{{ i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</div>
+  <div ng-if="!field.errors">{{ field.description  }}</div>
   <div class="formulaArrayCtrls">
-    <span ng-if="field.errors" title="{{ field.errors.join('\n') }}">{{ i18n.text.invalid | formulaReplace : { count: field.errors.length } }}</span>
-    <span ng-if="!field.errors">{{ field.description  }}</span>
-
     <button class="add" ng-click="field.itemAdd()" title="{{ i18n.text.add.tooltip }}" type="button">
       <strong>&plus;</strong>
       {{ i18n.text.add.label }}</button>

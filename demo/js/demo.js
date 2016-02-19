@@ -51,12 +51,10 @@ angular.module('demo', ['formula'])
       };
 
       var updateModel2 = function() {
-        $scope.formula.setModel({
-          boolean: false,
-        });
         console.log("timeout 2");
         $scope.formula.i18n.add({ fieldsets: ["Striiiiiiings"]}, 'nb_NO');
-        $scope.formula.addTemplate({match: 'string_required', template: '<h2 style="font-size: 18px;">updated template</h2>'});
+        $scope.formula.addTemplate({match: '#/array_string', template: '<h2 style="font-size: 18px;">updated template</h2>'});
+        $scope.formula.addTemplate({match: '#/array_object/0', template: '<h2 style="font-size: 18px;">updated template</h2>'});
       };
 
       var getResource = function() {
@@ -82,7 +80,10 @@ angular.module('demo', ['formula'])
         match: "ref_object",
         templateUrl: "customObject.html"
       });
-      $timeout(updateModel, 1000);
+      $scope.formula.getFields().then(function () {
+        $scope.formula.addTemplate({match: '#/string_required', template: '<h2 style="font-size: 18px;">updated template</h2>'});
+      });
+      //$timeout(updateModel, 1000);
       $timeout(updateModel2, 2000);
 
 

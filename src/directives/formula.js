@@ -26,19 +26,6 @@ angular.module('formula').directive('formula', ['$compile', '$timeout', 'formula
             $scope.form = this.form = form;
           },
 
-          updateTemplates: function() {
-            if (this.form) {
-              this.form.updateTemplates();
-              $timeout();
-            }
-          },
-
-          updateTemplate: function(template) {
-            if (this.form) {
-              this.form.updateTemplate(template);
-              $timeout();
-            }
-          }
         };
 
         controller.setForm($scope.options.form);
@@ -51,7 +38,7 @@ angular.module('formula').directive('formula', ['$compile', '$timeout', 'formula
         scope.$watch('form', function(form) {
           if (form) {
             iElement.addClass(formulaClassService.schemaClass(form));
-            iElement.html(form.template || form.matchedTemplate);
+            iElement.html(form.template);
             $compile(iElement.contents())(scope);
 
             // http://stackoverflow.com/a/19686824/1357822

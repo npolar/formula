@@ -39,6 +39,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
 
         formulaTemplateService.initNode(field);
+        
         field.sortable = {
           onEnd: function (e) {
             field.values = e.models;

@@ -7,7 +7,7 @@ angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaCla
       restrict: 'AE',
       link: function(scope, iElement, iAttrs) {
         scope.form.fieldsets.forEach(function(fieldset) {
-          var template = fieldset.template || fieldset.matchedTemplate;
+          var template = fieldset.template;
           if (!fieldset.hidden && template) {
             var fieldsetScope = scope.$new();
             var elem = angular.element(template);
