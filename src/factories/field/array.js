@@ -39,7 +39,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
 
         formulaTemplateService.initNode(field);
-        
+
         field.sortable = {
           onEnd: function (e) {
             field.values = e.models;
@@ -144,10 +144,12 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
        * Function used to remove a fieldset from an array-typed field.
        *
        * @param item Index number of the fieldset which should be removed
+       * @return removed item
        */
       itemRemove: function(item) {
+        var removed;
         if (this.values.length > item) {
-          this.values.splice(item, 1);
+          removed = this.values.splice(item, 1)[0];
           this.value.splice(item, 1);
         }
 
@@ -160,6 +162,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         this.dirty = true;
         this.dirtyParents();
         $rootScope.$emit('revalidate');
+        return removed;
       },
 
       moveUp: function (index) {
