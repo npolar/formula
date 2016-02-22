@@ -111,6 +111,9 @@ The instance you get from bootstrapping (```formula.getInstance()```) has the fo
     formula.setModel(model)
 Set data model
 
+    formula.getModel()
+Get data model
+
     formula.setForm(formDefinition)
 Set form definition
 

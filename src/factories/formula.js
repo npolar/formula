@@ -53,9 +53,14 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       };
 
       this.setModel = function(model) {
+        options.model = model;
         formLoaded.then(function(responses) {
           createForm(model, responses[2]);
         });
+      };
+
+      this.getModel = function() {
+        return _cfg.form ? _cfg.form.model.data : options.model;
       };
 
       this.setForm = function(form) {
