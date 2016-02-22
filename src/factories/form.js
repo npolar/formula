@@ -146,13 +146,13 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
        * @param validate Prevent form validation if this parameter is set to false
        */
       save: function(validate) {
-        this.ready = false;
         if ((validate !== false) && !this.validate(true)) {
           console.warn('Document not vaild', this.errors);
           throw this.errors;
         }
 
         if (typeof this.onsave === 'function') {
+          this.ready = false;
           return this.onsave(this.model.data);
         }
       },
@@ -203,12 +203,12 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
           if (field.dirty || force) {
             var index;
             if (field.validate(force, silent)) {
-              if ((index = fieldset.errors.indexOf(field.path)) !== -1) {
+              if ((index = fieldset.errors.indexOf(field.title)) !== -1) {
                 fieldset.errors.splice(index, 1);
               }
             } else if (field.typeOf('input')) { // Only show input errors
               if (!silent) {
-                fieldset.errors.push(field.path);
+                fieldset.errors.push(field.title);
                 // Only unique
                 fieldset.errors = fieldset.errors.filter(function(value, index, self) {
                   return self.indexOf(value) === index;
@@ -216,8 +216,6 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
               }
             }
           }
-
-
         };
 
         this.fieldsets.forEach(function(fieldset) {

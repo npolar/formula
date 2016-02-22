@@ -85,7 +85,10 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       };
 
       this.setOnSave = function(onsave) {
-        _cfg.form.onsave = onsave;
+        options.onsave = onsave;
+        if (_cfg.form) {
+          _cfg.form.onsave = onsave;
+        }
       };
 
       this.save = function() {
