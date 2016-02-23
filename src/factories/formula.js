@@ -12,16 +12,25 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       var schema = new Schema();
       var asyncs = [schema.deref(options.schema), jsonLoader(options.model), jsonLoader(options.form)];
 
+      var setLanguage = function(code) {
+        i18n.set(code).then(function() {
+          if (_cfg.controller) {
+            _cfg.controller.setLanguage(code);
+          }
+        });
+      };
+
+
       if (options.templates instanceof Array) {
         templates.setTemplates(options.templates);
       }
 
-      (options.languages instanceof Array ? options.languages : []).forEach(function(language, index) {
-        i18n.add(language.uri || language.map, language.code, language.aliases).then(function (locale) {
-          if (locale.code === i18n.code) {
-            setLanguage(locale.code); // If we added more texts to the currect locale, re-set it.
-          }
-        });
+      var languagePromises = (options.languages instanceof Array ? options.languages : []).map(function(language, index) {
+        return i18n.add(language.uri || language.map, language.code, language.aliases);
+      });
+
+      $q.all(languagePromises).then(function (responses) {
+        setLanguage(options.language || 'en');
       });
 
       var formLoaded = $q.all(asyncs).then(function(responses) {
@@ -30,15 +39,6 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       }, function() {
         console.error('Could not load form', arguments);
       });
-
-      var setLanguage = function(code) {
-        i18n.set(code).then(function() {
-          if (_cfg.controller) {
-            _cfg.controller.setLanguage(code);
-          }
-        });
-      };
-      setLanguage(options.language || 'en');
 
       var createForm = function(model, formDefinition) {
         if (_cfg.form) {

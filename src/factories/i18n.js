@@ -114,6 +114,44 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
       return deferred.promise;
     };
 
+    var gatherFields = function (memo, fields) {
+      fields.forEach(function (field) {
+        memo[field.id] = {
+          title: field.title || field.id,
+          description: field.description
+        };
+        if ((field.typeOf("object") || field.typeOf("field")) && field.fields) {
+          memo[field.id].fields = {};
+          gatherFields(memo[field.id].fields, field.fields);
+        } else if (field.typeOf("fieldset") && field.fields[0]) {
+          memo[field.id].fields = {
+            title: field.fields[0].title,
+            description: field.fields[0].description,
+            fields: {}
+          };
+          gatherFields(memo[field.id].fields.fields, field.fields[0].fields);
+        } else if (field.typeOf("select") && field.values) {
+          memo[field.id].values = field.values.map(function (value) {
+            return value.label;
+          });
+        }
+      });
+      return memo;
+    };
+
+    var addDefaultLanguage = function (form, code) {
+      var lang = {
+        fieldsets: form.fieldsets.map(function (fs) {
+          return fs.title;
+        }),
+        fields: form.fieldsets.reduce(function (memo, fs) {
+          return gatherFields(memo, fs.fields);
+        }, {}),
+        code: code
+      };
+      add(lang, code);
+    };
+
     add(DEFAULT_TEXTS, 'en');
 
     return {
@@ -130,7 +168,8 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
       },
       get code() {
         return currentLocale.code;
-      }
+      },
+      addDefaultLanguage: addDefaultLanguage
     };
   }
 ]);

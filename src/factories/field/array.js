@@ -237,7 +237,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       },
 
       translate: function (translations) {
-        Object.keys(translations.fields).forEach(function (key, index) {
+        Object.keys(translations.fields || []).forEach(function (key, index) {
           this.fields.concat(this.values).forEach(function(field) {
             field.translate(translations.fields);
           }, this);

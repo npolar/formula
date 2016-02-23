@@ -15,6 +15,258 @@ angular.module('formula', ['ng-sortable']);
 })();
 
 /* globals angular */
+angular.module('formula').directive('formulaField', ['$compile', 'formulaClassService', 'formulaI18n',
+  function($compile, formulaClassService, i18n) {
+    "use strict";
+
+    return {
+      restrict: 'AE',
+      scope: {
+        field: '='
+      },
+      link: function(scope, iElement, iAttrs) {
+        var field = scope.field;
+        iElement.addClass(formulaClassService.pathClass(field));
+        iElement.addClass(formulaClassService.schemaClass(field));
+        scope.i18n = i18n;
+        scope.$watch('field.template', function (template) {
+          if (!field.hidden && field.template) {
+            iElement.html(field.template);
+            $compile(iElement.contents())(scope);
+          }
+        });
+      },
+    };
+  }
+]);
+
+/* globals angular */
+angular.module('formula').directive('formulaFields', ['$compile', 'formulaClassService', 'formulaI18n',
+  function($compile, formulaClassService, i18n) {
+    "use strict";
+
+
+    return {
+      restrict: 'AE',
+      scope: {
+        fields: '='
+      },
+      compile: function(tElement, tAttrs) {
+        if (tElement.html()) {
+          var innerTemplate = tElement.html();
+          tElement.empty();
+        }
+        return function link(scope, iElement, iAttrs) {
+          scope.i18n = i18n;
+          scope.fields.forEach(function(field) {
+            var fieldScope = scope.$new();
+            fieldScope.field = field;
+            fieldScope.parent = field.parents[field.parents.length - 1];
+            var template = innerTemplate || '<formula:field field="field"></formula:field>';
+            if (!field.hidden && template) {
+              $compile(template)(fieldScope, function(cloned, scope) {
+                iElement.append(cloned);
+              });
+            }
+          });
+        };
+      }
+    };
+  }
+]);
+
+/* globals angular */
+angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaClassService',
+  function($compile, formulaClassService) {
+    "use strict";
+
+    return {
+      restrict: 'AE',
+      link: function(scope, iElement, iAttrs) {
+        scope.form.fieldsets.forEach(function(fieldset) {
+          var template = fieldset.template;
+          if (!fieldset.hidden && template) {
+            var fieldsetScope = scope.$new();
+            var elem = angular.element(template);
+            fieldsetScope.fieldset = fieldset;
+            elem.addClass(formulaClassService.schemaClass(fieldset));
+            $compile(elem)(fieldsetScope, function(cloned, scope) {
+              iElement.append(cloned);
+            });
+          }
+        });
+      }
+    };
+  }
+]);
+
+/* globals angular */
+angular.module('formula').directive('formula', ['$compile', '$timeout', 'formulaI18n', 'formulaClassService',
+  function($compile, $timeout, i18n, formulaClassService) {
+    "use strict";
+
+
+    return {
+      restrict: 'AE',
+      scope: {
+        options: '='
+      },
+      controller: ['$scope', function($scope) {
+        if (!$scope.options) {
+          throw "No formula options provided!";
+        }
+
+        var controller = {
+          setLanguage: function(code) {
+            $scope.language = code;
+            if (this.form) {
+              this.form.translate();
+            }
+          },
+
+          setForm: function(form) {
+            $scope.form = this.form = form;
+          },
+
+        };
+
+        controller.setForm($scope.options.form);
+        controller.setLanguage(i18n.code);
+
+        $scope.options.controller = controller;
+        $scope.i18n = i18n;
+      }],
+      link: function(scope, iElement, iAttrs) {
+        scope.$watch('form', function(form) {
+          if (form) {
+            iElement.addClass(formulaClassService.schemaClass(form));
+            iElement.html(form.template);
+            $compile(iElement.contents())(scope);
+
+            // http://stackoverflow.com/a/19686824/1357822
+            var to;
+            var listener = scope.$watch(function() {
+              clearTimeout(to);
+              to = setTimeout(function() {
+                listener();
+                $timeout(function() {
+                  scope.form.ready = true;
+                }, 100);
+              }, 50);
+            });
+          }
+        });
+      }
+    };
+  }
+]);
+
+/* globals angular */
+angular.module('formula').directive('formulaInput', ['$compile',
+  function($compile) {
+    "use strict";
+
+
+    var getInputElement = function(field, type, element) {
+      var elem;
+      switch (type.sub) {
+        case 'textarea':
+          elem = angular.element('<textarea>');
+          elem.attr('md-detect-hidden', true); // FIXME move to template in common
+          break;
+
+        case 'select':
+          elem = angular.element('<select>');
+
+          if (element.children().length) {
+            angular.forEach(element.children(), function(child) {
+              elem.append(child);
+            });
+          } else {
+            elem.attr('ng-options', 'value.id as value.label for value in field.values');
+          }
+
+          if (field.multiple) {
+            elem.attr('multiple', 'multiple');
+          }
+          break;
+
+        default:
+          elem = angular.element('<input>');
+          elem.attr('type', type.sub);
+
+          switch (type.sub) {
+            case 'number':
+            case 'range':
+              if (field.step !== null) {
+                elem.attr('step', field.step);
+              }
+              break;
+
+            case 'any':
+            case 'date':
+            case 'datetime':
+            case 'time':
+              elem.attr('type', 'text');
+              break;
+          }
+      }
+
+      return elem;
+    };
+
+
+    var getType = function(field) {
+      var type = field.type ? field.type.split(':') : null;
+      type = type ? {
+        main: type[0],
+        sub: type[1]
+      } : null;
+      return type;
+    };
+
+
+    var setAttrs = function(attrs) {
+      attrs.$set('id', '{{field.uid}}');
+      attrs.$set('ngModel', 'field.value');
+      attrs.$set('ng-disabled', 'field.disabled');
+      attrs.$set('ng-readonly', 'field.readonly');
+    };
+
+    var getElement = function(scope, element, attrs) {
+      var field = scope.field;
+      var type = getType(field);
+      var elem = getInputElement(field, type, element);
+
+      angular.forEach(attrs, function(val, key) {
+        if (attrs.$attr[key]) {
+          elem.attr(attrs.$attr[key], val);
+        }
+      });
+      return elem;
+    };
+
+    return {
+      restrict: 'AE',
+      scope: {
+        field: '='
+      },
+      compile: function(tElement, tAttrs, transclude) {
+
+        return function link(scope, iElement, iAttrs) {
+          setAttrs(iAttrs);
+          var elem = getElement(scope, iElement, iAttrs);
+          elem.removeAttr('formula:input');
+          $compile(elem)(scope, function(cloned, scope) {
+            iElement.replaceWith(cloned);
+          });
+        };
+      }
+    };
+  }
+]);
+
+/* globals angular */
 angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'formulaTemplateService',
   function(fieldBuiler, templates) {
     "use strict";
@@ -137,6 +389,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.destroyWatcher = $rootScope.$on('revalidate', function() {
         self.validate();
       });
+      i18n.addDefaultLanguage(this, formDefinition.lang || 'en');
       this.translate();
       this.validate(true, true);
     }
@@ -439,16 +692,25 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       var schema = new Schema();
       var asyncs = [schema.deref(options.schema), jsonLoader(options.model), jsonLoader(options.form)];
 
+      var setLanguage = function(code) {
+        i18n.set(code).then(function() {
+          if (_cfg.controller) {
+            _cfg.controller.setLanguage(code);
+          }
+        });
+      };
+
+
       if (options.templates instanceof Array) {
         templates.setTemplates(options.templates);
       }
 
-      (options.languages instanceof Array ? options.languages : []).forEach(function(language, index) {
-        i18n.add(language.uri || language.map, language.code, language.aliases).then(function (locale) {
-          if (locale.code === i18n.code) {
-            setLanguage(locale.code); // If we added more texts to the currect locale, re-set it.
-          }
-        });
+      var languagePromises = (options.languages instanceof Array ? options.languages : []).map(function(language, index) {
+        return i18n.add(language.uri || language.map, language.code, language.aliases);
+      });
+
+      $q.all(languagePromises).then(function (responses) {
+        setLanguage(options.language || 'en');
       });
 
       var formLoaded = $q.all(asyncs).then(function(responses) {
@@ -457,15 +719,6 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       }, function() {
         console.error('Could not load form', arguments);
       });
-
-      var setLanguage = function(code) {
-        i18n.set(code).then(function() {
-          if (_cfg.controller) {
-            _cfg.controller.setLanguage(code);
-          }
-        });
-      };
-      setLanguage(options.language || 'en');
 
       var createForm = function(model, formDefinition) {
         if (_cfg.form) {
@@ -690,6 +943,44 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
       return deferred.promise;
     };
 
+    var gatherFields = function (memo, fields) {
+      fields.forEach(function (field) {
+        memo[field.id] = {
+          title: field.title || field.id,
+          description: field.description
+        };
+        if ((field.typeOf("object") || field.typeOf("field")) && field.fields) {
+          memo[field.id].fields = {};
+          gatherFields(memo[field.id].fields, field.fields);
+        } else if (field.typeOf("fieldset") && field.fields[0]) {
+          memo[field.id].fields = {
+            title: field.fields[0].title,
+            description: field.fields[0].description,
+            fields: {}
+          };
+          gatherFields(memo[field.id].fields.fields, field.fields[0].fields);
+        } else if (field.typeOf("select") && field.values) {
+          memo[field.id].values = field.values.map(function (value) {
+            return value.label;
+          });
+        }
+      });
+      return memo;
+    };
+
+    var addDefaultLanguage = function (form, code) {
+      var lang = {
+        fieldsets: form.fieldsets.map(function (fs) {
+          return fs.title;
+        }),
+        fields: form.fieldsets.reduce(function (memo, fs) {
+          return gatherFields(memo, fs.fields);
+        }, {}),
+        code: code
+      };
+      add(lang, code);
+    };
+
     add(DEFAULT_TEXTS, 'en');
 
     return {
@@ -706,7 +997,8 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
       },
       get code() {
         return currentLocale.code;
-      }
+      },
+      addDefaultLanguage: addDefaultLanguage
     };
   }
 ]);
@@ -1269,258 +1561,6 @@ $templateCache.put("formula/default/fieldset.html","<fieldset ng-show=\"fieldset
 $templateCache.put("formula/default/form.html","<div><div class=\"formula\" ng-if=\"!form.ready\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div><form class=\"formula\" ng-show=\"form.ready\"><header ng-if=\"::form.title\">{{ form.title }}</header><nav ng-if=\"::form.fieldsets.length > 1\"><a href=\"\" ng-class=\"{ active: fieldset.active, error: !fieldset.valid }\" ng-click=\"form.activate(fieldset)\" ng-repeat=\"fieldset in ::form.fieldsets track by fieldset.id\">{{ fieldset.title }}</a></nav><formula:fieldsets></formula:fieldsets><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ i18n.text.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-click=\"form.validate(true);\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.validate.tooltip }}\"><strong>&#10003;</strong> {{ i18n.text.validate.label }}</button> <button ng-click=\"form.save()\" ng-disabled=\"!form.valid\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.save.tooltip }}\"><strong>&#9921;</strong> {{ i18n.text.save.label }}</button></footer></form></div>");
 $templateCache.put("formula/default/object.html","<fieldset><legend ng-if=\"::field.title\">{{ field.title }}</legend><formula:fields fields=\"::field.fields\"></formula:fields></fieldset>");}]);
 /* globals angular */
-angular.module('formula').directive('formulaField', ['$compile', 'formulaClassService', 'formulaI18n',
-  function($compile, formulaClassService, i18n) {
-    "use strict";
-
-    return {
-      restrict: 'AE',
-      scope: {
-        field: '='
-      },
-      link: function(scope, iElement, iAttrs) {
-        var field = scope.field;
-        iElement.addClass(formulaClassService.pathClass(field));
-        iElement.addClass(formulaClassService.schemaClass(field));
-        scope.i18n = i18n;
-        scope.$watch('field.template', function (template) {
-          if (!field.hidden && field.template) {
-            iElement.html(field.template);
-            $compile(iElement.contents())(scope);
-          }
-        });
-      },
-    };
-  }
-]);
-
-/* globals angular */
-angular.module('formula').directive('formulaFields', ['$compile', 'formulaClassService', 'formulaI18n',
-  function($compile, formulaClassService, i18n) {
-    "use strict";
-
-
-    return {
-      restrict: 'AE',
-      scope: {
-        fields: '='
-      },
-      compile: function(tElement, tAttrs) {
-        if (tElement.html()) {
-          var innerTemplate = tElement.html();
-          tElement.empty();
-        }
-        return function link(scope, iElement, iAttrs) {
-          scope.i18n = i18n;
-          scope.fields.forEach(function(field) {
-            var fieldScope = scope.$new();
-            fieldScope.field = field;
-            fieldScope.parent = field.parents[field.parents.length - 1];
-            var template = innerTemplate || '<formula:field field="field"></formula:field>';
-            if (!field.hidden && template) {
-              $compile(template)(fieldScope, function(cloned, scope) {
-                iElement.append(cloned);
-              });
-            }
-          });
-        };
-      }
-    };
-  }
-]);
-
-/* globals angular */
-angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaClassService',
-  function($compile, formulaClassService) {
-    "use strict";
-
-    return {
-      restrict: 'AE',
-      link: function(scope, iElement, iAttrs) {
-        scope.form.fieldsets.forEach(function(fieldset) {
-          var template = fieldset.template;
-          if (!fieldset.hidden && template) {
-            var fieldsetScope = scope.$new();
-            var elem = angular.element(template);
-            fieldsetScope.fieldset = fieldset;
-            elem.addClass(formulaClassService.schemaClass(fieldset));
-            $compile(elem)(fieldsetScope, function(cloned, scope) {
-              iElement.append(cloned);
-            });
-          }
-        });
-      }
-    };
-  }
-]);
-
-/* globals angular */
-angular.module('formula').directive('formula', ['$compile', '$timeout', 'formulaI18n', 'formulaClassService',
-  function($compile, $timeout, i18n, formulaClassService) {
-    "use strict";
-
-
-    return {
-      restrict: 'AE',
-      scope: {
-        options: '='
-      },
-      controller: ['$scope', function($scope) {
-        if (!$scope.options) {
-          throw "No formula options provided!";
-        }
-
-        var controller = {
-          setLanguage: function(code) {
-            $scope.language = code;
-            if (this.form) {
-              this.form.translate();
-            }
-          },
-
-          setForm: function(form) {
-            $scope.form = this.form = form;
-          },
-
-        };
-
-        controller.setForm($scope.options.form);
-        controller.setLanguage(i18n.code);
-
-        $scope.options.controller = controller;
-        $scope.i18n = i18n;
-      }],
-      link: function(scope, iElement, iAttrs) {
-        scope.$watch('form', function(form) {
-          if (form) {
-            iElement.addClass(formulaClassService.schemaClass(form));
-            iElement.html(form.template);
-            $compile(iElement.contents())(scope);
-
-            // http://stackoverflow.com/a/19686824/1357822
-            var to;
-            var listener = scope.$watch(function() {
-              clearTimeout(to);
-              to = setTimeout(function() {
-                listener();
-                $timeout(function() {
-                  scope.form.ready = true;
-                }, 100);
-              }, 50);
-            });
-          }
-        });
-      }
-    };
-  }
-]);
-
-/* globals angular */
-angular.module('formula').directive('formulaInput', ['$compile',
-  function($compile) {
-    "use strict";
-
-
-    var getInputElement = function(field, type, element) {
-      var elem;
-      switch (type.sub) {
-        case 'textarea':
-          elem = angular.element('<textarea>');
-          elem.attr('md-detect-hidden', true); // FIXME move to template in common
-          break;
-
-        case 'select':
-          elem = angular.element('<select>');
-
-          if (element.children().length) {
-            angular.forEach(element.children(), function(child) {
-              elem.append(child);
-            });
-          } else {
-            elem.attr('ng-options', 'value.id as value.label for value in field.values');
-          }
-
-          if (field.multiple) {
-            elem.attr('multiple', 'multiple');
-          }
-          break;
-
-        default:
-          elem = angular.element('<input>');
-          elem.attr('type', type.sub);
-
-          switch (type.sub) {
-            case 'number':
-            case 'range':
-              if (field.step !== null) {
-                elem.attr('step', field.step);
-              }
-              break;
-
-            case 'any':
-            case 'date':
-            case 'datetime':
-            case 'time':
-              elem.attr('type', 'text');
-              break;
-          }
-      }
-
-      return elem;
-    };
-
-
-    var getType = function(field) {
-      var type = field.type ? field.type.split(':') : null;
-      type = type ? {
-        main: type[0],
-        sub: type[1]
-      } : null;
-      return type;
-    };
-
-
-    var setAttrs = function(attrs) {
-      attrs.$set('id', '{{field.uid}}');
-      attrs.$set('ngModel', 'field.value');
-      attrs.$set('ng-disabled', 'field.disabled');
-      attrs.$set('ng-readonly', 'field.readonly');
-    };
-
-    var getElement = function(scope, element, attrs) {
-      var field = scope.field;
-      var type = getType(field);
-      var elem = getInputElement(field, type, element);
-
-      angular.forEach(attrs, function(val, key) {
-        if (attrs.$attr[key]) {
-          elem.attr(attrs.$attr[key], val);
-        }
-      });
-      return elem;
-    };
-
-    return {
-      restrict: 'AE',
-      scope: {
-        field: '='
-      },
-      compile: function(tElement, tAttrs, transclude) {
-
-        return function link(scope, iElement, iAttrs) {
-          setAttrs(iAttrs);
-          var elem = getElement(scope, iElement, iAttrs);
-          elem.removeAttr('formula:input');
-          $compile(elem)(scope, function(cloned, scope) {
-            iElement.replaceWith(cloned);
-          });
-        };
-      }
-    };
-  }
-]);
-
-/* globals angular */
 angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaField', 'formulaArrayFieldTypeService', 'formulaTemplateService',
   function($rootScope, formulaField, formulaArrayFieldTypeService, formulaTemplateService) {
     "use strict";
@@ -1759,7 +1799,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       },
 
       translate: function (translations) {
-        Object.keys(translations.fields).forEach(function (key, index) {
+        Object.keys(translations.fields || []).forEach(function (key, index) {
           this.fields.concat(this.values).forEach(function(field) {
             field.translate(translations.fields);
           }, this);

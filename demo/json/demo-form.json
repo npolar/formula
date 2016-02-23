@@ -1,6 +1,6 @@
 {
 	"title": "Formula Test Form",
-
+  "lang": "en",
 	"fieldsets": [
 		{
 			"title": "strings",
