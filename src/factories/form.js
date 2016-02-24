@@ -42,8 +42,9 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.destroyWatcher = $rootScope.$on('revalidate', function() {
         self.validate();
       });
-      i18n.addDefaultLanguage(this, formDefinition.lang || 'en');
-      this.translate();
+      i18n.addDefaultLanguage(this, formDefinition.lang || 'en').then(function () {
+        self.translate();
+      });
       this.validate(true, true);
     }
 

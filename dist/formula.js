@@ -122,6 +122,7 @@ angular.module('formula').directive('formula', ['$compile', '$timeout', 'formula
             if (this.form) {
               this.form.translate();
             }
+            $timeout();
           },
 
           setForm: function(form) {
@@ -267,48 +268,6 @@ angular.module('formula').directive('formulaInput', ['$compile',
 ]);
 
 /* globals angular */
-angular.module('formula').filter('formulaInlineValues', [function() {
-  "use strict";
-
-  return function(values, params) {
-
-    var result = [];
-
-    angular.forEach(values, function(value) {
-      if (value instanceof Array) {
-        result.push('Array[' + value.length + ']');
-      } else switch (typeof value) {
-        case 'string':
-        case 'number':
-        case 'boolean':
-          result.push(value);
-          break;
-
-        default:
-      }
-    });
-
-    return result.join(', ');
-  };
-}]);
-
-/* globals angular */
-angular.module('formula').filter('formulaReplace', [function() {
-  "use strict";
-
-  return function(input, params) {
-    var result = input;
-
-    (input.match(/\{[^\}]*\}/g) || [])
-    .forEach(function(val) {
-      result = result.replace(val, params[val.substr(1, val.length - 2)]);
-    });
-
-    return result;
-  };
-}]);
-
-/* globals angular */
 angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'formulaTemplateService',
   function(fieldBuiler, templates) {
     "use strict";
@@ -431,8 +390,9 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.destroyWatcher = $rootScope.$on('revalidate', function() {
         self.validate();
       });
-      i18n.addDefaultLanguage(this, formDefinition.lang || 'en');
-      this.translate();
+      i18n.addDefaultLanguage(this, formDefinition.lang || 'en').then(function () {
+        self.translate();
+      });
       this.validate(true, true);
     }
 
@@ -908,7 +868,6 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
         },
         item: 'Item {item}: {error}',
       },
-
       fields: {},
       fieldsets: []
     };
@@ -1011,7 +970,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
     };
 
     var addDefaultLanguage = function (form, code) {
-      var lang = angular.extend({
+      var lang = angular.merge({
         fieldsets: form.fieldsets.map(function (fs) {
           return fs.title;
         }),
@@ -1020,7 +979,11 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
         }, {}),
         code: code
       }, cache[code]);
-      add(lang, code);
+      return add(lang, code).then(function () {
+        if (currentLocale.code === code) {
+          set(code);
+        }
+      });
     };
 
     add(DEFAULT_TEXTS, 'en');
@@ -1361,6 +1324,48 @@ angular.module('formula').factory('formulaSchema', ['$q', 'formulaJsonLoader', '
     return Schema;
   }
 ]);
+
+/* globals angular */
+angular.module('formula').filter('formulaInlineValues', [function() {
+  "use strict";
+
+  return function(values, params) {
+
+    var result = [];
+
+    angular.forEach(values, function(value) {
+      if (value instanceof Array) {
+        result.push('Array[' + value.length + ']');
+      } else switch (typeof value) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+          result.push(value);
+          break;
+
+        default:
+      }
+    });
+
+    return result.join(', ');
+  };
+}]);
+
+/* globals angular */
+angular.module('formula').filter('formulaReplace', [function() {
+  "use strict";
+
+  return function(input, params) {
+    var result = input;
+
+    (input.match(/\{[^\}]*\}/g) || [])
+    .forEach(function(val) {
+      result = result.replace(val, params[val.substr(1, val.length - 2)]);
+    });
+
+    return result;
+  };
+}]);
 
 /* globals angular */
 angular.module('formula').service('formulaClassService', [function() {

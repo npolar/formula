@@ -20,6 +20,7 @@ angular.module('formula').directive('formula', ['$compile', '$timeout', 'formula
             if (this.form) {
               this.form.translate();
             }
+            $timeout();
           },
 
           setForm: function(form) {
