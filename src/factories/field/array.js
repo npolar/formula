@@ -23,7 +23,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
 
     var ArrayField = {
       create: function(options) {
-        var field = Object.create(formulaField.create(options));
+        var field = formulaField.create(options);
         angular.extend(field, ArrayField.prototype);
         formulaArrayFieldTypeService.applyType(field);
         if (!field.type) {
@@ -132,8 +132,8 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
           if (preventValidation !== true) {
             $rootScope.$emit('revalidate');
           }
-          if (i18n.fields[this.id] && i18n.fields[this.id].fields) {
-            field.translate(i18n.fields[this.id].fields);
+          if (this.fieldTranslations) {
+            field.translate(this.fieldTranslations);
           }
           return field;
         }
@@ -241,6 +241,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
 
       translate: function (translations) {
         if (translations) {
+          this.fieldTranslations = translations.fields;
           Object.keys(translations.fields || {}).forEach(function (key, index) {
             this.fields.concat(this.values).forEach(function(field) {
               field.translate(translations.fields);

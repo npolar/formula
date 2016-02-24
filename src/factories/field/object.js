@@ -24,7 +24,7 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
 
     var ObjectField = {
       create: function(options) {
-        var field = Object.create(formulaField.create(options));
+        var field = formulaField.create(options);
         angular.extend(field, ObjectField.prototype);
         applyType(field);
         if (!field.type) {

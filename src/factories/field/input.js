@@ -34,7 +34,7 @@ angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLo
 
     var InputField = {
       create: function(options) {
-        var field = Object.create(formulaField.create(options));
+        var field = formulaField.create(options);
         angular.extend(field, InputField.prototype);
         formulaInputFieldTypeService.applyType(field);
         if (!field.type) {
