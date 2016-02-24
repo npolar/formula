@@ -121,15 +121,17 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
       },
 
       translate: function (translations) {
-        if (translations.fields) {
-          this.fields.forEach(function(field) {
-            if (translations.fields[field.id]) {
-              field.translate(translations.fields[field.id]);
-            }
-          });
-        }
+        if (translations) {
+          if (translations.fields) {
+            this.fields.forEach(function(field) {
+              if (translations.fields[field.id]) {
+                field.translate(translations.fields[field.id]);
+              }
+            });
+          }
 
-        formulaField.prototype.translate.call(this, translations);
+          formulaField.prototype.translate.call(this, translations);
+        }
       },
 
     };

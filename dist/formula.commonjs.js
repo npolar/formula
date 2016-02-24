@@ -1566,8 +1566,8 @@ $templateCache.put("formula/default/fieldset.html","<fieldset ng-show=\"fieldset
 $templateCache.put("formula/default/form.html","<div><div class=\"formula\" ng-if=\"!form.ready\"><div class=\"loading\"><div class=\"spinner\"></div><span>Loading...</span></div></div><form class=\"formula\" ng-show=\"form.ready\"><header ng-if=\"::form.title\">{{ form.title }}</header><nav ng-if=\"::form.fieldsets.length > 1\"><a href=\"\" ng-class=\"{ active: fieldset.active, error: !fieldset.valid }\" ng-click=\"form.activate(fieldset)\" ng-repeat=\"fieldset in ::form.fieldsets track by fieldset.id\">{{ fieldset.title }}</a></nav><formula:fieldsets></formula:fieldsets><footer><span ng-if=\"form.errors\" title=\"{{ form.errors.join(\'\\n\') }}\">{{ i18n.text.invalid | formulaReplace : { count: form.errors.length } }}</span> <button ng-click=\"form.validate(true);\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.validate.tooltip }}\"><strong>&#10003;</strong> {{ i18n.text.validate.label }}</button> <button ng-click=\"form.save()\" ng-disabled=\"!form.valid\" ng-if=\"!data.hideButtons\" title=\"{{ i18n.text.save.tooltip }}\"><strong>&#9921;</strong> {{ i18n.text.save.label }}</button></footer></form></div>");
 $templateCache.put("formula/default/object.html","<fieldset><legend ng-if=\"::field.title\">{{ field.title }}</legend><formula:fields fields=\"::field.fields\"></formula:fields></fieldset>");}]);
 /* globals angular */
-angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaField', 'formulaArrayFieldTypeService', 'formulaTemplateService',
-  function($rootScope, formulaField, formulaArrayFieldTypeService, formulaTemplateService) {
+angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaField', 'formulaI18n', 'formulaArrayFieldTypeService', 'formulaTemplateService',
+  function($rootScope, formulaField, i18n, formulaArrayFieldTypeService, formulaTemplateService) {
     "use strict";
 
     var applyDefaultValue = function(field) {
@@ -1699,6 +1699,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
           if (preventValidation !== true) {
             $rootScope.$emit('revalidate');
           }
+          field.translate(i18n.fields[this.id].fields);
           return field;
         }
 
@@ -1804,12 +1805,14 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       },
 
       translate: function (translations) {
-        Object.keys(translations.fields || []).forEach(function (key, index) {
-          this.fields.concat(this.values).forEach(function(field) {
-            field.translate(translations.fields);
+        if (translations) {
+          Object.keys(translations.fields || {}).forEach(function (key, index) {
+            this.fields.concat(this.values).forEach(function(field) {
+              field.translate(translations.fields);
+            }, this);
           }, this);
-        }, this);
-        formulaField.prototype.translate.call(this, translations);
+          formulaField.prototype.translate.call(this, translations);
+        }
       },
 
       nrArrayValues: function() {
@@ -2290,15 +2293,17 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
       },
 
       translate: function (translations) {
-        if (translations.fields) {
-          this.fields.forEach(function(field) {
-            if (translations.fields[field.id]) {
-              field.translate(translations.fields[field.id]);
-            }
-          });
-        }
+        if (translations) {
+          if (translations.fields) {
+            this.fields.forEach(function(field) {
+              if (translations.fields[field.id]) {
+                field.translate(translations.fields[field.id]);
+              }
+            });
+          }
 
-        formulaField.prototype.translate.call(this, translations);
+          formulaField.prototype.translate.call(this, translations);
+        }
       },
 
     };

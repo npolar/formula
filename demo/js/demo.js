@@ -75,7 +75,16 @@ angular.module('demo', ['formula'])
             fields: {
               "string": {
                 "title": "Holabalola"
-              }
+              },
+              "array_object": {
+                "fields": {
+                  "fields": {
+                    "number": {
+                      "title": "loooo"
+                    }
+                  }
+                }
+              },
             }
           }
         }],
@@ -88,7 +97,7 @@ angular.module('demo', ['formula'])
       $scope.formula.getFields().then(function () {
         $scope.formula.addTemplate({match: '#/string_required', template: '<h2 style="font-size: 18px;">updated template</h2>'});
       });
-      $timeout(updateModel, 1000);
+      //$timeout(updateModel, 1000);
       $timeout(updateModel2, 2000);
 
 

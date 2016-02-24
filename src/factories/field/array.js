@@ -1,6 +1,6 @@
 /* globals angular */
-angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaField', 'formulaArrayFieldTypeService', 'formulaTemplateService',
-  function($rootScope, formulaField, formulaArrayFieldTypeService, formulaTemplateService) {
+angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaField', 'formulaI18n', 'formulaArrayFieldTypeService', 'formulaTemplateService',
+  function($rootScope, formulaField, i18n, formulaArrayFieldTypeService, formulaTemplateService) {
     "use strict";
 
     var applyDefaultValue = function(field) {
@@ -132,6 +132,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
           if (preventValidation !== true) {
             $rootScope.$emit('revalidate');
           }
+          field.translate(i18n.fields[this.id].fields);
           return field;
         }
 
@@ -237,12 +238,14 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       },
 
       translate: function (translations) {
-        Object.keys(translations.fields || []).forEach(function (key, index) {
-          this.fields.concat(this.values).forEach(function(field) {
-            field.translate(translations.fields);
+        if (translations) {
+          Object.keys(translations.fields || {}).forEach(function (key, index) {
+            this.fields.concat(this.values).forEach(function(field) {
+              field.translate(translations.fields);
+            }, this);
           }, this);
-        }, this);
-        formulaField.prototype.translate.call(this, translations);
+          formulaField.prototype.translate.call(this, translations);
+        }
       },
 
       nrArrayValues: function() {
