@@ -132,7 +132,9 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
           if (preventValidation !== true) {
             $rootScope.$emit('revalidate');
           }
-          field.translate(i18n.fields[this.id].fields);
+          if (i18n.fields[this.id] && i18n.fields[this.id].fields) {
+            field.translate(i18n.fields[this.id].fields);
+          }
           return field;
         }
 
