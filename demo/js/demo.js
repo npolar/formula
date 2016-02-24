@@ -69,11 +69,16 @@ angular.module('demo', ['formula'])
       $scope.formula = formula.getInstance({
         schema: "json/demo-schema.json",
         form: "json/demo-form.json",
-        // languages: [{
-        //   code: 'nb_NO',
-        //   aliases: ['nb', 'no'],
-        //   uri: 'json/no.json'
-        // }],
+        languages: [{
+          code: 'en',
+          map: {
+            fields: {
+              "string": {
+                "title": "Holabalola"
+              }
+            }
+          }
+        }],
         model: getResource()
       });
       $scope.formula.addTemplate({

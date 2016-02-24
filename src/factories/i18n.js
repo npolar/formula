@@ -140,7 +140,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
     };
 
     var addDefaultLanguage = function (form, code) {
-      var lang = {
+      var lang = angular.extend({
         fieldsets: form.fieldsets.map(function (fs) {
           return fs.title;
         }),
@@ -148,7 +148,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
           return gatherFields(memo, fs.fields);
         }, {}),
         code: code
-      };
+      }, cache[code]);
       add(lang, code);
     };
 
