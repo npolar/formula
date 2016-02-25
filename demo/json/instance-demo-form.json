@@ -3,7 +3,7 @@
   "lang": "en",
 	"fieldsets": [
 		{
-			"title": "strings",
+			"title": "first",
 			"fields": [
 				"string",
 				{
@@ -15,9 +15,9 @@
           "id": "array_string",
           "instance": "2"
         },
-        "ref_object",
+        "array_object",
         {
-          "id": "ref_object",
+          "id": "array_object",
           "instance": "2"
         }
 			]
