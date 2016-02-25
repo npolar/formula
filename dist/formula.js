@@ -1814,10 +1814,10 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
 
       translate: function (translations) {
         if (translations) {
-          this.fieldTranslations = translations.fields;
-          Object.keys(translations.fields || {}).forEach(function (key, index) {
+          this.fieldTranslations = translations.items;
+          Object.keys(translations.items || {}).forEach(function (key, index) {
             this.items.concat(this.values).forEach(function(field) {
-              field.translate(translations.fields);
+              field.translate(translations.items);
             }, this);
           }, this);
           formulaField.prototype.translate.call(this, translations);
