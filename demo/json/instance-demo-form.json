@@ -1,0 +1,26 @@
+{
+	"title": "Formula Instance Test Form",
+  "lang": "en",
+	"fieldsets": [
+		{
+			"title": "strings",
+			"fields": [
+				"string",
+				{
+					"id": "string",
+					"instance": "2"
+				},
+        "array_string",
+        {
+          "id": "array_string",
+          "instance": "2"
+        },
+        "ref_object",
+        {
+          "id": "ref_object",
+          "instance": "2"
+        }
+			]
+		}
+	]
+}

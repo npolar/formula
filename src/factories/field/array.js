@@ -29,6 +29,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         if (!field.type) {
           return;
         }
+        field.values = [];
         applyDefaultValue(field);
 
         field.setItemProto();
@@ -187,7 +188,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
 
       itemChange: function(item) {
         if (this.values) {
-          this.value = [];
+          this.value.length = 0;
           this.values.forEach(function(field) {
             if (field.value !== undefined) {
               this.value.push(field.value);
@@ -211,7 +212,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
 
       valueFromModel: function(model) {
         if (model[this.id] !== undefined) {
-          this.values = [];
+          this.values.length = 0;
           model[this.id].forEach(function(item, index) {
             var newField;
             if (this.typeOf('fieldset')) {

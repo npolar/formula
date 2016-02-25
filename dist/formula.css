@@ -61,7 +61,7 @@
 .formula .formulaFieldset {
   background: #fff;
   border: 1px solid #ddd;
-  font-size: 0;
+  /*font-size: 0;*/
   margin: 0;
   padding: 15px;
 }

@@ -99,7 +99,6 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
 
       itemChange: function(item) {
         if (this.fields) {
-          this.value = {};
           this.fields.forEach(function(field) {
             if (field.value !== undefined) {
               this.value[field.id] = field.value;

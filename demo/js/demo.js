@@ -43,7 +43,6 @@ angular.module('demo', ['formula'])
           }]
         });
         console.log("timeout 1");
-        $scope.formula.i18n.add('json/no.json', 'nb_NO', ['nb', 'no']);
         $scope.formula.i18n.set('no');
         $scope.formula.getFieldByPath('#/array_object/0/number').then(function (f) {
           console.log('fieldByPath', f);
@@ -97,9 +96,7 @@ angular.module('demo', ['formula'])
       $scope.formula.getFields().then(function () {
         $scope.formula.addTemplate({match: '#/string_required', template: '<h2 style="font-size: 18px;">updated template</h2>'});
       });
-      $timeout(updateModel, 1000);
-      $timeout(updateModel2, 2000);
-
+      $scope.formula.i18n.add('json/no.json', 'nb_NO', ['nb', 'no']);
 
       $scope.remove = function() {
         $scope.$destroy();
@@ -111,6 +108,23 @@ angular.module('demo', ['formula'])
 
       $scope.english = function() {
         $scope.formula.i18n.set('en');
+      };
+
+      $scope.updateModel = function() {
+        updateModel();
+      };
+
+      $scope.updateModel2 = function() {
+        updateModel2();
+      };
+
+      $scope.testInstance = function () {
+        $scope.formula.setForm("json/instance-demo-form.json");
+        $scope.formula.addTemplate({
+          match: function (field) {
+            return false; //field.id === 'array_string' && field.instance === '2';
+          },
+          template: '<h2 style="font-size: 18px;">updated template</h2>'});
       };
     }
   ]);

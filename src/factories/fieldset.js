@@ -46,16 +46,33 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
             mainType: '@fieldset',
             valid: true
           };
+          fieldsets.push(fieldset);
           fs.fields.forEach(function(f, j) {
             var key = (typeof f === 'string') ? f : f.id;
             var fieldSchema = schema.properties[key] || {
               id: key
             };
+            var duplicate = fieldsets.reduce(function (memo, fieldset) {
+              return memo.concat(fieldset.fields);
+            }, []).find(function (field) {
+              return field.id === key;
+            });
             var newField = fieldBuiler.build({
               schema: fieldSchema,
               id: key,
               fieldDefinition: f
             });
+
+            if (duplicate) {
+              newField.value = duplicate.value;
+              if (duplicate.values) {
+                newField.values = duplicate.values;
+              }
+              if (duplicate.fields) {
+                newField.fields = duplicate.fields;
+              }
+            }
+
             if (newField) {
               newField.setRequired(schema.required);
               newField.valueFromModel(data);
@@ -63,7 +80,6 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
             }
           });
           templates.initNode(fieldset);
-          fieldsets.push(fieldset);
         });
         return fieldsets;
       }

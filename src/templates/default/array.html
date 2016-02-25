@@ -26,6 +26,10 @@
         <a ng-show="!$last" class="toggle drag-handle" href="" ng-click="field.moveDown($index)" ng-attr-title="{{ i18n.text.movedown }}">&darr;</a>
         <a class="remove" href="" ng-click="field.itemRemove($index)" ng-attr-title="{{ i18n.text.remove.tooltip }}">&times;</a>
       </div>
+      <div>
+        <span ng-if="value.error">{{ value.getErrorText() }}</span>
+        <span ng-if="value.description">{{ value.description }}</span>
+      </div>
     </li>
   </ul>
 

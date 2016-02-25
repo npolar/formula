@@ -180,6 +180,10 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
 
       getErrorText: function(error) {
         var text = '';
+        error = error || this.error;
+        if (!error) {
+          return text;
+        }
         if (error.dataPath) {
           var item = Number(error.dataPath.replace(/^\/(\d+).*$/, '$1')) + 1;
           text += $filter('formulaReplace')(i18n.text.item, {

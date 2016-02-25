@@ -29,11 +29,15 @@ angular.module('formula').directive('formula', ['$compile', '$timeout', 'formula
 
         };
 
-        controller.setForm($scope.options.form);
-        controller.setLanguage(i18n.code);
+        var init = function () {
+          controller.setForm($scope.options.form);
+          controller.setLanguage(i18n.code);
 
-        $scope.options.controller = controller;
-        $scope.i18n = i18n;
+          $scope.options.controller = controller;
+          $scope.i18n = i18n;
+        };
+
+        init();
       }],
       link: function(scope, iElement, iAttrs) {
         scope.$watch('form', function(form) {
