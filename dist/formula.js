@@ -571,7 +571,6 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
           }
 
           if (field.dirty || force) {
-            console.log('inner validate', field.path + (field.instance || 1), angular.copy(field.value));
             var index;
             if (field.validate(force, silent)) {
               if ((index = fieldset.errors.indexOf(field.title)) !== -1) {
@@ -591,7 +590,6 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
-            console.log('outer validate', field.path + (field.instance || 1), angular.copy(field.value));
 
             fieldValidate(field, fieldset);
 
