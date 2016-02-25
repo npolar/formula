@@ -31,7 +31,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
         applyDefaultValue(field);
 
-        field.fieldAdd();
+        field.setItemProto();
 
         // Add one element to arrays which requires at least one element
         if (field.schema.minItems) {
@@ -61,27 +61,24 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
     ArrayField.prototype = {
 
       /**
-       * @method fieldAdd
+       * @method setItemProto
        *
-       * Function used to add subfields to object and array-typed field.
+       * Sets array item prototype
        *
-       * @param schema JSON Schema defining the field being added
        * @returns true if the field was successfully added, otherwise false
        */
-      fieldAdd: function() {
+      setItemProto: function() {
         var newField;
         var parents = this.parents.slice();
         parents.push(this);
 
-        if (!this.fields) {
-          this.fields = [];
+        if (!this.items) {
+          this.items = [];
         }
 
         var id = /\/([^\/]*?)$/.exec(this.path)[1] + '_item';
-        var fieldDefinition = {
-          id: id
-        };
-        fieldDefinition.fields = this.fieldDefinition.fields || null;
+        var fieldDefinition = this.fieldDefinition.items || {};
+        fieldDefinition.id = id;
         var schema = this.schema.items;
         newField = formulaField.builder.build({
           schema: schema,
@@ -91,9 +88,11 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         });
         if (newField) {
           newField.setRequired(this.schema.required);
-          newField.index = this.fields.length;
-          this.fields.push(newField);
+          newField.index = this.items.length;
+          this.items.push(newField);
+          return true;
         }
+        return false;
       },
 
       /**
@@ -106,12 +105,12 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
        * @returns Reference to the item just added
        */
       itemAdd: function(preventValidation) {
-        if (this.fields) {
+        if (this.items) {
           var parents = this.parents.slice();
           parents.push(this);
 
           var index = this.values.length;
-          var proto = this.fields[0];
+          var proto = this.items[0];
           var field = formulaField.builder.build({
             schema: proto.schema,
             id: proto.id,
@@ -221,7 +220,6 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
                 newField.visible = false;
               }
               if (newField) {
-
                 var valueModel = {};
                 valueModel[this.values[index].id] = item;
                 this.values[index].valueFromModel(valueModel);
@@ -243,7 +241,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         if (translations) {
           this.fieldTranslations = translations.fields;
           Object.keys(translations.fields || {}).forEach(function (key, index) {
-            this.fields.concat(this.values).forEach(function(field) {
+            this.items.concat(this.values).forEach(function(field) {
               field.translate(translations.fields);
             }, this);
           }, this);

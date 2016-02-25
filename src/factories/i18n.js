@@ -119,16 +119,24 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
           title: field.title || field.id,
           description: field.description
         };
-        if ((field.typeOf("object") || field.typeOf("field")) && field.fields) {
+        if (field.typeOf("object") && field.fields) {
           memo[field.id].fields = {};
           gatherFields(memo[field.id].fields, field.fields);
-        } else if (field.typeOf("fieldset") && field.fields[0]) {
-          memo[field.id].fields = {
-            title: field.fields[0].title,
-            description: field.fields[0].description,
-            fields: {}
+        } else if (field.typeOf("field") && field.items[0]) {
+          memo[field.id].items = {};
+          gatherFields(memo[field.id].items, field.items);
+        } else if (field.typeOf("fieldset") && field.items[0]) {
+          memo[field.id].items = {
+            title: field.items[0].title,
+            description: field.items[0].description,
           };
-          gatherFields(memo[field.id].fields.fields, field.fields[0].fields);
+          if (field.items[0].items) { // nested arrays
+            memo[field.id].items.items = {};
+            gatherFields(memo[field.id].items.items, field.items[0].items);
+          } else {
+            memo[field.id].items.fields = {};
+            gatherFields(memo[field.id].items.fields, field.items[0].fields);
+          }
         } else if (field.typeOf("select") && field.values) {
           memo[field.id].values = field.values.map(function (value) {
             return value.label;

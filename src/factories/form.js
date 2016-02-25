@@ -56,7 +56,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       };
 
       if (field.typeOf('array')) {
-        field.fields.forEach(recurseField);
+        field.items.forEach(recurseField);
         field.values.forEach(recurseField);
       } else if (field.typeOf('object')) {
         field.fields.forEach(recurseField);

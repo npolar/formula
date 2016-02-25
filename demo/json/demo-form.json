@@ -37,17 +37,19 @@
 			"fields": [
 				{
 					"id": "array_object",
-					"fields": [
-						{
-							"id": "string_default",
-							"title": "Fancy title",
-							"condition": "number==1"
-						},
-						{
-							"id": "number",
-							"hidden": false
-						}
-					]
+					"items": {
+            "fields": [
+  						{
+  							"id": "string_default",
+  							"title": "Fancy title",
+  							"condition": "number==1"
+  						},
+  						{
+  							"id": "number",
+  							"hidden": false
+  						}
+  					]
+          }
 				},
 				"array_string_enum",
 				"array_string",

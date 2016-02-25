@@ -77,9 +77,6 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
 
         assign(field, (field.schema = options.schema));
         assign(field, (field.fieldDefinition = options.fieldDefinition || {}));
-        if (field.schema.items && field.fieldDefinition.fields) {
-          assign(field.items, field.fieldDefinition.fields[0]);
-        }
 
         validateFieldId(field);
         uidGen(field);

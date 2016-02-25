@@ -53,7 +53,7 @@
     "array_object": {
       "title": "Objektliste",
       "description": "Flyvende ku!",
-      "fields": {
+      "items": {
         "title": "obbbjj",
         "fields": {
           "number": {
@@ -72,17 +72,17 @@
     },
     "array_hierarchy": {
       "title": "I",
-      "fields": {
+      "items": {
         "title": "I item",
         "fields": {
           "sub_array_one": {
             "title": "II",
-            "fields": {
+            "items": {
               "title": "II item",
               "fields": {
                 "sub_sub_array_one": {
                   "title": "III",
-                  "fields": {
+                  "items": {
                     "title": "III item",
                     "fields": {
                       "obj_1_1_1": {
