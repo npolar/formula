@@ -189,6 +189,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
        * @returns true if the entire form is valid, otherwise false
        */
       validate: function(force, silent) {
+        console.log("VALIDATING");
         this.errors = [];
         var fieldValidate = function(field, fieldset) {
           fieldset.errors = fieldset.errors || [];
@@ -204,6 +205,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
           if (field.dirty || force) {
             var index;
+            console.log('inner validate', field.id + (field.instance || 1), angular.copy(field.value));
             if (field.validate(force, silent)) {
               if ((index = fieldset.errors.indexOf(field.title)) !== -1) {
                 fieldset.errors.splice(index, 1);
@@ -222,7 +224,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
         this.fieldsets.forEach(function(fieldset) {
           fieldset.fields.forEach(function(field) {
-
+            console.log('outer validate', field.id + (field.instance || 1), angular.copy(field.value));
             fieldValidate(field, fieldset);
 
             if (field.valid) {

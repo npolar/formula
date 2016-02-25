@@ -97,6 +97,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       };
 
       this.save = function() {
+        console.log("save");
         return _cfg.form.save();
       };
 
