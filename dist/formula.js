@@ -557,7 +557,6 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
        * @returns true if the entire form is valid, otherwise false
        */
       validate: function(force, silent) {
-        console.log("VALIDATING");
         this.errors = [];
         var fieldValidate = function(field, fieldset) {
           fieldset.errors = fieldset.errors || [];
@@ -573,12 +572,11 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
           if (field.dirty || force) {
             var index;
-            console.log('inner validate', field.id + (field.instance || 1), angular.copy(field.value));
             if (field.validate(force, silent)) {
               if ((index = fieldset.errors.indexOf(field.title)) !== -1) {
                 fieldset.errors.splice(index, 1);
               }
-            } else if (field.typeOf('input')) { // Only show input errors
+            } else if (field.typeOf('input')) {
               if (!silent) {
                 fieldset.errors.push(field.title);
                 // Only unique
@@ -590,24 +588,26 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
           }
         };
 
+        this.valid = true;
         this.fieldsets.forEach(function(fieldset) {
+          fieldset.valid = true;
           fieldset.fields.forEach(function(field) {
-            console.log('outer validate', field.id + (field.instance || 1), angular.copy(field.value));
             fieldValidate(field, fieldset);
 
             if (field.valid) {
               this.model.data[field.id] = field.value;
             } else {
+              fieldset.valid = (silent || false);
+              this.valid = false;
               delete this.model.data[field.id];
             }
           }, this);
           this.errors = this.errors.concat(fieldset.errors);
-          fieldset.valid = (silent || !(fieldset.errors.length));
         }, this);
 
         formulaEvaluateConditionsService.evaluateConditions(this);
 
-        if ((this.valid = !(this.errors.length))) {
+        if (this.valid) {
           this.errors = null;
         }
         return this.valid;
@@ -802,7 +802,6 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       };
 
       this.save = function() {
-        console.log("save");
         return _cfg.form.save();
       };
 
