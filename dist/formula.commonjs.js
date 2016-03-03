@@ -557,6 +557,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
        * @returns true if the entire form is valid, otherwise false
        */
       validate: function(force, silent) {
+        var form = this;
         this.errors = [];
         var fieldValidate = function(field, fieldset) {
           fieldset.errors = fieldset.errors || [];
@@ -569,20 +570,30 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
               fieldValidate(subfield, fieldset);
             });
           }
-
           if (field.dirty || force) {
             var index;
             if (field.validate(force, silent)) {
               if ((index = fieldset.errors.indexOf(field.title)) !== -1) {
                 fieldset.errors.splice(index, 1);
               }
-            } else if (field.typeOf('input')) {
-              if (!silent) {
-                fieldset.errors.push(field.title);
-                // Only unique
-                fieldset.errors = fieldset.errors.filter(function(value, index, self) {
-                  return self.indexOf(value) === index;
-                });
+            } else {
+              if (field.typeOf('input')) {
+                if (!silent) {
+                  fieldset.errors.push(field.title);
+                  // Only unique
+                  fieldset.errors = fieldset.errors.filter(function(value, index, self) {
+                    return self.indexOf(value) === index;
+                  });
+                }
+              }
+
+
+              if (field.valid === false) {
+                fieldset.valid = (silent || false);
+                form.valid = false;
+                delete form.model.data[field.id];
+              } else {
+                form.model.data[field.id] = field.value;
               }
             }
           }
@@ -593,17 +604,9 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
           fieldset.valid = true;
           fieldset.fields.forEach(function(field) {
             fieldValidate(field, fieldset);
-
-            if (field.valid) {
-              this.model.data[field.id] = field.value;
-            } else {
-              fieldset.valid = (silent || false);
-              this.valid = false;
-              delete this.model.data[field.id];
-            }
-          }, this);
-          this.errors = this.errors.concat(fieldset.errors);
-        }, this);
+          });
+          form.errors = form.errors.concat(fieldset.errors);
+        });
 
         formulaEvaluateConditionsService.evaluateConditions(this);
 
