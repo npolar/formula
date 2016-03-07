@@ -5,6 +5,7 @@
 		{
 			"title": "strings",
 			"fields": [
+        "_rev",
 				"string",
 				"string_required",
 				"string_minlength_maxlength",

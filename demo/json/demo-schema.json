@@ -4,9 +4,13 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"type": "object",
 	"properties": {
+    "_rev": {
+      "type": "string"
+    },
 		"string": {
 			"type": "string",
-			"description": "string input without additional properties"
+			"description": "string input without additional properties",
+      "condition": "_rev"
 		},
 		"string_required": {
 			"type": "string",

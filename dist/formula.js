@@ -560,7 +560,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
         var form = this;
         this.errors = [];
         var fieldValidate = function(field, fieldset) {
-          fieldset.errors = fieldset.errors || [];
+          fieldset.errors = fieldset.errors || {};
           if (field.typeOf('array')) {
             field.values.forEach(function(value) {
               fieldValidate(value, fieldset);
@@ -571,22 +571,12 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             });
           }
           if (field.dirty || force) {
-            var index;
             if (field.validate(force, silent)) {
-              if ((index = fieldset.errors.indexOf(field.title)) !== -1) {
-                fieldset.errors.splice(index, 1);
-              }
+              delete fieldset.errors[field.id];
             } else {
-              if (field.typeOf('input')) {
-                if (!silent) {
-                  fieldset.errors.push(field.title);
-                  // Only unique
-                  fieldset.errors = fieldset.errors.filter(function(value, index, self) {
-                    return self.indexOf(value) === index;
-                  });
-                }
+              if (field.typeOf('input') && !silent) {
+                fieldset.errors[field.id] = field.error;
               }
-
 
               if (field.valid === false) {
                 fieldset.valid = (silent || false);
@@ -605,7 +595,9 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
           fieldset.fields.forEach(function(field) {
             fieldValidate(field, fieldset);
           });
-          form.errors = form.errors.concat(fieldset.errors);
+          form.errors = form.errors.concat(Object.keys(fieldset.errors).map(function (key) {
+            return key + ': ' + fieldset.errors[key];
+          }));
         });
 
         formulaEvaluateConditionsService.evaluateConditions(this);

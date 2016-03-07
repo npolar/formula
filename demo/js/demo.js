@@ -60,7 +60,8 @@ angular.module('demo', ['formula'])
         var deferred = $q.defer();
         deferred.resolve({
           string: 'initfoobar',
-          boolean: true
+          boolean: true,
+          _rev: 1
         });
         return deferred.promise;
       };
