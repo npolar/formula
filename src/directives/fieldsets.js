@@ -5,7 +5,8 @@ angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaCla
 
     return {
       restrict: 'AE',
-      link: function(scope, iElement, iAttrs) {
+      require: '?^^form',
+      link: function(scope, iElement, iAttrs, formController) {
         scope.form.fieldsets.forEach(function(fieldset) {
           var template = fieldset.template;
           if (!fieldset.hidden && template) {
@@ -16,6 +17,10 @@ angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaCla
             $compile(elem)(fieldsetScope, function(cloned, scope) {
               iElement.append(cloned);
             });
+
+            if (formController) {
+              formController.$setPristine();
+            }
           }
         });
       }
