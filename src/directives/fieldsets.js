@@ -1,6 +1,6 @@
 /* globals angular */
-angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaClassService',
-  function($compile, formulaClassService) {
+angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaClassService', 'formulaDirtyCheckService',
+  function($compile, formulaClassService, formulaDirtyCheckService) {
     "use strict";
 
     return {
@@ -20,6 +20,7 @@ angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaCla
 
             if (formController) {
               formController.$setPristine();
+              formulaDirtyCheckService.setForm(formController);
             }
           }
         });

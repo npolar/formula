@@ -1,7 +1,7 @@
 /* globals angular,window,console */
-angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaI18n',
-  'formulaEvaluateConditionsService', 'formulaTemplateService', 'formulaFieldset',
-  function($rootScope, jsonLoader, Model, i18n, formulaEvaluateConditionsService, templates, formulaFieldset) {
+angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'formulaJsonLoader', 'formulaModel', 'formulaI18n',
+  'formulaEvaluateConditionsService', 'formulaTemplateService', 'formulaFieldset', 'formulaDirtyCheckService',
+  function($rootScope, $location, jsonLoader, Model, i18n, formulaEvaluateConditionsService, templates, formulaFieldset, dirtyCheckService) {
     "use strict";
 
     /**
@@ -42,6 +42,18 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.destroyWatcher = $rootScope.$on('revalidate', function() {
         self.validate();
       });
+      this.destoryDirtyChecker = $rootScope.$on('$locationChangeStart', function(event, next, prev) {
+        if (dirtyCheckService.isDirty() && self.confirmDirtyNavigate) {
+          event.preventDefault();
+          self.confirmDirtyNavigate(function () {
+            dirtyCheckService.override();
+            var baseTag = document.head.querySelector('base'), base;
+            base = baseTag ? baseTag.href.replace(/\/$/, '') : location.protocol + '//' + location.host;
+            $location.path(next.replace(base, ''));
+          });
+        }
+      });
+
       i18n.addDefaultLanguage(this, formDefinition.lang || 'en').then(function () {
         self.translate();
       });
@@ -101,6 +113,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
           }
         });
         this.destroyWatcher();
+        this.destoryDirtyChecker();
       },
 
       /**

@@ -108,9 +108,6 @@
 				"minLength": 5
 			}
 		},
-		"ref_object": {
-			"$ref": "http://api.npolar.no/schema/user"
-		},
 		"nested_array": {
 			"type": "array",
 			"items": {
