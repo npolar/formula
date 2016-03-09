@@ -17,7 +17,6 @@ angular.module('formula').service('formulaClassService', [function() {
       schemaType.slice(1);
   };
 
-
   return {
     schemaClass: schemaClass,
     pathClass: pathClass

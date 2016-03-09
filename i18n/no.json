@@ -19,7 +19,7 @@
       "label": "Fjern",
       "tooltip": "Klikk for å fjerne elementet"
     },
-    "required": "påkrevd felt",
+    "required": "påkrevd",
     "save": {
       "label": "Lagre",
       "tooltip": "Klikk for å lagre dokumentet"

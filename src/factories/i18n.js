@@ -26,7 +26,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
           label: 'Remove',
           tooltip: 'Click to remove item'
         },
-        required: 'Required field',
+        required: 'required',
         save: {
           label: 'Save',
           tooltip: 'Click to save document'

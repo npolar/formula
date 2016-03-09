@@ -12,6 +12,9 @@ angular.module('formula').directive('formulaField', ['$compile', 'formulaClassSe
         var field = scope.field;
         iElement.addClass(formulaClassService.pathClass(field));
         iElement.addClass(formulaClassService.schemaClass(field));
+        if (field.required) {
+          iElement.addClass('required');
+        }
         scope.i18n = i18n;
         scope.$watch('field.template', function (template) {
           if (!field.hidden && field.template) {
