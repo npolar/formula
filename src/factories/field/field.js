@@ -1,6 +1,6 @@
 /* globals angular */
-angular.module('formula').factory('formulaField', ['$filter', '$injector', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
-  function($filter, $injector, log, i18n, formulaTemplateService, formulaFieldValidateService) {
+angular.module('formula').factory('formulaField', ['$filter', '$rootScope', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
+  function($filter, $rootScope, log, i18n, formulaTemplateService, formulaFieldValidateService) {
     "use strict";
 
     var fieldBuilder;
@@ -88,12 +88,6 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
     };
 
     Field.prototype = {
-      dirtyParents: function() {
-        for (var i = this.parents.length - 1; i >= 0; i--) {
-          this.parents[i].dirty = true;
-          this.parents[i].itemChange(this);
-        }
-      },
 
       /**
        * @method pathGen
@@ -161,11 +155,17 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
         });
       },
 
-      valueFromModel: function(model) {
+      valueFromModel: function(model, validate) {
         if (model[this.id] !== undefined && this.value !== model[this.id]) {
           this.value = model[this.id];
           this.dirty = true;
+
+          this.updateParent();
+
           formulaTemplateService.initNode(this);
+          if (validate) {
+            $rootScope.$emit('revalidate');
+          }
         }
       },
 
@@ -194,6 +194,19 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
           text += error.message;
         }
         return text;
+      },
+
+      destroy: function() {
+        if (typeof this.destroyWatcher === 'function') {
+          this.destroyWatcher();
+        }
+      },
+
+      updateParent: function () {
+        var parent;
+        if ((parent = this.parents[this.parents.length - 1])) {
+          parent.itemChange(this);
+        }
       }
     };
 

@@ -108,9 +108,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
 
       destroy: function() {
         this.fields().forEach(function(field) {
-          if (typeof field.destroyWatcher === 'function') {
-            field.destroyWatcher();
-          }
+          field.destroy();
         });
         this.destroyWatcher();
         this.destoryDirtyChecker();
@@ -205,7 +203,6 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
         var form = this;
         this.errors = [];
         var fieldValidate = function(field, fieldset) {
-          fieldset.errors = fieldset.errors || {};
           if (field.typeOf('array')) {
             field.values.forEach(function(value) {
               fieldValidate(value, fieldset);
@@ -215,21 +212,20 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
               fieldValidate(subfield, fieldset);
             });
           }
-          if (field.dirty || force) {
+          // jshint -W116
+          if ((field.dirty || force) && field.instance == null) {
             if (field.validate(force, silent)) {
               delete fieldset.errors[field.id];
+              form.model.data[field.id] = field.value;
             } else {
               if (field.typeOf('input') && !silent) {
                 fieldset.errors[field.id] = field.error;
               }
 
-              if (field.valid === false) {
-                fieldset.valid = (silent || false);
-                form.valid = false;
-                delete form.model.data[field.id];
-              } else {
-                form.model.data[field.id] = field.value;
-              }
+              fieldset.valid = (silent || false);
+              form.valid = false;
+              delete form.model.data[field.id];
+
             }
           }
         };
@@ -237,6 +233,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
         this.valid = true;
         this.fieldsets.forEach(function(fieldset) {
           fieldset.valid = true;
+          fieldset.errors = fieldset.errors || {};
           fieldset.fields.forEach(function(field) {
             fieldValidate(field, fieldset);
           });

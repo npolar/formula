@@ -27,6 +27,9 @@ angular.module('formula').directive('formulaField', ['$compile', 'formulaClassSe
         var field = scope.field;
         iElement.addClass(formulaClassService.pathClass(field));
         iElement.addClass(formulaClassService.schemaClass(field));
+        if (field.required) {
+          iElement.addClass('required');
+        }
         scope.i18n = i18n;
         scope.$watch('field.template', function (template) {
           if (!field.hidden && field.template) {
@@ -480,9 +483,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
 
       destroy: function() {
         this.fields().forEach(function(field) {
-          if (typeof field.destroyWatcher === 'function') {
-            field.destroyWatcher();
-          }
+          field.destroy();
         });
         this.destroyWatcher();
         this.destoryDirtyChecker();
@@ -576,8 +577,8 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
       validate: function(force, silent) {
         var form = this;
         this.errors = [];
+        this._allErrors = [];
         var fieldValidate = function(field, fieldset) {
-          fieldset.errors = fieldset.errors || {};
           if (field.typeOf('array')) {
             field.values.forEach(function(value) {
               fieldValidate(value, fieldset);
@@ -587,21 +588,21 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
               fieldValidate(subfield, fieldset);
             });
           }
-          if (field.dirty || force) {
+          // jshint -W116
+          if ((field.dirty || force) && field.instance == null) {
             if (field.validate(force, silent)) {
               delete fieldset.errors[field.id];
+              form.model.data[field.id] = field.value;
             } else {
+              fieldset._allErrors.push(field.error);
               if (field.typeOf('input') && !silent) {
                 fieldset.errors[field.id] = field.error;
               }
 
-              if (field.valid === false) {
-                fieldset.valid = (silent || false);
-                form.valid = false;
-                delete form.model.data[field.id];
-              } else {
-                form.model.data[field.id] = field.value;
-              }
+              fieldset.valid = (silent || false);
+              form.valid = false;
+              delete form.model.data[field.id];
+
             }
           }
         };
@@ -609,9 +610,12 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
         this.valid = true;
         this.fieldsets.forEach(function(fieldset) {
           fieldset.valid = true;
+          fieldset._allErrors = [];
+          fieldset.errors = fieldset.errors || {};
           fieldset.fields.forEach(function(field) {
             fieldValidate(field, fieldset);
           });
+          form._allErrors = form._allErrors.concat(fieldset._allErrors);
           form.errors = form.errors.concat(Object.keys(fieldset.errors).map(function (key) {
             return key + ': ' + fieldset.errors[key];
           }));
@@ -900,7 +904,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
           label: 'Remove',
           tooltip: 'Click to remove item'
         },
-        required: 'Required field',
+        required: 'required',
         save: {
           label: 'Save',
           tooltip: 'Click to save document'
@@ -1437,7 +1441,6 @@ angular.module('formula').service('formulaClassService', [function() {
       schemaType.slice(1);
   };
 
-
   return {
     schemaClass: schemaClass,
     pathClass: pathClass
@@ -1768,7 +1771,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
             this.value.push(field.value);
           }
           this.dirty = true;
-          this.dirtyParents();
+          this.updateParent();
           if (preventValidation !== true) {
             $rootScope.$emit('revalidate');
           }
@@ -1803,7 +1806,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
 
         this.dirty = true;
-        this.dirtyParents();
+        this.updateParent();
         $rootScope.$emit('revalidate');
         return removed;
       },
@@ -1827,14 +1830,16 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       },
 
       itemChange: function(item) {
-        if (this.values) {
-          this.value.length = 0;
-          this.values.forEach(function(field) {
-            if (field.value !== undefined) {
-              this.value.push(field.value);
-            }
-          }, this);
-        }
+        this.value.length = 0;
+        this.values.forEach(function(field) {
+          if (field.value !== undefined) {
+            this.value.push(field.value);
+          }
+        }, this);
+        this.dirty = true;
+
+        this.updateParent();
+
       },
 
       /**
@@ -1850,30 +1855,32 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
       },
 
-      valueFromModel: function(model) {
+      destroy: function() {
+        this.values.forEach(function (val) {
+          val.destroy();
+        });
+      },
+
+      valueFromModel: function(model, validate) {
         if (model[this.id] !== undefined) {
+          this.values.forEach(function (val) {
+            val.destroy();
+          });
           this.values.length = 0;
           model[this.id].forEach(function(item, index) {
-            var newField;
-            if (this.typeOf('fieldset')) {
-              newField = this.itemAdd(true /* preventValidation */ );
-              if (newField.index !== 0) { // @FIXME does not handle hidden array items
+            var newField = this.itemAdd(true /* preventValidation */ );
+            if (newField) {
+              if (this.typeOf('fieldset') && newField.index !== 0) {
                 newField.visible = false;
               }
-              if (newField) {
-                var valueModel = {};
-                valueModel[this.values[index].id] = item;
-                this.values[index].valueFromModel(valueModel);
-              }
-            } else if (this.typeOf('field')) {
-              newField = this.itemAdd(true /* preventValidation */ );
-              if (newField) {
-                this.values[index].value = item;
-              }
+
+              var valueModel = {};
+              valueModel[this.values[index].id] = item;
+              this.values[index].valueFromModel(valueModel);
             }
           }, this);
 
-          formulaField.prototype.valueFromModel.call(this, model);
+          formulaField.prototype.valueFromModel.call(this, model, validate);
         }
 
       },
@@ -1903,8 +1910,8 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
 ]);
 
 /* globals angular */
-angular.module('formula').factory('formulaField', ['$filter', '$injector', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
-  function($filter, $injector, log, i18n, formulaTemplateService, formulaFieldValidateService) {
+angular.module('formula').factory('formulaField', ['$filter', '$rootScope', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
+  function($filter, $rootScope, log, i18n, formulaTemplateService, formulaFieldValidateService) {
     "use strict";
 
     var fieldBuilder;
@@ -1992,12 +1999,6 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
     };
 
     Field.prototype = {
-      dirtyParents: function() {
-        for (var i = this.parents.length - 1; i >= 0; i--) {
-          this.parents[i].dirty = true;
-          this.parents[i].itemChange(this);
-        }
-      },
 
       /**
        * @method pathGen
@@ -2065,11 +2066,17 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
         });
       },
 
-      valueFromModel: function(model) {
+      valueFromModel: function(model, validate) {
         if (model[this.id] !== undefined && this.value !== model[this.id]) {
           this.value = model[this.id];
           this.dirty = true;
+
+          this.updateParent();
+
           formulaTemplateService.initNode(this);
+          if (validate) {
+            $rootScope.$emit('revalidate');
+          }
         }
       },
 
@@ -2098,6 +2105,19 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
           text += error.message;
         }
         return text;
+      },
+
+      destroy: function() {
+        if (typeof this.destroyWatcher === 'function') {
+          this.destroyWatcher();
+        }
+      },
+
+      updateParent: function () {
+        var parent;
+        if ((parent = this.parents[this.parents.length - 1])) {
+          parent.itemChange(this);
+        }
       }
     };
 
@@ -2187,10 +2207,7 @@ angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLo
             return; // triggers new watch
           }
           field.dirty = true;
-          for (var i = field.parents.length - 1; i >= 0; i--) {
-            field.parents[i].dirty = true;
-            field.parents[i].itemChange(field);
-          }
+          field.updateParent();
           $rootScope.$emit('revalidate');
         }
       });
@@ -2353,9 +2370,12 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
             }
           }, this);
         }
+        this.dirty = true;
+
+        this.updateParent();
       },
 
-      valueFromModel: function(model) {
+      valueFromModel: function(model, validate) {
         if (model[this.id] !== undefined) {
           this.fields.forEach(function(fc, index) {
             if (model[this.id][fc.id] !== undefined) {
@@ -2363,7 +2383,7 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
             }
           }, this);
 
-          formulaField.prototype.valueFromModel.call(this, model);
+          formulaField.prototype.valueFromModel.call(this, model, validate);
         }
       },
 
@@ -2554,14 +2574,14 @@ angular.module('formula').service('formulaFieldValidateService', [
               break;
 
             case 'object':
-              if (!Object.keys(field.value).length) {
+              if (field.typeOf('object') && !Object.keys(field.value).length) {
                 field.value = null;
               }
               break;
           }
 
           // Nullable array case..
-          if (field.values && !field.values.length) {
+          if (field.typeOf('array') && field.values && !field.values.length) {
             field.value = null;
           }
 

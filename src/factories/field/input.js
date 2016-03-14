@@ -23,10 +23,7 @@ angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLo
             return; // triggers new watch
           }
           field.dirty = true;
-          for (var i = field.parents.length - 1; i >= 0; i--) {
-            field.parents[i].dirty = true;
-            field.parents[i].itemChange(field);
-          }
+          field.updateParent();
           $rootScope.$emit('revalidate');
         }
       });

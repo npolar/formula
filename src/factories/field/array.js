@@ -128,7 +128,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
             this.value.push(field.value);
           }
           this.dirty = true;
-          this.dirtyParents();
+          this.updateParent();
           if (preventValidation !== true) {
             $rootScope.$emit('revalidate');
           }
@@ -163,7 +163,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
 
         this.dirty = true;
-        this.dirtyParents();
+        this.updateParent();
         $rootScope.$emit('revalidate');
         return removed;
       },
@@ -187,14 +187,16 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       },
 
       itemChange: function(item) {
-        if (this.values) {
-          this.value.length = 0;
-          this.values.forEach(function(field) {
-            if (field.value !== undefined) {
-              this.value.push(field.value);
-            }
-          }, this);
-        }
+        this.value.length = 0;
+        this.values.forEach(function(field) {
+          if (field.value !== undefined) {
+            this.value.push(field.value);
+          }
+        }, this);
+        this.dirty = true;
+
+        this.updateParent();
+
       },
 
       /**
@@ -210,30 +212,32 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
       },
 
-      valueFromModel: function(model) {
+      destroy: function() {
+        this.values.forEach(function (val) {
+          val.destroy();
+        });
+      },
+
+      valueFromModel: function(model, validate) {
         if (model[this.id] !== undefined) {
+          this.values.forEach(function (val) {
+            val.destroy();
+          });
           this.values.length = 0;
           model[this.id].forEach(function(item, index) {
-            var newField;
-            if (this.typeOf('fieldset')) {
-              newField = this.itemAdd(true /* preventValidation */ );
-              if (newField.index !== 0) { // @FIXME does not handle hidden array items
+            var newField = this.itemAdd(true /* preventValidation */ );
+            if (newField) {
+              if (this.typeOf('fieldset') && newField.index !== 0) {
                 newField.visible = false;
               }
-              if (newField) {
-                var valueModel = {};
-                valueModel[this.values[index].id] = item;
-                this.values[index].valueFromModel(valueModel);
-              }
-            } else if (this.typeOf('field')) {
-              newField = this.itemAdd(true /* preventValidation */ );
-              if (newField) {
-                this.values[index].value = item;
-              }
+
+              var valueModel = {};
+              valueModel[this.values[index].id] = item;
+              this.values[index].valueFromModel(valueModel);
             }
           }, this);
 
-          formulaField.prototype.valueFromModel.call(this, model);
+          formulaField.prototype.valueFromModel.call(this, model, validate);
         }
 
       },
