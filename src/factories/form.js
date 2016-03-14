@@ -216,16 +216,14 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
           if ((field.dirty || force) && field.instance == null) {
             if (field.validate(force, silent)) {
               delete fieldset.errors[field.id];
-              form.model.data[field.id] = field.value;
+              return true;
             } else {
               if (field.typeOf('input') && !silent) {
                 fieldset.errors[field.id] = field.error;
               }
 
-              fieldset.valid = (silent || false);
-              form.valid = false;
-              delete form.model.data[field.id];
-
+              fieldset.valid = (silent || field.valid === false);
+              return false;
             }
           }
         };
@@ -235,7 +233,12 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
           fieldset.valid = true;
           fieldset.errors = fieldset.errors || {};
           fieldset.fields.forEach(function(field) {
-            fieldValidate(field, fieldset);
+            if (fieldValidate(field, fieldset)) {
+              form.model.data[field.id] = field.value;
+            } else {
+              form.valid = false;
+              delete form.model.data[field.id];
+            }
           });
           form.errors = form.errors.concat(Object.keys(fieldset.errors).map(function (key) {
             return key + ': ' + fieldset.errors[key];
