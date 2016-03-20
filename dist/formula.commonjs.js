@@ -489,7 +489,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
             }
           }
         });
-      },
+      }.bind(this),
 
       /**
        * @method toggleArrays
