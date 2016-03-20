@@ -432,6 +432,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
       i18n.addDefaultLanguage(this, formDefinition.lang || 'en').then(function () {
         self.translate();
       });
+      this.activate = this.activate.bind(this);
       this.validate(true, true);
     }
 
@@ -507,7 +508,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
             }
           }
         });
-      }.bind(this),
+      },
 
       /**
        * @method toggleArrays
@@ -597,7 +598,6 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
                 fieldset.errors[field.id] = field.error;
               }
 
-              fieldset.valid = (silent || field.valid === false);
               return false;
             }
           }
@@ -611,6 +611,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
             if (fieldValidate(field, fieldset)) {
               form.model.data[field.id] = field.value;
             } else {
+              fieldset.valid = silent || (field.valid === false ? false : fieldset.valid);
               form.valid = false;
               delete form.model.data[field.id];
             }
