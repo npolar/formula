@@ -1,17 +1,16 @@
 /* globals angular */
 
 (function() {
-"use strict";
+  "use strict";
 
-/**
- * formula.js
- * Generic JSON Schema form builder
- *
- * Norsk Polarinstutt 2014, http://npolar.no/
- */
+  /**
+   * formula.js
+   * Generic JSON Schema form builder
+   *
+   * Norsk Polarinstutt 2014, http://npolar.no/
+   */
 
-angular.module('formula', ['ng-sortable']);
-
+  angular.module('formula', ['ng-sortable']);
 })();
 
 /* globals angular */
@@ -28,6 +27,9 @@ angular.module('formula').directive('formulaField', ['$compile', 'formulaClassSe
         var field = scope.field;
         iElement.addClass(formulaClassService.pathClass(field));
         iElement.addClass(formulaClassService.schemaClass(field));
+        if (field.required) {
+          iElement.addClass('required');
+        }
         scope.i18n = i18n;
         scope.$watch('field.template', function (template) {
           if (!field.hidden && field.template) {
@@ -76,13 +78,14 @@ angular.module('formula').directive('formulaFields', ['$compile', 'formulaClassS
 ]);
 
 /* globals angular */
-angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaClassService',
-  function($compile, formulaClassService) {
+angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaClassService', 'formulaDirtyCheckService',
+  function($compile, formulaClassService, formulaDirtyCheckService) {
     "use strict";
 
     return {
       restrict: 'AE',
-      link: function(scope, iElement, iAttrs) {
+      require: '?^^form',
+      link: function(scope, iElement, iAttrs, formController) {
         scope.form.fieldsets.forEach(function(fieldset) {
           var template = fieldset.template;
           if (!fieldset.hidden && template) {
@@ -93,6 +96,11 @@ angular.module('formula').directive('formulaFieldsets', ['$compile', 'formulaCla
             $compile(elem)(fieldsetScope, function(cloned, scope) {
               iElement.append(cloned);
             });
+
+            if (formController) {
+              formController.$setPristine();
+              formulaDirtyCheckService.setForm(formController);
+            }
           }
         });
       }
@@ -127,8 +135,7 @@ angular.module('formula').directive('formula', ['$compile', '$timeout', 'formula
 
           setForm: function(form) {
             $scope.form = this.form = form;
-          },
-
+          }
         };
 
         var init = function () {
@@ -367,9 +374,9 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
 ]);
 
 /* globals angular,window,console */
-angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaI18n',
-  'formulaEvaluateConditionsService', 'formulaTemplateService', 'formulaFieldset',
-  function($rootScope, jsonLoader, Model, i18n, formulaEvaluateConditionsService, templates, formulaFieldset) {
+angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'formulaJsonLoader', 'formulaModel', 'formulaI18n',
+  'formulaEvaluateConditionsService', 'formulaTemplateService', 'formulaFieldset', 'formulaDirtyCheckService',
+  function($rootScope, $location, jsonLoader, Model, i18n, formulaEvaluateConditionsService, templates, formulaFieldset, dirtyCheckService) {
     "use strict";
 
     /**
@@ -410,6 +417,18 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.destroyWatcher = $rootScope.$on('revalidate', function() {
         self.validate();
       });
+      this.destoryDirtyChecker = $rootScope.$on('$locationChangeStart', function(event, next, prev) {
+        if (dirtyCheckService.isDirty() && self.confirmDirtyNavigate) {
+          event.preventDefault();
+          self.confirmDirtyNavigate(function () {
+            dirtyCheckService.override();
+            var baseTag = document.head.querySelector('base'), base;
+            base = baseTag ? baseTag.href.replace(/\/$/, '') : location.protocol + '//' + location.host;
+            $location.path(next.replace(base, ''));
+          });
+        }
+      });
+
       i18n.addDefaultLanguage(this, formDefinition.lang || 'en').then(function () {
         self.translate();
       });
@@ -464,11 +483,10 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
       destroy: function() {
         this.fields().forEach(function(field) {
-          if (typeof field.destroyWatcher === 'function') {
-            field.destroyWatcher();
-          }
+          field.destroy();
         });
         this.destroyWatcher();
+        this.destoryDirtyChecker();
       },
 
       /**
@@ -557,9 +575,9 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
        * @returns true if the entire form is valid, otherwise false
        */
       validate: function(force, silent) {
+        var form = this;
         this.errors = [];
         var fieldValidate = function(field, fieldset) {
-          fieldset.errors = fieldset.errors || [];
           if (field.typeOf('array')) {
             field.values.forEach(function(value) {
               fieldValidate(value, fieldset);
@@ -569,21 +587,18 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
               fieldValidate(subfield, fieldset);
             });
           }
-
-          if (field.dirty || force) {
-            var index;
+          // jshint -W116
+          if ((field.dirty || force) && field.instance == null) {
             if (field.validate(force, silent)) {
-              if ((index = fieldset.errors.indexOf(field.title)) !== -1) {
-                fieldset.errors.splice(index, 1);
+              delete fieldset.errors[field.id];
+              return true;
+            } else {
+              if (field.typeOf('input') && !silent) {
+                fieldset.errors[field.id] = field.error;
               }
-            } else if (field.typeOf('input')) {
-              if (!silent) {
-                fieldset.errors.push(field.title);
-                // Only unique
-                fieldset.errors = fieldset.errors.filter(function(value, index, self) {
-                  return self.indexOf(value) === index;
-                });
-              }
+
+              fieldset.valid = (silent || field.valid === false);
+              return false;
             }
           }
         };
@@ -591,19 +606,19 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
         this.valid = true;
         this.fieldsets.forEach(function(fieldset) {
           fieldset.valid = true;
+          fieldset.errors = fieldset.errors || {};
           fieldset.fields.forEach(function(field) {
-            fieldValidate(field, fieldset);
-
-            if (field.valid) {
-              this.model.data[field.id] = field.value;
+            if (fieldValidate(field, fieldset)) {
+              form.model.data[field.id] = field.value;
             } else {
-              fieldset.valid = (silent || false);
-              this.valid = false;
-              delete this.model.data[field.id];
+              form.valid = false;
+              delete form.model.data[field.id];
             }
-          }, this);
-          this.errors = this.errors.concat(fieldset.errors);
-        }, this);
+          });
+          form.errors = form.errors.concat(Object.keys(fieldset.errors).map(function (key) {
+            return key + ': ' + fieldset.errors[key];
+          }));
+        });
 
         formulaEvaluateConditionsService.evaluateConditions(this);
 
@@ -755,6 +770,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
           _cfg.form.translate();
         }
         _cfg.form.onsave = options.onsave || _cfg.form.onsave;
+        _cfg.form.confirmDirtyNavigate = options.confirmDirtyNavigate;
       };
 
       this.setModel = function(model) {
@@ -840,6 +856,13 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
         }
       };
 
+      this.setConfirmDirtyNavigate = function (confirm) {
+        options.confirmDirtyNavigate = confirm;
+        if (_cfg.form) {
+          _cfg.form.confirmDirtyNavigate = confirm;
+        }
+      };
+
       this._cfg = _cfg;
       return this;
     };
@@ -880,7 +903,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
           label: 'Remove',
           tooltip: 'Click to remove item'
         },
-        required: 'Required field',
+        required: 'required',
         save: {
           label: 'Save',
           tooltip: 'Click to save document'
@@ -1417,10 +1440,31 @@ angular.module('formula').service('formulaClassService', [function() {
       schemaType.slice(1);
   };
 
-
   return {
     schemaClass: schemaClass,
     pathClass: pathClass
+  };
+}]);
+
+/* globals angular */
+angular.module('formula').service('formulaDirtyCheckService', [function() {
+  "use strict";
+
+  var formCtrl;
+
+  return {
+    setForm: function (form) {
+      formCtrl = form;
+    },
+    isDirty: function () {
+      return formCtrl ? formCtrl.$dirty : false;
+    },
+    override: function () {
+      if (formCtrl) {
+        formCtrl.$setPristine();
+        formCtrl.$setUntouched();
+      }
+    }
   };
 }]);
 
@@ -1726,7 +1770,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
             this.value.push(field.value);
           }
           this.dirty = true;
-          this.dirtyParents();
+          this.updateParent();
           if (preventValidation !== true) {
             $rootScope.$emit('revalidate');
           }
@@ -1761,7 +1805,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
 
         this.dirty = true;
-        this.dirtyParents();
+        this.updateParent();
         $rootScope.$emit('revalidate');
         return removed;
       },
@@ -1785,14 +1829,16 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       },
 
       itemChange: function(item) {
-        if (this.values) {
-          this.value.length = 0;
-          this.values.forEach(function(field) {
-            if (field.value !== undefined) {
-              this.value.push(field.value);
-            }
-          }, this);
-        }
+        this.value.length = 0;
+        this.values.forEach(function(field) {
+          if (field.value !== undefined) {
+            this.value.push(field.value);
+          }
+        }, this);
+        this.dirty = true;
+
+        this.updateParent();
+
       },
 
       /**
@@ -1808,30 +1854,32 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
       },
 
-      valueFromModel: function(model) {
+      destroy: function() {
+        this.values.forEach(function (val) {
+          val.destroy();
+        });
+      },
+
+      valueFromModel: function(model, validate) {
         if (model[this.id] !== undefined) {
+          this.values.forEach(function (val) {
+            val.destroy();
+          });
           this.values.length = 0;
           model[this.id].forEach(function(item, index) {
-            var newField;
-            if (this.typeOf('fieldset')) {
-              newField = this.itemAdd(true /* preventValidation */ );
-              if (newField.index !== 0) { // @FIXME does not handle hidden array items
+            var newField = this.itemAdd(true /* preventValidation */ );
+            if (newField) {
+              if (this.typeOf('fieldset') && newField.index !== 0) {
                 newField.visible = false;
               }
-              if (newField) {
-                var valueModel = {};
-                valueModel[this.values[index].id] = item;
-                this.values[index].valueFromModel(valueModel);
-              }
-            } else if (this.typeOf('field')) {
-              newField = this.itemAdd(true /* preventValidation */ );
-              if (newField) {
-                this.values[index].value = item;
-              }
+
+              var valueModel = {};
+              valueModel[this.values[index].id] = item;
+              this.values[index].valueFromModel(valueModel);
             }
           }, this);
 
-          formulaField.prototype.valueFromModel.call(this, model);
+          formulaField.prototype.valueFromModel.call(this, model, validate);
         }
 
       },
@@ -1861,8 +1909,8 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
 ]);
 
 /* globals angular */
-angular.module('formula').factory('formulaField', ['$filter', '$injector', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
-  function($filter, $injector, log, i18n, formulaTemplateService, formulaFieldValidateService) {
+angular.module('formula').factory('formulaField', ['$filter', '$rootScope', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
+  function($filter, $rootScope, log, i18n, formulaTemplateService, formulaFieldValidateService) {
     "use strict";
 
     var fieldBuilder;
@@ -1950,12 +1998,6 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
     };
 
     Field.prototype = {
-      dirtyParents: function() {
-        for (var i = this.parents.length - 1; i >= 0; i--) {
-          this.parents[i].dirty = true;
-          this.parents[i].itemChange(this);
-        }
-      },
 
       /**
        * @method pathGen
@@ -2023,11 +2065,17 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
         });
       },
 
-      valueFromModel: function(model) {
+      valueFromModel: function(model, validate) {
         if (model[this.id] !== undefined && this.value !== model[this.id]) {
           this.value = model[this.id];
           this.dirty = true;
+
+          this.updateParent();
+
           formulaTemplateService.initNode(this);
+          if (validate) {
+            $rootScope.$emit('revalidate');
+          }
         }
       },
 
@@ -2056,6 +2104,19 @@ angular.module('formula').factory('formulaField', ['$filter', '$injector', 'form
           text += error.message;
         }
         return text;
+      },
+
+      destroy: function() {
+        if (typeof this.destroyWatcher === 'function') {
+          this.destroyWatcher();
+        }
+      },
+
+      updateParent: function () {
+        var parent;
+        if ((parent = this.parents[this.parents.length - 1])) {
+          parent.itemChange(this);
+        }
       }
     };
 
@@ -2145,10 +2206,7 @@ angular.module('formula').factory('formulaInputField', ['$rootScope', 'formulaLo
             return; // triggers new watch
           }
           field.dirty = true;
-          for (var i = field.parents.length - 1; i >= 0; i--) {
-            field.parents[i].dirty = true;
-            field.parents[i].itemChange(field);
-          }
+          field.updateParent();
           $rootScope.$emit('revalidate');
         }
       });
@@ -2311,9 +2369,12 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
             }
           }, this);
         }
+        this.dirty = true;
+
+        this.updateParent();
       },
 
-      valueFromModel: function(model) {
+      valueFromModel: function(model, validate) {
         if (model[this.id] !== undefined) {
           this.fields.forEach(function(fc, index) {
             if (model[this.id][fc.id] !== undefined) {
@@ -2321,7 +2382,7 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
             }
           }, this);
 
-          formulaField.prototype.valueFromModel.call(this, model);
+          formulaField.prototype.valueFromModel.call(this, model, validate);
         }
       },
 
@@ -2512,14 +2573,14 @@ angular.module('formula').service('formulaFieldValidateService', [
               break;
 
             case 'object':
-              if (!Object.keys(field.value).length) {
+              if (field.typeOf('object') && !Object.keys(field.value).length) {
                 field.value = null;
               }
               break;
           }
 
           // Nullable array case..
-          if (field.values && !field.values.length) {
+          if (field.typeOf('array') && field.values && !field.values.length) {
             field.value = null;
           }
 

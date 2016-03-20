@@ -29,14 +29,14 @@ angular.module('formula').service('formulaFieldValidateService', [
               break;
 
             case 'object':
-              if (!Object.keys(field.value).length) {
+              if (field.typeOf('object') && !Object.keys(field.value).length) {
                 field.value = null;
               }
               break;
           }
 
           // Nullable array case..
-          if (field.values && !field.values.length) {
+          if (field.typeOf('array') && field.values && !field.values.length) {
             field.value = null;
           }
 

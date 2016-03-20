@@ -105,9 +105,12 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
             }
           }, this);
         }
+        this.dirty = true;
+
+        this.updateParent();
       },
 
-      valueFromModel: function(model) {
+      valueFromModel: function(model, validate) {
         if (model[this.id] !== undefined) {
           this.fields.forEach(function(fc, index) {
             if (model[this.id][fc.id] !== undefined) {
@@ -115,7 +118,7 @@ angular.module('formula').factory('formulaObjectField', ['formulaLog', 'formulaF
             }
           }, this);
 
-          formulaField.prototype.valueFromModel.call(this, model);
+          formulaField.prototype.valueFromModel.call(this, model, validate);
         }
       },
 

@@ -24,10 +24,13 @@ Bootstrapping is done by using the **'formula'** service to create a instance. T
 ### Options
 * **schema**\* - [url] JSON schema
 * **form** - [url, Object], form layout config
+* **language** - [String] language code
 * **languages** - [Array] languages
 * **model** - [Promise, Object] JSON document
 * **keepFailing** - [Boolean], to keep properties with failing conditions in model or not (default: true)
 * **templates** - [Object] templates
+* **onsave** - [Function] onsave function
+* **confirmDirtyNavigate** - [Function (navigate)] function with one argument, a function to proceed with blocked navigation.
 
 #### options.form
 Config to set form title, group properties into fieldsets, override schema type, set formats and visibility conditions.
@@ -119,6 +122,9 @@ Set form definition
 
     formula.setOnSave(saveCallback)
 Set save callback
+
+    formula.setConfirmDirtyNavigate(confirmFunction)
+Set confirmDirtyNavigate function. confirmFunction is called with one argument, a function to proceed with blocked navigation.
 
     formula.save()
 Exec save

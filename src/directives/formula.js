@@ -25,8 +25,7 @@ angular.module('formula').directive('formula', ['$compile', '$timeout', 'formula
 
           setForm: function(form) {
             $scope.form = this.form = form;
-          },
-
+          }
         };
 
         var init = function () {

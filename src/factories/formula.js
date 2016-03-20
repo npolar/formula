@@ -50,6 +50,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
           _cfg.form.translate();
         }
         _cfg.form.onsave = options.onsave || _cfg.form.onsave;
+        _cfg.form.confirmDirtyNavigate = options.confirmDirtyNavigate;
       };
 
       this.setModel = function(model) {
@@ -132,6 +133,13 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
         set: setLanguage,
         get code() {
           return i18n.code;
+        }
+      };
+
+      this.setConfirmDirtyNavigate = function (confirm) {
+        options.confirmDirtyNavigate = confirm;
+        if (_cfg.form) {
+          _cfg.form.confirmDirtyNavigate = confirm;
         }
       };
 

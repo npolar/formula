@@ -1,7 +1,7 @@
 /* globals angular,window,console */
-angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoader', 'formulaModel', 'formulaI18n',
-  'formulaEvaluateConditionsService', 'formulaTemplateService', 'formulaFieldset',
-  function($rootScope, jsonLoader, Model, i18n, formulaEvaluateConditionsService, templates, formulaFieldset) {
+angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'formulaJsonLoader', 'formulaModel', 'formulaI18n',
+  'formulaEvaluateConditionsService', 'formulaTemplateService', 'formulaFieldset', 'formulaDirtyCheckService',
+  function($rootScope, $location, jsonLoader, Model, i18n, formulaEvaluateConditionsService, templates, formulaFieldset, dirtyCheckService) {
     "use strict";
 
     /**
@@ -42,6 +42,18 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
       this.destroyWatcher = $rootScope.$on('revalidate', function() {
         self.validate();
       });
+      this.destoryDirtyChecker = $rootScope.$on('$locationChangeStart', function(event, next, prev) {
+        if (dirtyCheckService.isDirty() && self.confirmDirtyNavigate) {
+          event.preventDefault();
+          self.confirmDirtyNavigate(function () {
+            dirtyCheckService.override();
+            var baseTag = document.head.querySelector('base'), base;
+            base = baseTag ? baseTag.href.replace(/\/$/, '') : location.protocol + '//' + location.host;
+            $location.path(next.replace(base, ''));
+          });
+        }
+      });
+
       i18n.addDefaultLanguage(this, formDefinition.lang || 'en').then(function () {
         self.translate();
       });
@@ -96,11 +108,10 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
 
       destroy: function() {
         this.fields().forEach(function(field) {
-          if (typeof field.destroyWatcher === 'function') {
-            field.destroyWatcher();
-          }
+          field.destroy();
         });
         this.destroyWatcher();
+        this.destoryDirtyChecker();
       },
 
       /**
@@ -189,9 +200,9 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
        * @returns true if the entire form is valid, otherwise false
        */
       validate: function(force, silent) {
+        var form = this;
         this.errors = [];
         var fieldValidate = function(field, fieldset) {
-          fieldset.errors = fieldset.errors || [];
           if (field.typeOf('array')) {
             field.values.forEach(function(value) {
               fieldValidate(value, fieldset);
@@ -201,21 +212,18 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
               fieldValidate(subfield, fieldset);
             });
           }
-
-          if (field.dirty || force) {
-            var index;
+          // jshint -W116
+          if ((field.dirty || force) && field.instance == null) {
             if (field.validate(force, silent)) {
-              if ((index = fieldset.errors.indexOf(field.title)) !== -1) {
-                fieldset.errors.splice(index, 1);
+              delete fieldset.errors[field.id];
+              return true;
+            } else {
+              if (field.typeOf('input') && !silent) {
+                fieldset.errors[field.id] = field.error;
               }
-            } else if (field.typeOf('input')) {
-              if (!silent) {
-                fieldset.errors.push(field.title);
-                // Only unique
-                fieldset.errors = fieldset.errors.filter(function(value, index, self) {
-                  return self.indexOf(value) === index;
-                });
-              }
+
+              fieldset.valid = (silent || field.valid === false);
+              return false;
             }
           }
         };
@@ -223,19 +231,19 @@ angular.module('formula').factory('formulaForm', ['$rootScope', 'formulaJsonLoad
         this.valid = true;
         this.fieldsets.forEach(function(fieldset) {
           fieldset.valid = true;
+          fieldset.errors = fieldset.errors || {};
           fieldset.fields.forEach(function(field) {
-            fieldValidate(field, fieldset);
-
-            if (field.valid) {
-              this.model.data[field.id] = field.value;
+            if (fieldValidate(field, fieldset)) {
+              form.model.data[field.id] = field.value;
             } else {
-              fieldset.valid = (silent || false);
-              this.valid = false;
-              delete this.model.data[field.id];
+              form.valid = false;
+              delete form.model.data[field.id];
             }
-          }, this);
-          this.errors = this.errors.concat(fieldset.errors);
-        }, this);
+          });
+          form.errors = form.errors.concat(Object.keys(fieldset.errors).map(function (key) {
+            return key + ': ' + fieldset.errors[key];
+          }));
+        });
 
         formulaEvaluateConditionsService.evaluateConditions(this);
 
