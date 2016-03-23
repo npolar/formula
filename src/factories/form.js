@@ -26,9 +26,11 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
       templates.initNode(this);
       formulaEvaluateConditionsService.setKeepFailing(!!keepFailing);
 
+      var defaultLang = 'en';
       if (formDefinition) {
         this.title = formDefinition.title;
         this.fieldsets = formulaFieldset.fieldsetFromDefinition(schema, formDefinition, this.model.data);
+        defaultLang = formDefinition.lang || defaultLang;
       } else {
         this.fieldsets = formulaFieldset.fieldsetFromSchema(schema, this.model.data);
       }
@@ -54,7 +56,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
         }
       });
 
-      i18n.addDefaultLanguage(this, formDefinition.lang || 'en').then(function () {
+      i18n.addDefaultLanguage(this, defaultLang).then(function () {
         self.translate();
       });
       this.validate(true, true);
@@ -123,6 +125,9 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
        * @param fieldset An object or an index number representing the fieldset
        */
       activate: function(fieldset) {
+        if (!this.fieldsets) {
+          return; // might be called before form is ready
+        }
         this.fieldsets.forEach(function(f, i) {
           if (typeof fieldset === 'object' || typeof fieldset === 'number') {
             if ((typeof fieldset === 'object') ? (f === fieldset) : (i === fieldset)) {
