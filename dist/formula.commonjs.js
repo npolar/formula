@@ -584,6 +584,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
         var form = this;
         this.errors = [];
         var fieldValidate = function(field, fieldset) {
+          var valid = true;
           if (field.typeOf('array')) {
             field.values.forEach(function(value) {
               fieldValidate(value, fieldset);
@@ -597,15 +598,14 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
           if ((field.dirty || force) && field.instance == null) {
             if (field.validate(force, silent)) {
               delete fieldset.errors[field.id];
-              return true;
             } else {
               if (field.typeOf('input') && !silent) {
                 fieldset.errors[field.id] = field.error;
               }
-
-              return false;
+              valid = false;
             }
           }
+          return valid;
         };
 
         this.valid = true;
