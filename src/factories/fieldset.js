@@ -30,7 +30,7 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
         return fieldsets;
       }
 
-      return null;
+      throw "Can't create fieldsets from schema";
     }
 
     var fieldsetFromDefinition = function(schema, formDefinition, data) {
@@ -83,7 +83,8 @@ angular.module('formula').factory('formulaFieldset', ['formulaFieldBuilder', 'fo
         });
         return fieldsets;
       }
-      return null;
+
+      throw "Can't create fieldsets from schema/formDefinition";
     };
 
     return {
