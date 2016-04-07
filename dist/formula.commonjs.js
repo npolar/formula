@@ -737,6 +737,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       }
       var _cfg = {};
       var schema = new Schema();
+      var formDefinition;
       var asyncs = [schema.deref(options.schema), jsonLoader(options.model), jsonLoader(options.form)];
 
       var setLanguage = function(code) {
@@ -761,6 +762,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       });
 
       var formLoaded = $q.all(asyncs).then(function(responses) {
+        formDefinition = responses[2];
         createForm(responses[1], responses[2]);
         return responses;
       }, function() {
@@ -783,7 +785,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       this.setModel = function(model) {
         options.model = model;
         formLoaded.then(function(responses) {
-          createForm(model, responses[2]);
+          createForm(model, formDefinition);
         });
       };
 
@@ -799,7 +801,8 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
           asyncs.push(Promise.resolve(form));
         }
         $q.all(asyncs).then(function(responses) {
-          createForm(responses[0][1], responses[1]);
+          formDefinition = responses[1];
+          createForm(options.model, responses[1]);
         });
       };
 
@@ -1868,12 +1871,13 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       },
 
       valueFromModel: function(model, validate) {
-        if (model[this.id] !== undefined) {
+        var data = angular.copy(model);
+        if (data[this.id] !== undefined) {
           this.values.forEach(function (val) {
             val.destroy();
           });
           this.values.length = 0;
-          model[this.id].forEach(function(item, index) {
+          data[this.id].forEach(function(item, index) {
             var newField = this.itemAdd(true /* preventValidation */ );
             if (newField) {
               if (this.typeOf('fieldset') && newField.index !== 0) {
@@ -1885,8 +1889,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
               this.values[index].valueFromModel(valueModel);
             }
           }, this);
-
-          formulaField.prototype.valueFromModel.call(this, model, validate);
+          formulaField.prototype.valueFromModel.call(this, data, validate);
         }
 
       },

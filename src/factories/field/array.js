@@ -219,12 +219,13 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       },
 
       valueFromModel: function(model, validate) {
-        if (model[this.id] !== undefined) {
+        var data = angular.copy(model);
+        if (data[this.id] !== undefined) {
           this.values.forEach(function (val) {
             val.destroy();
           });
           this.values.length = 0;
-          model[this.id].forEach(function(item, index) {
+          data[this.id].forEach(function(item, index) {
             var newField = this.itemAdd(true /* preventValidation */ );
             if (newField) {
               if (this.typeOf('fieldset') && newField.index !== 0) {
@@ -236,8 +237,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
               this.values[index].valueFromModel(valueModel);
             }
           }, this);
-
-          formulaField.prototype.valueFromModel.call(this, model, validate);
+          formulaField.prototype.valueFromModel.call(this, data, validate);
         }
 
       },

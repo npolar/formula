@@ -14,13 +14,13 @@ angular.module('demo', ['formula'])
             number: 1
           }, {
             string_default: 'two',
-            number: 1
+            number: 2
           }, {
             string_default: 'three',
-            number: 1
+            number: 3
           }, {
             string_default: 'four',
-            number: 1
+            number: 4
           }],
           array_string_enum: ['foo', 'qux'],
           array_string: ['foobar', 'bazquz'],
@@ -43,10 +43,10 @@ angular.module('demo', ['formula'])
           }]
         });
         console.log("timeout 1");
-        $scope.formula.i18n.set('no');
-        $scope.formula.getFieldByPath('#/array_object/0/number').then(function (f) {
-          console.log('fieldByPath', f);
-        });
+        // $scope.formula.i18n.set('no');
+        // $scope.formula.getFieldByPath('#/array_object/0/number').then(function (f) {
+        //   console.log('fieldByPath', f);
+        // });
       };
 
       var updateModel2 = function() {

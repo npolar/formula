@@ -10,6 +10,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       }
       var _cfg = {};
       var schema = new Schema();
+      var formDefinition;
       var asyncs = [schema.deref(options.schema), jsonLoader(options.model), jsonLoader(options.form)];
 
       var setLanguage = function(code) {
@@ -34,6 +35,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       });
 
       var formLoaded = $q.all(asyncs).then(function(responses) {
+        formDefinition = responses[2];
         createForm(responses[1], responses[2]);
         return responses;
       }, function() {
@@ -56,7 +58,7 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       this.setModel = function(model) {
         options.model = model;
         formLoaded.then(function(responses) {
-          createForm(model, responses[2]);
+          createForm(model, formDefinition);
         });
       };
 
@@ -72,7 +74,8 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
           asyncs.push(Promise.resolve(form));
         }
         $q.all(asyncs).then(function(responses) {
-          createForm(responses[0][1], responses[1]);
+          formDefinition = responses[1];
+          createForm(options.model, responses[1]);
         });
       };
 
