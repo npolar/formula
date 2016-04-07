@@ -219,7 +219,8 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
               fieldValidate(subfield, fieldset);
             });
           }
-          // jshint -W116
+
+          // jshint -W041
           if ((field.dirty || force) && field.instance == null) {
             if (field.validate(force, silent)) {
               delete fieldset.errors[field.id];
