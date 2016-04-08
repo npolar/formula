@@ -30,6 +30,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
       if (formDefinition) {
         this.title = formDefinition.title;
         this.fieldsets = formulaFieldset.fieldsetFromDefinition(schema, formDefinition, this.model.data);
+
         defaultLang = formDefinition.lang || defaultLang;
       } else {
         this.fieldsets = formulaFieldset.fieldsetFromSchema(schema, this.model.data);

@@ -12,7 +12,6 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
       var schema = new Schema();
       var formDefinition;
       var asyncs = [schema.deref(options.schema), jsonLoader(options.model), jsonLoader(options.form)];
-
       var setLanguage = function(code) {
         i18n.set(code).then(function() {
           if (_cfg.controller) {
@@ -42,11 +41,11 @@ angular.module('formula').factory('formula', ['$q', 'formulaI18n', 'formulaTempl
         console.error('Could not load form', arguments);
       });
 
-      var createForm = function(model, formDefinition) {
+      var createForm = function(model, form) {
         if (_cfg.form) {
           _cfg.form.destroy();
         }
-        _cfg.form = new Form(schema.json, model, formDefinition, options.keepFailing);
+        _cfg.form = new Form(schema.json, model, form, options.keepFailing);
         if (_cfg.controller) {
           _cfg.controller.setForm(_cfg.form);
           _cfg.form.translate();
