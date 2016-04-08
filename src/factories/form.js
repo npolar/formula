@@ -223,7 +223,7 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
             });
           }
 
-          // jshint -W041
+          // jshint -W041,-W116
           if ((field.dirty || force) && field.instance == null) {
             if (field.validate(force, silent)) {
               delete fieldset.errors[field.id];

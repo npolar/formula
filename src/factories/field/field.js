@@ -135,7 +135,7 @@ angular.module('formula').factory('formulaField', ['$filter', '$rootScope', 'for
       },
 
       isEmpty: function() {
-        // jshint -W041
+        // jshint -W041,-W116
         return (this.value == null || this.value.length === 0);
       },
       /**
