@@ -129,15 +129,18 @@ angular.module('formula').factory('formulaForm', ['$rootScope', '$location', 'fo
         if (!this.fieldsets) {
           return; // might be called before form is ready
         }
+        var fs;
         this.fieldsets.forEach(function(f, i) {
           if (typeof fieldset === 'object' || typeof fieldset === 'number') {
             if ((typeof fieldset === 'object') ? (f === fieldset) : (i === fieldset)) {
               f.active = true;
+              fs = f;
             } else {
               f.active = false;
             }
           }
         });
+        $rootScope.$broadcast('activate:fieldset', fs);
       },
 
       /**
