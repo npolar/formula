@@ -18,7 +18,6 @@
   "homepage": "https://github.com/npolar/formula#readme",
   "dependencies": {
     "angular": "^1.5.3",
-    "sortablejs": "^1.4.2",
     "tv4": "^1.1.12"
   },
   "devDependencies": {
