@@ -2,30 +2,28 @@
 <html>
 
 <head>
-	<title>Formula (demo)</title>
-	<meta charset="UTF-8" />
-	<link rel="stylesheet" href="../dist/formula.min.css" />
-	<link rel="stylesheet" href="css/demo.css" />
+  <title>Formula (demo)</title>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../dist/formula.min.css" />
+  <link rel="stylesheet" href="css/demo.css" />
 </head>
 
 <body ng-app="demo" ng-controller="demoController" ng-strict-di>
-	<div class="container">
-		<formula options="formula._cfg"></formula>
-	</div>
+  <div class="container">
+    <formula options="formula._cfg"></formula>
+  </div>
 
   <button ng-click="remove()">Remove</button>
   <button ng-click="english()">en</button>
   <button ng-click="norwegian()">no</button>
   <button ng-click="updateModel()">updateModel</button>
   <button ng-click="updateModel2()">updateModel2</button>
-	<button ng-click="testInstance()">testInstance</button>
-	<script src="../node_modules/angular/angular.js"></script>
-	<script src="../node_modules/tv4/tv4.js"></script>
-	<script src="../node_modules/tv4/lang/nb.js"></script>
-	<script src="../node_modules/sortablejs/Sortable.min.js"></script>
-	<script src="../node_modules/sortablejs/ng-sortable.js"></script>
-	<script src="../dist/formula.js"></script>
-	<script src="js/demo.js"></script>
+  <button ng-click="testInstance()">testInstance</button>
+  <script src="../node_modules/angular/angular.js"></script>
+  <script src="../node_modules/tv4/tv4.js"></script>
+  <script src="../node_modules/tv4/lang/nb.js"></script>
+  <script src="../dist/formula.js"></script>
+  <script src="js/demo.js"></script>
 </body>
 
 </html>

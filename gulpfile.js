@@ -50,9 +50,7 @@ gulp.task('compile-commonjs', ['compile-templates'], function () {
 		.pipe(concat('formula.commonjs.js'))
 		.pipe(defineModule('commonjs', { require: {
       angular: 'angular',
-      tv4: 'tv4',
-      sortablejs: 'sortablejs',
-      ngSortable: 'sortablejs/ng-sortable'
+      tv4: 'tv4'
     }}))
 		.pipe(gulp.dest('./dist/'));
 });

@@ -15,12 +15,6 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
       }
     };
 
-    var recalcIndex = function(field) {
-      field.values.forEach(function(fs, i) {
-        fs.index = i;
-      });
-    };
-
     var ArrayField = {
       create: function(options) {
         var field = formulaField.create(options);
@@ -40,15 +34,6 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         }
 
         formulaTemplateService.initNode(field);
-
-        field.sortable = {
-          onEnd: function (e) {
-            field.values = e.models;
-            recalcIndex(field);
-            field.itemChange();
-          },
-          handle: '.drag-handle'
-        };
         field.visible = field.hidden ? false : true;
 
         return field;
@@ -156,7 +141,9 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
           this.value.splice(item, 1);
         }
 
-        recalcIndex(this);
+        this.values.forEach(function(fs, i) {
+          fs.index = i;
+        });
 
         if (typeof item.destroyWatcher === 'function') {
           item.destroyWatcher();
@@ -188,15 +175,15 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
 
       itemChange: function(item) {
         this.value.length = 0;
+
         this.values.forEach(function(field) {
           if (field.value !== undefined) {
             this.value.push(field.value);
           }
         }, this);
+
         this.dirty = true;
-
         this.updateParent();
-
       },
 
       /**

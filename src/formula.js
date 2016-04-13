@@ -10,5 +10,5 @@
    * Norsk Polarinstutt 2014, http://npolar.no/
    */
 
-  angular.module('formula', ['ng-sortable']);
+  angular.module('formula', []);
 })();

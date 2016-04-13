@@ -2,13 +2,13 @@
   <legend>{{ field.title }}
     ({{ field.nrArrayValues() || 0 }})</legend>
 
-  <ul ng-if="::field.typeOf('fieldset')" ng-sortable="field.sortable">
+  <ul ng-if="::field.typeOf('fieldset')">
     <li ng-repeat="value in field.values" ng-if="!value.hidden">
       <fieldset ng-class="{ valid: value.valid }">
         <legend>
           <span ng-if="!value.visible">{{ value.value | formulaInlineValues }}</span>
-          <a ng-show="!$first" class="toggle drag-handle" href="" ng-click="field.moveUp($index)" ng-attr-title="{{ i18n.text.moveup }}">&uarr;</a>
-          <a ng-show="!$last" class="toggle drag-handle" href="" ng-click="field.moveDown($index)" ng-attr-title="{{ i18n.text.movedown }}">&darr;</a>
+          <a ng-show="!$first" class="toggle" href="" ng-click="field.moveUp($index)" ng-attr-title="{{ i18n.text.moveup }}">&uarr;</a>
+          <a ng-show="!$last" class="toggle" href="" ng-click="field.moveDown($index)" ng-attr-title="{{ i18n.text.movedown }}">&darr;</a>
           <a class="toggle" href="" ng-click="field.itemToggle($index)" ng-attr-title="{{ value.visible ? i18n.text.minimize.tooltip : i18n.text.maximize.tooltip }}">{{ value.visible ? '_' : '‾' }}</a>
           <a class="remove" href="" ng-click="field.itemRemove($index)" ng-attr-title="{{ i18n.text.remove.tooltip }}">&times;</a>
         </legend>
@@ -18,12 +18,12 @@
     </li>
   </ul>
 
-  <ul ng-if="::field.typeOf('field')" ng-sortable="field.sortable">
+  <ul ng-if="::field.typeOf('field')">
     <li ng-class="{ valid: value.valid, error: value.error }" ng-repeat="value in field.values">
       <input formula:input field="value" />
       <div class="input-ctrls">
-        <a ng-show="!$first" class="toggle drag-handle" href="" ng-click="field.moveUp($index)" ng-attr-title="{{ i18n.text.moveup }}">&uarr;</a>
-        <a ng-show="!$last" class="toggle drag-handle" href="" ng-click="field.moveDown($index)" ng-attr-title="{{ i18n.text.movedown }}">&darr;</a>
+        <a ng-show="!$first" class="toggle" href="" ng-click="field.moveUp($index)" ng-attr-title="{{ i18n.text.moveup }}">&uarr;</a>
+        <a ng-show="!$last" class="toggle" href="" ng-click="field.moveDown($index)" ng-attr-title="{{ i18n.text.movedown }}">&darr;</a>
         <a class="remove" href="" ng-click="field.itemRemove($index)" ng-attr-title="{{ i18n.text.remove.tooltip }}">&times;</a>
       </div>
       <div>
