@@ -3,17 +3,26 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
   function(jsonLoader, log, $q) {
     "use strict";
 
-
     var DEFAULT_TEXTS = {
       code: 'en',
       text: {
+        actions: {
+          label: 'More',
+          tooltip: 'Click for more actions'
+        },
         add: {
           label: 'Add',
           tooltip: 'Click to add a new item'
         },
         invalid: '{count} invalid fields',
-        moveup: 'Click to move item up (or drag)',
-        movedown: 'Click to move item down (or drag)',
+        moveup: {
+          label: 'Move up',
+          tooltip: 'Click to move item up'
+        },
+        movedown: {
+          label: 'Move down',
+          tooltip: 'Click to move item down'
+        },
         maximize: {
           label: 'Maximize',
           tooltip: 'Click to maximize item'

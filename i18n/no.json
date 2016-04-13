@@ -1,15 +1,25 @@
 {
   "text": {
+    "actions": {
+      "label": "Mer",
+      "tooltip": "Klikk for flere handlinger"
+    },
     "add": {
       "label": "Legg til",
       "tooltip": "Klikk for å legge til et nytt element"
     },
     "invalid": "{count} ugyldige felt",
-    "moveup": "Klikk for å flytt element opp (eller dra)",
-    "movedown": "Klikk for å flytt element ned (eller dra)",
+    "moveup": {
+      "label": "Flytt opp",
+      "tooltip": "Klikk for å flytte elementet opp"
+    },
+    "movedown": {
+      "label": "Flytt ned",
+      "tooltip": "Klikk for å flytte elementet ned"
+    },
     "maximize": {
       "label": "Maksimer",
-      "tooltip": "Klikk for å maksimer"
+      "tooltip": "Klikk for å maksimere"
     },
     "minimize": {
       "label": "Minimere",
