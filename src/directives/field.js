@@ -20,6 +20,9 @@ angular.module('formula').directive('formulaField', ['$compile', 'formulaClassSe
           if (!field.hidden && field.template) {
             iElement.html(field.template);
             $compile(iElement.contents())(scope);
+            field._elem_q.resolve(iElement);
+          } else {
+            field._elem_q.reject(iElement);
           }
         });
       },

@@ -1,10 +1,10 @@
 /* globals angular */
-angular.module('formula').factory('formulaField', ['$filter', '$rootScope', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
-  function($filter, $rootScope, log, i18n, formulaTemplateService, formulaFieldValidateService) {
+angular.module('formula').factory('formulaField', ['$q', '$filter', '$rootScope', 'formulaLog', 'formulaI18n', 'formulaTemplateService', 'formulaFieldValidateService',
+  function($q, $filter, $rootScope, log, i18n, formulaTemplateService, formulaFieldValidateService) {
     "use strict";
 
     var fieldBuilder;
-    var uids = [];
+    var nextUid = 1;
 
     var validateFieldId = function(field) {
       ['.', '/', '#'].forEach(function(invalidChar) {
@@ -50,21 +50,8 @@ angular.module('formula').factory('formulaField', ['$filter', '$rootScope', 'for
     };
 
     var uidGen = function (field) {
-      var uid = 'formula-',
-        chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-      for (var i = 0; i < 8; ++i) {
-        uid += chars[Math.floor(Math.random() * chars.length)];
-      }
-
-      if (uids.indexOf(uid) !== -1) {
-        return uidGen(field);
-      } else {
-        field.uid = uid;
-        uids.push(uid);
-      }
-
-      return uid;
+      var uid = 'formula-' + ('00000' + (nextUid++).toString(16)).slice(-5);
+      return (field.uid = uid);
     };
 
     var Field = {
@@ -74,6 +61,8 @@ angular.module('formula').factory('formulaField', ['$filter', '$rootScope', 'for
         field.id = options.id;
         field.title = options.id.replace(/_/g, ' ');
         field.index = options.index;
+
+        field._elem_q = $q.defer();
 
         assign(field, (field.schema = options.schema));
         assign(field, (field.fieldDefinition = options.fieldDefinition || {}));
@@ -88,12 +77,10 @@ angular.module('formula').factory('formulaField', ['$filter', '$rootScope', 'for
     };
 
     Field.prototype = {
+      get element() {
+        return this._elem_q.promise;
+      },
 
-      /**
-       * @method pathGen
-       *
-       * Function used to generate full JSON path for fields
-       */
       get path() {
         var path = '#';
 
