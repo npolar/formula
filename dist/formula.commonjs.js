@@ -1050,7 +1050,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
     };
 
     var addDefaultLanguage = function (form, code) {
-      var lang = angular.merge(cache[code], {
+      var lang = angular.merge({}, {
         fieldsets: form.fieldsets.map(function (fs) {
           return fs.title;
         }),
@@ -1058,7 +1058,7 @@ angular.module('formula').factory('formulaI18n', ['formulaJsonLoader', 'formulaL
           return gatherFields(memo, fs.fields);
         }, {}),
         code: code
-      });
+      }, cache[code]);
       return add(lang, code).then(function () {
         if (currentLocale.code === code) {
           set(code);
