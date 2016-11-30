@@ -94,9 +94,9 @@ angular.module('demo', ['formula'])
         match: "ref_object",
         templateUrl: "customObject.html"
       });
-      $scope.formula.getFields().then(function () {
-        $scope.formula.addTemplate({match: '#/string_required', template: '<h2 style="font-size: 18px;">updated template</h2>'});
-      });
+//      $scope.formula.getFields().then(function () {
+//        $scope.formula.addTemplate({match: '#/string_required', template: '<h2 style="font-size: 18px;">updated template</h2>'});
+//      });
       $scope.formula.i18n.add('json/no.json', 'nb_NO', ['nb', 'no']);
 
       $scope.remove = function() {
