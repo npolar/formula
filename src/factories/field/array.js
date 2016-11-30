@@ -162,6 +162,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         b.index = index;
         this.values[index - 1] = a;
         this.values[index] = b;
+        this.itemChange();
       },
 
       moveDown: function (index) {
@@ -171,6 +172,7 @@ angular.module('formula').factory('formulaArrayField', ['$rootScope', 'formulaFi
         b.index = index;
         this.values[index + 1] = a;
         this.values[index] = b;
+        this.itemChange();
       },
 
       itemChange: function(item) {
