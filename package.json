@@ -17,20 +17,11 @@
   },
   "homepage": "https://github.com/npolar/formula#readme",
   "dependencies": {
-<<<<<<< Updated upstream
-    "angular": "^1.5.3",
-    "tv4": "^1.1.12"
-  },
-  "devDependencies": {
-    "angular": "^1.5.3",
-=======
     "angular": ">= 1.5.9 < 1.6",
-    "sortablejs": "^1.4.2",
     "tv4": "^1.1.12"
   },
   "devDependencies": {
     "angular": ">= 1.5.9 < 1.6",
->>>>>>> Stashed changes
     "gulp": "^3.9.0",
     "gulp-angular-templatecache": "^1.7.0",
     "gulp-concat": "^2.6.0",
